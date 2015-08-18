@@ -49,8 +49,23 @@ var Setup = React.createClass({
     }
 });
 
+var formMixin = {
+    showForm : function() {
+        this.setState({
+            showForm : true
+        });
+    },
+
+    hideForm : function() {
+        this.setState({
+            showForm : false
+        });
+    },
+};
 
 var Visitors = React.createClass({
+    mixins: [formMixin],
+
     getInitialState: function() {
         return {
             visitors : [],
@@ -75,22 +90,11 @@ var Visitors = React.createClass({
         }.bind(this));
     },
 
-    showForm : function() {
-        this.setState({
-            showForm : true
-        });
-    },
-
-    hideForm : function() {
-        this.setState({
-            showForm : false
-        });
-    },
 
     removeVisitor : function(index) {
         var visitor = this.state.visitors[index];
         $.post('tailgate/Admin/Setup/Visitor', {
-            command : 'remove',
+            command : 'deactivate',
             visitor_id: visitor.id
         }, null, 'json')
         .done(function(){
@@ -137,8 +141,9 @@ var VisitorForm = React.createClass({
     },
 
     save : function() {
-        var university = React.findDOMNode(this.refs.university).value;
-        var mascot = React.findDOMNode(this.refs.mascot).value;
+        console.log(this.refs);
+        var university = $('#university').val();
+        var mascot = $('#mascot').val();
 
         if (university.length > 0 && mascot.length > 0) {
             $.post('tailgate/Admin/Setup/Visitor', {
@@ -165,12 +170,10 @@ var VisitorForm = React.createClass({
                 <div className="row well">
                     {this.state.message}
                     <div className="form-group col-sm-6">
-                        <label htmlFor="university">University:</label>
-                        <input type="text" id="university" className="form-control" ref="university"/>
+                        <TextInput label={'University:'} inputId={'university'} />
                     </div>
                     <div className="form-group col-sm-6">
-                        <label htmlFor="mascot">Mascot:</label>
-                        <input type="text" id="mascot" className="form-control" ref="mascot"/>
+                        <TextInput label={'Mascot:'} inputId={'mascot'} />
                     </div>
                     <div className="col-sm-12 text-center">
                         <button className="btn btn-primary" onClick={this.save}><i className="fa fa-save"></i> Save</button>&nbsp;
@@ -183,12 +186,109 @@ var VisitorForm = React.createClass({
 });
 
 var Lots = React.createClass({
+    mixins: [formMixin],
+
+    getInitialState : function() {
+        return {
+            lots : [],
+            showForm: false
+        };
+    },
+
+    componentWillMount: function() {
+        this.loadLots();
+    },
+
+    loadLots: function() {
+        $.getJSON('tailgate/Admin/Setup/Lot', {
+            command : 'list'
+        }).done(function(data){
+            if (data.length < 1) {
+                data = [];
+            }
+            this.setState({
+                lots : data
+            });
+        }.bind(this));
+    },
+
+
     render : function() {
+        var lotForm;
+        if (this.state.showForm) {
+            lotForm = <LotForm closeForm={this.hideForm} loadLots={this.loadLots}/>;
+        } else {
+            lotForm = null;
+        }
         return (
-            <div>Lots</div>
+            <div>
+                <p><button className="btn btn-success" onClick={this.showForm}><i className="fa fa-plus"></i> Add Tailgating Lot</button></p>
+                {lotForm}
+            </div>
         );
     }
 });
+
+var LotForm = React.createClass({
+    getInitialState : function() {
+        return {
+            message : ''
+        };
+    },
+
+    save : function() {
+        var title = React.findDOMNode(this.refs.lotTitle).value;
+        var totalSpaces = React.findDOMNode(this.refs.totalSpaces).value;
+        var availableSpaces = React.findDOMNode(this.refs.availableSpaces).value;
+        console.log(title);
+        console.log(totalSpaces);
+        console.log(availableSpaces);
+        /*
+
+        if (university.length > 0 && mascot.length > 0) {
+            $.post('tailgate/Admin/Setup/Visitor', {
+                command : 'add',
+                university: university,
+                mascot : mascot
+            })
+            .done(function(){
+                this.props.closeForm();
+                this.props.loadVisitors();
+            }.bind(this))
+            .fail(function(){
+                var error_message = <Alert message={'Error: Check your university and mascot inputs for correct information'} />;
+                this.setState({
+                    message : error_message
+                });
+            }.bind(this));
+        }
+        */
+    },
+
+    render : function() {
+        return (
+            <div>
+                <div className="row well">
+                    {this.state.message}
+                    <div className="form-group col-sm-6">
+                        <TextInput label={'Name of lot'} inputId={'lotTitle'} />
+                    </div>
+                    <div className="form-group col-sm-3">
+                        <TextInput label={'Total spaces:'} inputId={'totalSpaces'} />
+                    </div>
+                    <div className="form-group col-sm-3">
+                        <TextInput label={'Available spaces:'} inputId={'availableSpaces'} />
+                    </div>
+                    <div className="col-sm-12 text-center">
+                        <button className="btn btn-primary" onClick={this.save}><i className="fa fa-save"></i> Save</button>&nbsp;
+                        <button className="btn btn-default" onClick={this.props.closeForm}><i className="fa fa-times"></i> Close</button>
+                    </div>
+                </div>
+            </div>
+        );
+    }
+});
+
 
 
 var Students = React.createClass({
@@ -222,7 +322,53 @@ var Alert = React.createClass({
     }
 });
 
+var TextInput = React.createClass({
+    getDefaultProps: function() {
+        return {
+            label: '',
+            placeholder: '',
+            handleChange: null,
+            handleBlur:null,
+            required: false,
+            handlePress : null,
+            inputId : null
+        };
+    },
 
+    handleBlur : function(e) {
+        if (this.props.required && e.target.value.length < 1) {
+            $(e.target).css('border-color', 'red');
+        }
+        if (this.props.handleBlur) {
+            this.props.handleBlur(e);
+        }
+    },
+
+    handleFocus : function(e) {
+        $(e.target).css('border-color', '');
+    },
+
+    render : function() {
+        var label = '';
+        var required = '';
+        if (this.props.label.length > 0) {
+            if (this.props.required) {
+                required = <i className="fa fa-asterisk text-danger"></i>;
+            }
+            label = <label htmlFor={this.props.inputId}>{this.props.label}</label>;
+        } else {
+            label = null;
+        }
+        return (
+            <div className="form-group">
+                {label} {required}
+                <input type="text" className="form-control" id={this.props.inputId}
+                    name={this.props.inputId} placeholder={this.props.placeholder} onFocus={this.handleFocus}
+                    onChange={this.props.handleChange} onBlur={this.handleBlur} onKeyPress={this.props.handlePress}/>
+            </div>
+        );
+    }
+});
 
 // This script will not run after compiled UNLESS the below is wrapped in $(window).load(function(){...});
 React.render(<Setup/>, document.getElementById('tailgate-setup'));

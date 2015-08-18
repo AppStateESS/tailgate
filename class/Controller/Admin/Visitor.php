@@ -8,7 +8,7 @@ use tailgate\Factory\Visitor as Factory;
  * @license http://opensource.org/licenses/lgpl-3.0.html
  * @author Matthew McNaney <mcnaney at gmail dot com>
  */
-class Visitor extends \Http\Controller
+class Visitor extends Base
 {
 
     public function get(\Request $request)
@@ -22,22 +22,17 @@ class Visitor extends \Http\Controller
     protected function getJsonView($data, \Request $request)
     {
         $command = $request->getVar('command');
+        $factory = new Factory;
 
         switch ($command) {
             case 'list':
-                return $this->visitorList();
+                return $this->getList($factory, TG_LIST_ACTIVE, 'university');
         }
-    }
-
-    private function visitorList()
-    {
-        $listing = Factory::getList();
-        $view = new \View\JsonView($listing);
-        return $view;
     }
 
     public function post(\Request $request)
     {
+        $factory = new Factory;
         if (!$request->isVar('command')) {
             throw new \Exception('Bad command');
         }
@@ -46,12 +41,9 @@ class Visitor extends \Http\Controller
                 $this->add();
                 exit;
 
-            case 'remove':
-                $this->remove($request);
-                $view = new \View\JsonView(array('success' => true));
-                $response = new \Response($view);
-                return $response;
-                exit;
+            case 'deactivate':
+                return $this->deactivate($factory, $request->getVar('visitor_id'));
+                break;
 
             default:
                 throw new \Exception('Bad command:' . $request->getVar('command'));
@@ -68,16 +60,18 @@ class Visitor extends \Http\Controller
         $visitor->setUniversity($university);
         $visitor->setMascot($mascot);
 
-        Factory::save($visitor);
+        $factory = new Factory;
+        $factory->save($visitor);
     }
 
-    private function remove(\Request $request)
-    {
-        $id = $request->getVar('visitor_id');
-        $db = \Database::getDB();
-        $tbl = $db->addTable('tg_visitor');
-        $tbl->addFieldConditional('id', $id);
-        $db->delete();
-    }
-
+    /*
+      protected function deactivate(\Request $request)
+      {
+      $factory = new Factory;
+      $factory->deactivate($request->getVar('visitor_id'));
+      $view = new \View\JsonView(array('success' => true));
+      $response = new \Response($view);
+      return $response;
+      }
+     */
 }
