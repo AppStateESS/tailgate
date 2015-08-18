@@ -7,7 +7,7 @@
 
 $link[] = array('label' => 'Tailgate',
     'restricted' => TRUE,
-    'url' => 'tailgate/admin/',
+    'url' => 'tailgate/Admin/',
     'description' => 'Online lottery for tailgating spots',
     'image' => 'tailgate.gif',
     'tab' => 'content'

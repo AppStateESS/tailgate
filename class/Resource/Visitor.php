@@ -27,13 +27,41 @@ class Visitor extends \Resource
      * @var Variable\File
      */
     protected $image;
+    
+    protected $active;
+    
     protected $table = 'tg_visitor';
     
     public function __construct()
     {
+        parent::__construct();
         $this->university = new \Variable\String(null, 'university');
+        $this->university->allowEmpty(false);
         $this->mascot = new \Variable\String(null, 'mascot');
+        $this->mascot->allowEmpty(false);
+        $this->active = new \Variable\Bool(true, 'active');
         $this->image = new \Variable\File(null, 'image');
+        $this->image->allowNull(true);
+    }
+    
+    public function getMascot()
+    {
+        return $this->mascot->get();
+    }
+
+    public function getUniversity()
+    {
+        return $this->university->get();
+    }
+    
+    public function setMascot($mascot)
+    {
+        $this->mascot->set($mascot);
+    }
+    
+    public function setUniversity($university)
+    {
+        $this->university->set($university);
     }
 
 }

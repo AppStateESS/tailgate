@@ -16,10 +16,15 @@ class Module extends \Module
         $this->setProperName('Tailgating');
     }
 
+    public function beforeRun(\Request $request, \Controller $controller)
+    {
+        require_once PHPWS_SOURCE_DIR . 'mod/tailgate/conf/defines.php';
+    }
+    
     public function getController(\Request $request)
     {
         $cmd = $request->shiftCommand();
-        if ($cmd == 'admin' && \Current_User::allow('tailgate')) {
+        if ($cmd == 'Admin' && \Current_User::allow('tailgate')) {
             $admin = new \tailgate\Controller\Admin($this);
             return $admin;
         } else {
