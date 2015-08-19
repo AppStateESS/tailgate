@@ -23,10 +23,33 @@ class Lot extends Base
     {
         $command = $request->getVar('command');
         $factory = new Factory;
-        
+
         switch ($command) {
             case 'list':
                 return $this->getList($factory, TG_LIST_ACTIVE, 'title');
+        }
+    }
+
+    public function post(\Request $request)
+    {
+        $factory = new Factory;
+        $view = new \View\JsonView(array('success' => true));
+        $response = new \Response($view);
+
+        if (!$request->isVar('command')) {
+            throw new \Exception('Bad command');
+        }
+        switch ($request->getVar('command')) {
+            case 'add':
+                $factory->postNew();
+                return $response;
+
+            case 'deactivate':
+                $factory->deactivate($request->getVar('lot_id'));
+                return $response;
+
+            default:
+                throw new \Exception('Bad command:' . $request->getVar('command'));
         }
     }
 

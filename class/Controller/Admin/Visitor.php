@@ -33,45 +33,24 @@ class Visitor extends Base
     public function post(\Request $request)
     {
         $factory = new Factory;
+        $view = new \View\JsonView(array('success' => true));
+        $response = new \Response($view);
+        
         if (!$request->isVar('command')) {
             throw new \Exception('Bad command');
         }
         switch ($request->getVar('command')) {
             case 'add':
-                $this->add();
-                exit;
+                $factory->postNew();
+                return $response;
 
             case 'deactivate':
-                return $this->deactivate($factory, $request->getVar('visitor_id'));
-                break;
+                $factory->deactivate($request->getVar('visitor_id'));
+                return $response;
 
             default:
                 throw new \Exception('Bad command:' . $request->getVar('command'));
         }
     }
 
-    private function add()
-    {
-        $university = filter_input(INPUT_POST, 'university', FILTER_SANITIZE_STRING);
-        $mascot = filter_input(INPUT_POST, 'mascot', FILTER_SANITIZE_STRING);
-
-        $visitor = new \tailgate\Resource\Visitor;
-
-        $visitor->setUniversity($university);
-        $visitor->setMascot($mascot);
-
-        $factory = new Factory;
-        $factory->save($visitor);
-    }
-
-    /*
-      protected function deactivate(\Request $request)
-      {
-      $factory = new Factory;
-      $factory->deactivate($request->getVar('visitor_id'));
-      $view = new \View\JsonView(array('success' => true));
-      $response = new \Response($view);
-      return $response;
-      }
-     */
 }

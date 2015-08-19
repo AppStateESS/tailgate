@@ -236,53 +236,31 @@ var LotForm = React.createClass({
     },
 
     save : function() {
-        var title = React.findDOMNode(this.refs.lotTitle).value;
-        var totalSpaces = React.findDOMNode(this.refs.totalSpaces).value;
-        var availableSpaces = React.findDOMNode(this.refs.availableSpaces).value;
-        console.log(title);
-        console.log(totalSpaces);
-        console.log(availableSpaces);
-        /*
-
-        if (university.length > 0 && mascot.length > 0) {
-            $.post('tailgate/Admin/Setup/Visitor', {
+        var title = $('#lotTitle').val();
+        var totalSpaces = $('#totalSpaces').val();
+        if (title.length > 0 && totalSpaces.length > 0) {
+            $.post('tailgate/Admin/Setup/Lot', {
                 command : 'add',
-                university: university,
-                mascot : mascot
+                title: title,
+                default_spots : totalSpaces
             })
             .done(function(){
                 this.props.closeForm();
-                this.props.loadVisitors();
+                this.props.loadLots();
             }.bind(this))
             .fail(function(){
-                var error_message = <Alert message={'Error: Check your university and mascot inputs for correct information'} />;
+                var error_message = <Alert message={'Error: Check your lot name and total spaces for correct information'} />;
                 this.setState({
                     message : error_message
                 });
             }.bind(this));
         }
-        */
+
     },
 
     forceNumbers : function(e) {
         if (e.which < 48 || e.which > 57) {
             e.preventDefault();
-        }
-    },
-
-    copyNumbers : function(e) {
-        var totalSpaces = e.target.value;
-        var available = $('#availableSpaces');
-        if (available.val().length === 0) {
-            available.val(totalSpaces);
-        }
-    },
-
-    checkAvailable : function(e) {
-        var totalSpaces = $('#totalSpaces').val();
-        var available = e.target.value;
-        if (available > totalSpaces) {
-            $('#availableSpaces').val(totalSpaces);
         }
     },
 
@@ -292,13 +270,10 @@ var LotForm = React.createClass({
                 <div className="row well">
                     {this.state.message}
                     <div className="form-group col-sm-6">
-                        <TextInput label={'Name of lot'} inputId={'lotTitle'} />
+                        <TextInput label={'Name of lot'} inputId={'lotTitle'} required={true}/>
                     </div>
                     <div className="form-group col-sm-3">
-                        <TextInput label={'Total spaces:'} inputId={'totalSpaces'} handlePress={this.forceNumbers} handleBlur={this.copyNumbers}/>
-                    </div>
-                    <div className="form-group col-sm-3">
-                        <TextInput label={'Available spaces:'} inputId={'availableSpaces'} handlePress={this.forceNumbers} handleBlur={this.checkAvailable} />
+                        <TextInput label={'Total spaces:'} inputId={'totalSpaces'} handlePress={this.forceNumbers} required={true}/>
                     </div>
                     <div className="col-sm-12 text-center">
                         <button className="btn btn-primary" onClick={this.save}><i className="fa fa-save"></i> Save</button>&nbsp;
@@ -370,7 +345,6 @@ var TextInput = React.createClass({
     },
 
     render : function() {
-
         var label = '';
         var required = '';
         if (this.props.label.length > 0) {
@@ -386,7 +360,7 @@ var TextInput = React.createClass({
                 {label} {required}
                 <input type="text" className="form-control" id={this.props.inputId}
                     name={this.props.inputId} placeholder={this.props.placeholder} onFocus={this.handleFocus}
-                    onChange={this.handleChange} onBlur={this.handleBlur} onKeyPress={this.props.handlePress} />
+                    onChange={this.handleChange} onBlur={this.handleBlur} onKeyPress={this.props.handlePress}/>
             </div>
         );
     }

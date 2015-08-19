@@ -47,5 +47,5 @@ abstract class Base extends \ResourceFactory
         $result = $db->select();
         return $result;
     }
-
+    
 }

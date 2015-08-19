@@ -9,10 +9,17 @@ namespace tailgate\Factory;
 class Visitor extends Base
 {
     protected $table = 'tg_visitor';
-            
-    public function save(\tailgate\Resource\Visitor $visitor)
+
+    public function postNew()
     {
+        $university = filter_input(INPUT_POST, 'university', FILTER_SANITIZE_STRING);
+        $mascot = filter_input(INPUT_POST, 'mascot', FILTER_SANITIZE_STRING);
+
+        $visitor = new \tailgate\Resource\Visitor;
+
+        $visitor->setUniversity($university);
+        $visitor->setMascot($mascot);
+
         self::saveResource($visitor);
     }
-    
 }
