@@ -3,7 +3,7 @@ var ReactCSSTransitionGroup = React.addons.CSSTransitionGroup;
 var Setup = React.createClass({
     getInitialState: function() {
         return {
-            currentTab : 'visitors'
+            currentTab : 'lots'
         };
     },
 
@@ -141,7 +141,6 @@ var VisitorForm = React.createClass({
     },
 
     save : function() {
-        console.log(this.refs);
         var university = $('#university').val();
         var mascot = $('#mascot').val();
 
@@ -265,6 +264,28 @@ var LotForm = React.createClass({
         */
     },
 
+    forceNumbers : function(e) {
+        if (e.which < 48 || e.which > 57) {
+            e.preventDefault();
+        }
+    },
+
+    copyNumbers : function(e) {
+        var totalSpaces = e.target.value;
+        var available = $('#availableSpaces');
+        if (available.val().length === 0) {
+            available.val(totalSpaces);
+        }
+    },
+
+    checkAvailable : function(e) {
+        var totalSpaces = $('#totalSpaces').val();
+        var available = e.target.value;
+        if (available > totalSpaces) {
+            $('#availableSpaces').val(totalSpaces);
+        }
+    },
+
     render : function() {
         return (
             <div>
@@ -274,10 +295,10 @@ var LotForm = React.createClass({
                         <TextInput label={'Name of lot'} inputId={'lotTitle'} />
                     </div>
                     <div className="form-group col-sm-3">
-                        <TextInput label={'Total spaces:'} inputId={'totalSpaces'} />
+                        <TextInput label={'Total spaces:'} inputId={'totalSpaces'} handlePress={this.forceNumbers} handleBlur={this.copyNumbers}/>
                     </div>
                     <div className="form-group col-sm-3">
-                        <TextInput label={'Available spaces:'} inputId={'availableSpaces'} />
+                        <TextInput label={'Available spaces:'} inputId={'availableSpaces'} handlePress={this.forceNumbers} handleBlur={this.checkAvailable} />
                     </div>
                     <div className="col-sm-12 text-center">
                         <button className="btn btn-primary" onClick={this.save}><i className="fa fa-save"></i> Save</button>&nbsp;
@@ -327,13 +348,13 @@ var TextInput = React.createClass({
         return {
             label: '',
             placeholder: '',
-            handleChange: null,
             handleBlur:null,
             required: false,
             handlePress : null,
             inputId : null
         };
     },
+
 
     handleBlur : function(e) {
         if (this.props.required && e.target.value.length < 1) {
@@ -349,6 +370,7 @@ var TextInput = React.createClass({
     },
 
     render : function() {
+
         var label = '';
         var required = '';
         if (this.props.label.length > 0) {
@@ -364,7 +386,7 @@ var TextInput = React.createClass({
                 {label} {required}
                 <input type="text" className="form-control" id={this.props.inputId}
                     name={this.props.inputId} placeholder={this.props.placeholder} onFocus={this.handleFocus}
-                    onChange={this.props.handleChange} onBlur={this.handleBlur} onKeyPress={this.props.handlePress}/>
+                    onChange={this.handleChange} onBlur={this.handleBlur} onKeyPress={this.props.handlePress} />
             </div>
         );
     }
