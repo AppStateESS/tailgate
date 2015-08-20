@@ -239,22 +239,42 @@ var Lots = React.createClass({
 
 var LotListing = React.createClass({
 
+    getInitialState: function() {
+        return {
+            formKey : null
+        };
+    },
+
+    manageSpots : function(e, key) {
+        this.setState({
+            formKey : key
+        });
+    },
+
     render : function() {
+        var spotForm = null;
         return (
             <table className="table table-striped table-hover">
                 <tbody>
                     <tr>
                         <th>Title</th>
-                        <th>Total spots</th>
+                        <th className="col-sm-2">Total spots</th>
+                        <th>&nbsp;</th>
                     </tr>
                     {this.props.lots.map(function(value, i){
+                        if (this.state.formKey === i) {
+                            spotForm = '<tr><td colspan="3">Hello there!</td></tr>';
+                        } else {
+                            spotForm = null;
+                        }
                         return (
                             <tr key={i}>
                                 <td>{value.title}</td>
                                 <td>{value.total_spots}</td>
+                                <td><button className="btn btn-primary btn-sm" onClick={this.manageSpots.bind(this, i)}>Manage slots</button></td>
                             </tr>
                         );
-                    })}
+                    }.bind(this))}
                 </tbody>
             </table>
         );
