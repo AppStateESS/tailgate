@@ -1,6 +1,6 @@
-var ReactCSSTransitionGroup = React.addons.CSSTransitionGroup;
-
 var Setup = React.createClass({
+    mixins: [React.addons.PureRenderMixin],
+
     getInitialState: function() {
         return {
             currentTab : 'lots'
@@ -73,7 +73,7 @@ var Visitors = React.createClass({
         };
     },
 
-    componentWillMount: function() {
+    componentDidMount: function() {
         this.loadVisitors();
     },
 
@@ -84,9 +84,11 @@ var Visitors = React.createClass({
             if (data.length < 1) {
                 data = [];
             }
-            this.setState({
-                visitors : data
-            });
+            if (this.isMounted()) {
+                this.setState({
+                    visitors : data
+                });
+            }
         }.bind(this));
     },
 
@@ -117,17 +119,21 @@ var Visitors = React.createClass({
             <div>
                 <p><button className="btn btn-success" onClick={this.showForm}><i className="fa fa-plus"></i> Add Team</button></p>
                 {visitorForm}
-                <ul className="list-group">
-                    {this.state.visitors.map(function(value, i){
-                        var removeClick = this.removeVisitor.bind(this,i);
-                        return (
-                            <li className="list-group-item" key={i}>
-                                <button className="btn btn-sm btn-danger pull-right" onClick={removeClick}>
-                                    <i className="fa fa-times"></i> Remove</button> {value.university} - {value.mascot}
-                            </li>
-                        );
-                    }, this)}
-                </ul>
+                <table className="table table-striped">
+                    <tbody>
+                        {this.state.visitors.map(function(value, i){
+                            var removeClick = this.removeVisitor.bind(this,i);
+                            return (
+                                <tr key={i}>
+                                    <td>
+                                    <button className="btn btn-sm btn-danger pull-right" onClick={removeClick}>
+                                        <i className="fa fa-times"></i> Remove</button> {value.university} - {value.mascot}
+                                    </td>
+                                </tr>
+                            );
+                        }, this)}
+                    </tbody>
+                </table>
             </div>
         );
     }
@@ -194,7 +200,7 @@ var Lots = React.createClass({
         };
     },
 
-    componentWillMount: function() {
+    componentDidMount: function() {
         this.loadLots();
     },
 
@@ -205,9 +211,11 @@ var Lots = React.createClass({
             if (data.length < 1) {
                 data = [];
             }
+
             this.setState({
                 lots : data
             });
+
         }.bind(this));
     },
 
@@ -223,7 +231,32 @@ var Lots = React.createClass({
             <div>
                 <p><button className="btn btn-success" onClick={this.showForm}><i className="fa fa-plus"></i> Add Tailgating Lot</button></p>
                 {lotForm}
+                <LotListing lots={this.state.lots} />
             </div>
+        );
+    }
+});
+
+var LotListing = React.createClass({
+
+    render : function() {
+        return (
+            <table className="table table-striped table-hover">
+                <tbody>
+                    <tr>
+                        <th>Title</th>
+                        <th>Total spots</th>
+                    </tr>
+                    {this.props.lots.map(function(value, i){
+                        return (
+                            <tr key={i}>
+                                <td>{value.title}</td>
+                                <td>{value.total_spots}</td>
+                            </tr>
+                        );
+                    })}
+                </tbody>
+            </table>
         );
     }
 });

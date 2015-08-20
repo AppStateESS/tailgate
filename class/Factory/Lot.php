@@ -40,10 +40,41 @@ class Lot extends Base
         for ($i = 1; $i <= $spots; $i++) {
             $slot = new Spot;
             $slot->setLotId($lot->getId());
-            $slot->setNumber((string)$i);
-            
+            $slot->setNumber((string) $i);
+
             self::saveResource($slot);
         }
+    }
+
+    public function getList($mode = TG_LIST_ALL, $order_by = null)
+    {
+        $db = \Database::getDB();
+        $lot = $db->addTable('tg_lot');
+        $spot = $db->addTable('tg_spot');
+
+        $id = $spot->addField('id');
+        $id->showCount();
+        $id->setAlias('total_spots');
+        
+        $db->setGroupBy($lot->getField('title'));
+
+        $conditional = new \Database\Conditional($db, $lot->getField('id'), $spot->getField('lot_id'), '=');
+
+        $db->joinResources($lot, $spot, $conditional);
+
+        $lot->addOrderBy('title');
+        switch ($mode) {
+            case TG_LIST_ACTIVE:
+                $lot->addFieldConditional('active', 1);
+                break;
+
+            case TG_LIST_INACTIVE:
+                $lot->addFieldConditional('active', 0);
+                break;
+        }
+
+        $result = $db->select();
+        return $result;
     }
 
 }
