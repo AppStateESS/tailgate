@@ -239,44 +239,45 @@ var Lots = React.createClass({
 
 var LotListing = React.createClass({
 
-    getInitialState: function() {
+    getDefaultProps : function() {
         return {
-            formKey : null
+            lots : []
         };
     },
 
-    manageSpots : function(e, key) {
+    getInitialState: function() {
+        return {
+            spotKey : -1
+        };
+    },
+
+    manageSpots : function(key, e) {
+        if (this.state.spotKey === key) {
+            key = -1;
+        }
         this.setState({
-            formKey : key
+            spotKey : key
         });
     },
 
     render : function() {
-        var spotForm = null;
         return (
-            <table className="table table-striped table-hover">
-                <tbody>
-                    <tr>
-                        <th>Title</th>
-                        <th className="col-sm-2">Total spots</th>
-                        <th>&nbsp;</th>
-                    </tr>
-                    {this.props.lots.map(function(value, i){
-                        if (this.state.formKey === i) {
-                            spotForm = '<tr><td colspan="3">Hello there!</td></tr>';
-                        } else {
-                            spotForm = null;
-                        }
-                        return (
-                            <tr key={i}>
-                                <td>{value.title}</td>
-                                <td>{value.total_spots}</td>
-                                <td><button className="btn btn-primary btn-sm" onClick={this.manageSpots.bind(this, i)}>Manage slots</button></td>
-                            </tr>
-                        );
-                    }.bind(this))}
-                </tbody>
-            </table>
+            <div>
+                {this.props.lots.map(function(value, i){
+                    return (
+                        <div className="panel panel-default" key={i}>
+                            <div className="panel-body row">
+                                <div className="col-sm-6">{value.title}</div>
+                                <div className="col-sm-3"><strong>Total spots:</strong> {value.total_spots}</div>
+                                <div className="col-sm-3">
+                                    <button className="btn btn-primary btn-sm" onClick={this.manageSpots.bind(this, i)}>
+                                        <i className={this.state.spotKey === i ? 'fa fa-caret-up' : 'fa fa-caret-down'}></i> Manage Spots</button></div>
+                                {this.state.spotKey === i ? <Spots lotId={value.id} /> : null}
+                            </div>
+                        </div>
+                    );
+                }.bind(this))}
+            </div>
         );
     }
 });
@@ -338,7 +339,90 @@ var LotForm = React.createClass({
     }
 });
 
+var Spots = React.createClass({
+    getInitialState : function() {
+        return {
+            spots : []
+        };
+    },
 
+    getDefaultProps : function() {
+        return {
+            lotId : 0
+        };
+    },
+
+    componentDidMount: function() {
+        this.loadSpots();
+    },
+
+    componentWillReceiveProps : function(newProps)
+    {
+        loadSpots();
+    },
+
+    loadSpots : function() {
+        if (this.props.lotId === 0) {
+            console.log('Lot id is zero');
+        }
+
+        $.getJSON('tailgate/Admin/Setup/Spot', {
+            command : 'list',
+            id : this.props.lotId
+        }).done(function(data){
+            this.setState({
+                spots : data
+            });
+        }.bind(this));
+    },
+
+    render : function() {
+        if (this.state.spots.length === 0) {
+            return <Waiting/>;
+        }
+        return (
+            <div>
+                <table className="table table-striped">
+                    <tbody>
+                        <tr>
+                            <th>
+                                Number
+                            </th>
+                            <th>
+                                Selected
+                            </th>
+                            <th>
+                                Picked up
+                            </th>
+                            <th>
+                                Reserved
+                            </th>
+                        </tr>
+                        {this.state.spots.map(function(value, i){
+                            return (
+                                <tr key={i}>
+                                    <td>{value.number}</td>
+                                    <td>{value.selected}</td>
+                                    <td>{value.picked_up}</td>
+                                    <td>{value.reserved}</td>
+                                </tr>
+                            );
+                        })}
+                    </tbody>
+                </table>
+            </div>
+        );
+    }
+});
+
+
+var Waiting = React.createClass({
+    render : function() {
+        return (
+            <div className="text-center"><i className="fa fa-cog fa-spin"></i> Loading...</div>
+        );
+    }
+});
 
 var Students = React.createClass({
 

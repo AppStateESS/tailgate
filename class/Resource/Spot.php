@@ -38,6 +38,12 @@ class Spot extends \Resource
      */
     protected $selected;
     
+    /**
+     *
+     * @var Variable\Bool
+     */
+    protected $active;
+    
     
     protected $table = 'tg_spot';
 
@@ -45,11 +51,12 @@ class Spot extends \Resource
     {
         parent::__construct();
         $this->lot_id = new \Variable\Integer(null, 'lot_id');
-        $this->number = new \Variable\String(null, 'number');
-        $this->number->setLimit(50);
+        $this->number = new \Variable\Integer(null, 'number');
+        $this->number->setLimit(999);
         $this->picked_up = new \Variable\Bool(false, 'picked_up');
         $this->reserved = new \Variable\Bool(false, 'reserved');
         $this->selected = new \Variable\Bool(false, 'selected');
+        $this->active = new \Variable\Bool(true, 'active');
     }
     
     public function getLotId()

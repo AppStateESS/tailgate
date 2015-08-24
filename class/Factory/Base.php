@@ -27,7 +27,7 @@ abstract class Base extends \ResourceFactory
         $db->update();
     }
 
-    public function getList($mode = TG_LIST_ALL, $order_by = null)
+    public function getListDB($mode = TG_LIST_ALL, $order_by = null)
     {
         $db = \Database::getDB();
         $tbl = $db->addTable($this->table);
@@ -43,9 +43,14 @@ abstract class Base extends \ResourceFactory
                 $tbl->addFieldConditional('active', 0);
                 break;
         }
+        return $db;
+    }
 
+    public function getList($mode = TG_LIST_ALL, $order_by = null)
+    {
+        $db = $this->getListDB($mode, $order_by);
         $result = $db->select();
         return $result;
     }
-    
+
 }
