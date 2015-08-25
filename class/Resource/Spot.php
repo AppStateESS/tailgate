@@ -52,7 +52,6 @@ class Spot extends \Resource
         parent::__construct();
         $this->lot_id = new \Variable\Integer(null, 'lot_id');
         $this->number = new \Variable\Integer(null, 'number');
-        $this->number->setLimit(999);
         $this->picked_up = new \Variable\Bool(false, 'picked_up');
         $this->reserved = new \Variable\Bool(false, 'reserved');
         $this->selected = new \Variable\Bool(false, 'selected');

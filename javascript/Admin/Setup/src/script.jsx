@@ -271,7 +271,9 @@ var LotListing = React.createClass({
                                 <div className="col-sm-3"><strong>Total spots:</strong> {value.total_spots}</div>
                                 <div className="col-sm-3">
                                     <button className="btn btn-primary btn-sm" onClick={this.manageSpots.bind(this, i)}>
-                                        <i className={this.state.spotKey === i ? 'fa fa-caret-up' : 'fa fa-caret-down'}></i> Manage Spots</button></div>
+                                        <i className={this.state.spotKey === i ? 'fa fa-caret-up' : 'fa fa-caret-down'}></i> Manage Spots
+                                    </button>
+                                </div>
                                 {this.state.spotKey === i ? <Spots lotId={value.id} /> : null}
                             </div>
                         </div>
@@ -358,7 +360,7 @@ var Spots = React.createClass({
 
     componentWillReceiveProps : function(newProps)
     {
-        loadSpots();
+        this.loadSpots();
     },
 
     loadSpots : function() {
@@ -373,6 +375,30 @@ var Spots = React.createClass({
             this.setState({
                 spots : data
             });
+        }.bind(this));
+    },
+
+    toggleReserve : function(key,e) {
+        var allSpots = this.state.spots;
+        var spot = allSpots[key];
+
+        var reserved = spot.reserved === '1' ? '0' : '1';
+
+        $.post('tailgate/Admin/Setup/Spot', {
+            command : 'reserve',
+            id : spot.id,
+            reserved : reserved
+        })
+        .done(function(){
+            spot.reserved = reserved;
+            allSpots[key] = spot;
+            this.setState({
+                spots : allSpots
+            });
+        }.bind(this))
+        .fail(function(){
+            var error_message = 'Error: Could not update the spot';
+            console.log(error_message);
         }.bind(this));
     },
 
@@ -404,10 +430,12 @@ var Spots = React.createClass({
                                     <td>{value.number}</td>
                                     <td>{value.selected}</td>
                                     <td>{value.picked_up}</td>
-                                    <td>{value.reserved}</td>
+                                    <td>{value.reserved === '1' ?
+                                            <YesButton handleClick={this.toggleReserve.bind(this, i)} label={'Reserved'}/> :
+                                                <NoButton handleClick={this.toggleReserve.bind(this, i)} label={'Not reserved'}/>}</td>
                                 </tr>
                             );
-                        })}
+                        }.bind(this))}
                     </tbody>
                 </table>
             </div>
@@ -415,6 +443,25 @@ var Spots = React.createClass({
     }
 });
 
+var YesButton = React.createClass({
+        render : function () {
+            return (
+                <button onClick={this.props.handleClick} className="btn btn-sm btn-success">
+                    <i className="fa fa-check"></i> {this.props.label}
+                </button>
+            );
+        }
+});
+
+var NoButton = React.createClass({
+        render : function () {
+            return (
+                <button onClick={this.props.handleClick}  className="btn btn-sm btn-default">
+                    <i className="fa fa-times"></i> {this.props.label}
+                </button>
+            );
+        }
+});
 
 var Waiting = React.createClass({
     render : function() {

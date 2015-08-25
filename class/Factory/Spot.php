@@ -20,5 +20,12 @@ class Spot extends Base
         $result = $db->select();
         return $result;
     }
-
+        
+    public function reserve($spot_id, $reserve)
+    {
+        $spot = new Resource;
+        $this->loadByID($spot, $spot_id);
+        $spot->setReserved($reserve);
+        $spot->save();
+    }
 }
