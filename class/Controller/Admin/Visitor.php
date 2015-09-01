@@ -11,14 +11,6 @@ use tailgate\Factory\Visitor as Factory;
 class Visitor extends Base
 {
 
-    public function get(\Request $request)
-    {
-        $data = array();
-        $view = $this->getView($data, $request);
-        $response = new \Response($view);
-        return $response;
-    }
-
     protected function getJsonView($data, \Request $request)
     {
         $command = $request->getVar('command');
@@ -26,8 +18,11 @@ class Visitor extends Base
 
         switch ($command) {
             case 'list':
-                return $this->getList($factory, TG_LIST_ACTIVE, 'university');
+                $json = $factory->getList(TG_LIST_ACTIVE, 'university');
+                break;
         }
+        $view = new \View\JsonView($json);
+        return $view;
     }
 
     public function post(\Request $request)
@@ -35,7 +30,7 @@ class Visitor extends Base
         $factory = new Factory;
         $view = new \View\JsonView(array('success' => true));
         $response = new \Response($view);
-        
+
         if (!$request->isVar('command')) {
             throw new \Exception('Bad command');
         }

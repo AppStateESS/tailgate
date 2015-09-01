@@ -2,13 +2,13 @@
 
 namespace tailgate\Controller\Admin;
 
-use tailgate\Factory\Lot as Factory;
+use tailgate\Factory\Content as Factory;
 
 /**
  * @license http://opensource.org/licenses/lgpl-3.0.html
  * @author Matthew McNaney <mcnaney at gmail dot com>
  */
-class Lot extends Base
+class Content extends Base
 {
 
     protected function getJsonView($data, \Request $request)
@@ -18,7 +18,7 @@ class Lot extends Base
 
         switch ($command) {
             case 'list':
-                $json = $factory->getList(TG_LIST_ACTIVE, 'title');
+                $json = $factory->getList();
                 break;
         }
         $view = new \View\JsonView($json);
@@ -35,17 +35,13 @@ class Lot extends Base
             throw new \Exception('Bad command');
         }
         switch ($request->getVar('command')) {
-            case 'add':
-                $factory->postNew();
-                return $response;
-
-            case 'deactivate':
-                $factory->deactivate($request->getVar('lot_id'));
-                return $response;
-
-            default:
-                throw new \Exception('Bad command:' . $request->getVar('command'));
+            case 'save':
+                $factory->postContent();
+                break;
         }
+        \PHPWS_Core::goBack('tailgate/Admin/Content?command=list');
     }
+    
+    
 
 }

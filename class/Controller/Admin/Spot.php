@@ -11,14 +11,6 @@ use tailgate\Factory\Spot as Factory;
 class Spot extends Base
 {
 
-    public function get(\Request $request)
-    {
-        $data = array();
-        $view = $this->getView($data, $request);
-        $response = new \Response($view);
-        return $response;
-    }
-
     protected function getJsonView($data, \Request $request)
     {
         $command = $request->getVar('command');
@@ -26,8 +18,12 @@ class Spot extends Base
 
         switch ($command) {
             case 'list':
-                return $this->getList($factory, TG_LIST_ACTIVE, 'number');
+                 $json = $factory->getList();
+                break;
         }
+
+        $view = new \View\JsonView($json);
+        return $view;
     }
 
     public function post(\Request $request)
@@ -41,10 +37,10 @@ class Spot extends Base
         }
         switch ($request->getVar('command')) {
             case 'reserve':
-                $factory->reserve(filter_input(INPUT_POST, 'id', FILTER_SANITIZE_NUMBER_INT), 
-                        filter_input(INPUT_POST, 'reserved', FILTER_SANITIZE_NUMBER_INT));
+                $factory->reserve(filter_input(INPUT_POST, 'id', FILTER_SANITIZE_NUMBER_INT), filter_input(INPUT_POST, 'reserved', FILTER_SANITIZE_NUMBER_INT));
                 break;
         }
         return $response;
     }
+
 }

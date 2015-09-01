@@ -9,10 +9,29 @@ namespace tailgate\Controller\Admin;
 abstract class Base extends \Http\Controller
 {
 
-    protected function getList($factory, $active_state = TG_LIST_ACTIVE, $sort_by=null)
+    public function get(\Request $request)
     {
-        $listing = $factory->getList($active_state, $sort_by);
-        $view = new \View\JsonView($listing);
+        $data = array();
+        $view = $this->getView($data, $request);
+        $response = new \Response($view);
+        return $response;
+    }
+
+    public function getHtmlView($data, \Request $request)
+    {
+        \Layout::addStyle('tailgate', 'Admin/Setup/style.css');
+
+        javascript('ckeditor');
+        $development = true;
+        $script = 'Admin/Setup/';
+
+        \tailgate\Factory\React::load($script, $development);
+
+        $content = <<<EOF
+<h2>Tailgate</h2>
+<div id="tailgate-setup"></div>
+EOF;
+        $view = new \View\HtmlView($content);
         return $view;
     }
 
