@@ -27,12 +27,19 @@ abstract class Base extends \ResourceFactory
         $db->update();
     }
 
-    public function getListDB($mode = TG_LIST_ALL, $order_by = null)
+    /**
+     * 
+     * @param integer $mode
+     * @param string $order_by
+     * @param string $order_dir
+     * @return \Global\Datanase\DB
+     */
+    public function getListDB($mode = TG_LIST_ALL, $order_by = null, $order_dir = 'asc')
     {
         $db = \Database::getDB();
         $tbl = $db->addTable($this->table);
         if (!empty($order_by)) {
-            $tbl->addOrderBy($order_by);
+            $tbl->addOrderBy($order_by, $order_dir);
         }
         switch ($mode) {
             case TG_LIST_ACTIVE:
@@ -51,6 +58,16 @@ abstract class Base extends \ResourceFactory
         $db = $this->getListDB($mode, $order_by);
         $result = $db->select();
         return $result;
+    }
+
+    public function load(\Resource $resource)
+    {
+        self::loadByID($resource);
+    }
+    
+    public function save(\Resource $resource)
+    {
+        self::saveResource($resource);
     }
 
 }
