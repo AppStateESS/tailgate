@@ -20,8 +20,10 @@ abstract class Base extends \Http\Controller
     public function getHtmlView($data, \Request $request)
     {
         \Layout::addStyle('tailgate', 'Admin/Setup/style.css');
-
+        javascript('datetimepicker');
         javascript('ckeditor');
+        $http = PHPWS_SOURCE_HTTP;
+        
         $development = true;
         $script = 'Admin/Setup/';
 
