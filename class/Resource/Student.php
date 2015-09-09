@@ -23,6 +23,12 @@ class Student extends \Resource
     protected $eligible;
 
     /**
+     * Reason student was flagged as ineligible.
+     * @var \Variable\String
+     */
+    protected $ineligible_reason;
+
+    /**
      * Number of student wins
      * @var \Variable\Integer
      */
@@ -56,17 +62,19 @@ class Student extends \Resource
     public function __construct()
     {
         parent::__construct();
-        $this->username = new \Variable\String(null, 'username');
-        $this->first_name = new \Variable\String(null, 'first_name');
+        $this->username = new \Variable\TextOnly(null, 'username');
+        $this->username->setLimit(100);
+        $this->first_name = new \Variable\TextOnly(null, 'first_name');
         $this->first_name->setLimit(100);
-        $this->last_name = new \Variable\String(null, 'last_name');
+        $this->last_name = new \Variable\TextOnly(null, 'last_name');
         $this->last_name->setLimit(100);
         $this->eligible = new \Variable\Bool(true, 'eligible');
+        $this->ineligible_reason = new \Variable\TextOnly(null, 'ineligible_reason');
         $this->wins = new \Variable\Integer(0, 'wins');
         $this->wins->setRange(0, 100);
         $this->signup_date = new \Variable\DateTime(null, 'signup_date');
         $this->banned = new \Variable\Bool(false, 'banned');
-        $this->banned_reason = new \Variable\String(null, 'banned_reason');
+        $this->banned_reason = new \Variable\TextOnly(null, 'banned_reason');
         $this->banned_date = new \Variable\DateTime(null, 'banned_date');
     }
 
@@ -79,12 +87,12 @@ class Student extends \Resource
     {
         return $this->banned->get();
     }
-    
+
     public function getBannedReason()
     {
         return $this->banned_reason->get();
     }
-    
+
     public function getBannedDate($format = null)
     {
         if ($format) {
@@ -103,6 +111,11 @@ class Student extends \Resource
     public function getFirstName()
     {
         return $this->first_name->get();
+    }
+
+    public function getIneligibleReason()
+    {
+        return $this->ineligible_reason->get();
     }
 
     public function getLastName()
@@ -148,6 +161,11 @@ class Student extends \Resource
     public function setFirstName($first_name)
     {
         $this->first_name->set($first_name);
+    }
+
+    public function setIneligibleReason($reason)
+    {
+        $this->ineligible_reason->set($reason);
     }
 
     public function setLastName($last_name)
