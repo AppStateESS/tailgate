@@ -1,11 +1,47 @@
-var limitDefault = 10;
+var limitDefault = 50;
+
+var tgMixin = {
+    showForm : function() {
+        this.setState({
+            showForm : true
+        });
+    },
+
+    hideForm : function() {
+        this.setState({
+            showForm : false
+        });
+    },
+
+    loadVisitors: function() {
+        $.getJSON('tailgate/Admin/Visitor', {
+            command : 'list'
+        }).done(function(data){
+            if (data.length < 1) {
+                data = [];
+            }
+            if (this.isMounted()) {
+                this.setState({
+                    visitors : data
+                });
+            }
+        }.bind(this));
+    },
+
+    getUnixTime : function(date){
+        var obj = new Date(date).getTime() / 1000;
+        return obj;
+    }
+
+};
+
 
 var Setup = React.createClass({
     mixins: [React.addons.PureRenderMixin],
 
     getInitialState: function() {
         return {
-            currentTab : 'students'
+            currentTab : 'games'
         };
     },
 
@@ -19,6 +55,10 @@ var Setup = React.createClass({
         var pageContent;
 
         switch(this.state.currentTab) {
+            case 'games':
+            pageContent = <Games />;
+            break;
+
             case 'visitors':
             pageContent = <Visitors/>;
             break;
@@ -42,6 +82,7 @@ var Setup = React.createClass({
         return (
             <div>
                 <ul className="nav nav-tabs">
+                  <li role="presentation" className={this.state.currentTab === 'games' ? 'active' : ''} onClick={this.changeTab.bind(null, 'games')}><a style={{cursor:'pointer'}}>Games</a></li>
                   <li role="presentation" className={this.state.currentTab === 'visitors' ? 'active' : ''} onClick={this.changeTab.bind(null, 'visitors')}><a style={{cursor:'pointer'}}>Visitors</a></li>
                   <li role="presentation" className={this.state.currentTab === 'lots' ? 'active' : ''} onClick={this.changeTab.bind(null, 'lots')}><a style={{cursor:'pointer'}}>Lots</a></li>
                   <li role="presentation" className={this.state.currentTab === 'students' ? 'active' : ''} onClick={this.changeTab.bind(null, 'students')}><a style={{cursor:'pointer'}}>Students</a></li>
@@ -55,20 +96,6 @@ var Setup = React.createClass({
         );
     }
 });
-
-var formMixin = {
-    showForm : function() {
-        this.setState({
-            showForm : true
-        });
-    },
-
-    hideForm : function() {
-        this.setState({
-            showForm : false
-        });
-    },
-};
 
 var Modal = React.createClass({
     render: function() {
@@ -95,7 +122,7 @@ var Modal = React.createClass({
 });
 
 var Visitors = React.createClass({
-    mixins: [formMixin],
+    mixins: [tgMixin],
 
     getInitialState: function() {
         return {
@@ -107,22 +134,6 @@ var Visitors = React.createClass({
     componentDidMount: function() {
         this.loadVisitors();
     },
-
-    loadVisitors: function() {
-        $.getJSON('tailgate/Admin/Visitor', {
-            command : 'list'
-        }).done(function(data){
-            if (data.length < 1) {
-                data = [];
-            }
-            if (this.isMounted()) {
-                this.setState({
-                    visitors : data
-                });
-            }
-        }.bind(this));
-    },
-
 
     removeVisitor : function(index) {
         var visitor = this.state.visitors[index];
@@ -222,7 +233,7 @@ var VisitorForm = React.createClass({
 });
 
 var Lots = React.createClass({
-    mixins: [formMixin],
+    mixins: [tgMixin],
 
     getInitialState : function() {
         return {
@@ -564,6 +575,47 @@ var Waiting = React.createClass({
 });
 
 var StudentRow = React.createClass({
+    eligible : function(e) {
+        if (this.props.student.eligible === '1') {
+            this.makeIneligible(this.props.resetRows);
+        } else {
+            this.makeEligible(this.props.resetRows);
+        }
+    },
+
+    makeIneligible : function(reset) {
+        var content = '<textarea id="ineligibleReason" class="form-control" name="ineligibleReason" placeholder="Please enter the reason for making this student ineligible."></textarea>' +
+        '<button style="margin-top:1em" id="makeIneligible" class="btn btn-danger"><i class="fa fa-ban"></i> Prevent user from applying for current tailgate</button>';
+        $('#admin-modal .modal-title').text('Make user ineligible: ' + this.props.student.first_name + ' ' + this.props.student.last_name);
+        $('#admin-modal .modal-body').html(content);
+        $('#makeIneligible').click(function(){
+            var reason = $('#ineligibleReason').val();
+            if (reason.length < 1) {
+                $('#ineligibleReason').css('border-color', 'red');
+            }
+            $.post('tailgate/Admin/Student', {
+                command : 'ineligible',
+                id : this.props.student.id,
+                reason : reason
+            }).done(function(){
+                reset();
+            }.bind(this));
+            $('#admin-modal').modal('hide');
+        }.bind(this));
+        $('#admin-modal').modal('show');
+    },
+
+    makeEligible : function(reset) {
+        if (confirm('Click OK if you are sure you want to restore this student\'s eligiblity. Cancel if not.')) {
+            $.post('tailgate/Admin/Student', {
+                command : 'eligible',
+                id : this.props.student.id
+            }).done(function(){
+                reset();
+            });
+        }
+    },
+
     bannedReason : function(e) {
         if (this.props.student.banned === '1') {
             this.unBan(this.props.resetRows);
@@ -583,8 +635,8 @@ var StudentRow = React.createClass({
         }
     },
 
-    ban: function(reset) {
-        var content = '<textarea id="bannedReason" class="form-control" name="bannedReason" placeholder="Please the reason for the ban."></textarea>' +
+    ban: function() {
+        var content = '<textarea id="bannedReason" class="form-control" name="bannedReason" placeholder="Please enter the reason for the ban."></textarea>' +
         '<button style="margin-top:1em" id="banUser" class="btn btn-danger"><i class="fa fa-ban"></i> Ban user from accessing system</button>';
         $('#admin-modal .modal-title').text('Ban user: ' + this.props.student.first_name + ' ' + this.props.student.last_name);
         $('#admin-modal .modal-body').html(content);
@@ -598,11 +650,22 @@ var StudentRow = React.createClass({
                 id : this.props.student.id,
                 reason : bannedReason
             }).done(function(){
-                reset();
+                this.props.resetRows();
             }.bind(this));
             $('#admin-modal').modal('hide');
         }.bind(this));
         $('#admin-modal').modal('show');
+    },
+
+    deleteStudent : function() {
+        if (confirm('Are you sure you want to PERMANENTLY delete this student?')) {
+            $.post('tailgate/Admin/Student', {
+                command : 'delete',
+                id : this.props.student.id
+            }).done(function(){
+                    this.props.resetRows();
+            }.bind(this));
+        }
     },
 
     render : function() {
@@ -616,6 +679,7 @@ var StudentRow = React.createClass({
                 <td className="text-right">{value.wins}</td>
                 <td className="text-center"><EligibleIcon value={value} handleClick={this.eligible}/></td>
                 <td className="text-center"><BannedIcon value={value} handleClick={this.bannedReason}/></td>
+                <td><button className="btn btn-sm btn-danger" onClick={this.deleteStudent}><i className="fa fa-trash-o"></i> Delete</button></td>
             </tr>
         );
     }
@@ -623,18 +687,26 @@ var StudentRow = React.createClass({
 
 
 var EligibleIcon = React.createClass({
+    hover : function(e) {
+        if (this.props.value.eligible == '0') {
+            $(e.target).tooltip('show');
+        } else {
+            $(e.target).tooltip('destroy');
+        }
+    },
+
     render : function() {
-        var iconClass = null;
         var title = null;
+        var iconClass = null;
         if (this.props.value.eligible == '1') {
             iconClass = 'fa-check text-success';
             title = 'Eligible';
         } else {
             iconClass = 'fa-times text-danger';
-            title = 'Not eligible';
+            title = 'Reason: ' + this.props.value.ineligible_reason;
         }
         return (
-            <Icon iconClass={iconClass} handleClick={this.props.handleClick} title={title} />
+            <Icon iconClass={iconClass} handleClick={this.props.handleClick} handleOver={this.hover} title={title} />
         );
     }
 });
@@ -654,11 +726,11 @@ var BannedIcon = React.createClass({
         var bannedDate = new Date(this.props.value.banned_date * 1000);
         var iconClass = null;
         if (this.props.value.banned == '1') {
-            iconClass = 'fa-ban text-danger';
+            iconClass = 'fa-times text-danger';
             title = 'Banned: ' + bannedDate.toLocaleDateString() + "\nReason: " + this.props.value.banned_reason;
         } else {
-            iconClass = 'fa-times text-muted';
-            title = '';
+            iconClass = 'fa-check text-success';
+            title = 'Click to ban student';
         }
         return (
             <Icon iconClass={iconClass} handleClick={this.props.handleClick} handleOver={this.hover} title={title} />
@@ -743,7 +815,7 @@ var Students = React.createClass({
         var nextLimit = this.state.limit + limitDefault;
         var nextButton = null;
         if (this.state.limit <= this.state.students.length) {
-            nextButton = <button className="btn btn-default" onClick={this.loadStudents.bind(null, nextLimit, this.state.search)}>Add more rows</button>;
+            nextButton = <button className="btn btn-default" onClick={this.loadStudents.bind(null, nextLimit, this.state.search)}><i className="fa fa-plus"></i> Show more rows</button>;
         }
         return (
             <div>
@@ -752,7 +824,7 @@ var Students = React.createClass({
                         <TextInput placeholder={'Search'} handleChange={this.searchRows} handlePress={this.preventSpaces}/>
                     </div>
                 </div>
-                <table className="table table-striped">
+                <table className="table table-striped sans">
                     <thead>
                         <tr>
                             <th>Id</th>
@@ -761,7 +833,8 @@ var Students = React.createClass({
                             <th>Username</th>
                             <th>Wins</th>
                             <th className="text-center">Eligible</th>
-                            <th className="text-center">Banned</th>
+                            <th className="text-center">Allowed</th>
+                            <th>&nbsp;</th>
                         </tr>
                     </thead>
                     <tbody id="studentList">
@@ -783,6 +856,322 @@ var Reports = React.createClass({
     render: function() {
         return (
             <div>Reports</div>
+        );
+    }
+});
+
+var Games = React.createClass({
+    mixins: [tgMixin],
+
+    getInitialState: function() {
+        return {
+            visitors : [],
+            games : [],
+            currentGame : null,
+            message : ''
+        };
+    },
+
+    loadGames : function() {
+        $.getJSON('tailgate/Admin/Game', {
+            command : 'list'
+        }).done(function(data){
+            if (typeof data[0] !== 'undefined') {
+                this.setState({
+                    currentGame : data.shift(),
+                    games : data
+                });
+            } else {
+                this.setState({
+                    currentGame : null,
+                    games : data
+                });
+            }
+        }.bind(this));
+    },
+
+    componentDidMount : function() {
+        this.loadVisitors();
+        this.loadGames();
+        if (this.isMounted()) {
+            $('#start-signup').datetimepicker({
+                timepicker:true,
+                format: 'n/j/Y H:i'
+            });
+
+            $('#end-signup').datetimepicker({
+                timepicker:true,
+                format: 'n/j/Y H:i'
+            });
+
+            $('#kickoff').datetimepicker({
+                timepicker:false,
+                format: 'n/j/Y'
+            });
+        }
+    },
+
+    saveGame : function() {
+        var visitor_id = $('#pick-team').val();
+        var kickoff = this.getUnixTime($('#kickoff').val());
+        var startSignup = new Date($('#start-signup').val()).getTime() / 1000;
+        var endSignup = new Date($('#end-signup').val()).getTime() / 1000;
+
+        if ((startSignup < endSignup)) {
+            if (endSignup < kickoff) {
+                $.post('tailgate/Admin/Game', {
+                    command : 'add',
+                    visitor_id : visitor_id,
+                    kickoff : kickoff,
+                    signup_start : startSignup,
+                    signup_end : endSignup
+                }).done(function(){
+                    this.loadGames();
+                }.bind(this));
+            } else {
+                this.setState({
+                    message : 'Signup end must be less than gate date'
+                });
+            }
+        } else {
+            this.setState({
+                message : 'Signup start must be less than signup deadline'
+            });
+        }
+    },
+
+    render : function() {
+        var game = null;
+        var previousGames = null;
+        var currentGame = null;
+        var message = null;
+        if (this.state.message.length > 0) {
+            message = <div className="alert alert-danger">{this.state.message}</div>;
+        }
+
+        if (this.state.games.length === 0) {
+            previousGames = <p>No games found</p>;
+        } else {
+            previousGames = <GameListing games={this.state.games} />;
+        }
+
+
+        if (this.state.currentGame) {
+            currentGame = <GameInfo game={this.state.currentGame}/>;
+        } else if (this.state.visitors.length > 0)  {
+            currentGame = <GameForm visitors={this.state.visitors} save={this.saveGame} />;
+        } else {
+            currentGame = null;
+        }
+
+        return (
+            <div>
+                <div className="well">
+                    <div className="row">
+                        <div className="col-sm-12">
+                            <h3>Current game</h3>
+                            {message}
+                        </div>
+                    </div>
+                    {currentGame}
+                </div>
+                <div className="row">
+                    <div className="col-sm-12">
+                        <h3>Previous games</h3>
+                        {previousGames}
+                    </div>
+                </div>
+            </div>
+        );
+    }
+});
+
+var GameInfo = React.createClass({
+
+    getInitialState: function() {
+        return {
+            game : {}
+        };
+    },
+
+    componentDidMount : function() {
+        this.initializeDateTime(this.props.game);
+        this.updateGame(this.props.game);
+    },
+
+    updateGame : function(game) {
+        if (game.signup_start >= game.signup_end ||
+            game.signup_end >= game.kickoff) {
+            return;
+        }
+
+        this.setState({
+            game : game
+        });
+
+        $('#signup-start').datetimepicker({
+            value : game.signup_start_ts,
+            maxDate : game.signup_end_ts.substr(0, 10)
+        });
+
+        $('#signup-end').datetimepicker({
+            value : game.signup_end_ts,
+            minDate : game.signup_start_ts.substr(0, 10),
+            maxDate : game.kickoff_ts
+        });
+
+        $('#kickoff').datetimepicker({
+            value : game.kickoff_ts,
+            minDate : game.signup_end_ts.substr(0, 10)
+        });
+    },
+
+    initializeDateTime : function(game)
+    {
+        $('#signup-start').datetimepicker({
+            timepicker:true,
+            format: 'Y/m/d H:i',
+            onChangeDateTime : function(ct, i) {
+                $.post('tailgate/Admin/Game', {
+                    command : 'changeDate',
+                    game_id : game.id,
+                    signup_start : ct
+                }, function(){}, 'json').done(function(data){
+                    this.updateGame(data);
+                }.bind(this));
+            }.bind(this),
+        });
+
+        $('#signup-end').datetimepicker({
+            timepicker:true,
+            format: 'Y/m/d H:i',
+            onChangeDateTime : function(ct, i) {
+                $.post('tailgate/Admin/Game', {
+                    command : 'changeDate',
+                    game_id : game.id,
+                    signup_end : ct
+                }, function(){}, 'json').done(function(data){
+                    this.updateGame(data);
+                }.bind(this));
+            }.bind(this),
+        });
+
+        $('#kickoff').datetimepicker({
+            timepicker:false,
+            format: 'Y/m/d',
+            onChangeDateTime : function(ct, i) {
+                $.post('tailgate/Admin/Game', {
+                    command : 'changeDate',
+                    game_id : game.id,
+                    kickoff : ct
+                }, function(){}, 'json').done(function(data){
+                    this.updateGame(data);
+                }.bind(this));
+            }.bind(this),
+        });
+    },
+
+    signupStartDate : function()
+    {
+        $('#signup-start').datetimepicker('show');
+    },
+
+    signupEndDate : function()
+    {
+        $('#signup-end').datetimepicker('show');
+    },
+
+    kickoffDate : function()
+    {
+        $('#kickoff').datetimepicker('show');
+    },
+
+
+    render : function() {
+        return (
+        <div>
+            <h4>{this.props.game.university} {this.props.game.mascot}</h4>
+            <div className="row">
+                <div className="col-sm-4">
+                    <div className="alert alert-success">
+                        <button className="pull-right btn btn-sm btn-primary" id="signup-start" onClick={this.signupStartDate}>Edit</button>
+                        <big><strong>Signup start</strong></big><br />
+                        {this.state.game.signup_start_format}
+                    </div>
+                </div>
+                <div className="col-sm-4">
+                    <div className="alert alert-success">
+                        <button className="pull-right btn btn-sm btn-primary" id="signup-end" onClick={this.signupEndDate}>Edit</button>
+                        <big><strong>Signup end</strong></big><br />
+                        {this.state.game.signup_end_format}
+                    </div>
+                </div>
+                <div className="col-sm-4">
+                    <div className="alert alert-success">
+                        <button className="pull-right btn btn-sm btn-primary" id="kickoff" onClick={this.kickoffDate}>Edit</button>
+                        <big><strong>Kickoff:</strong></big><br />{this.state.game.kickoff_format}
+                    </div>
+                </div>
+            </div>
+        </div>
+        );
+    }
+});
+
+var GameForm = React.createClass({
+
+    render : function() {
+        var date = new Date();
+        var month = (date.getMonth() + 1);
+        var dateString = month + '/' + date.getDate() +  '/' + date.getFullYear();
+        var hours = date.getHours().toString();
+        var datetimeString = dateString + ' ' + hours + ':00';
+        var options = this.props.visitors.map(function(value, i){
+            return (
+                <option key={i} value={value.id}>{value.university} - {value.mascot}</option>
+            );
+        }.bind(this));
+        return (
+            <div>
+                <div className="row">
+                    <div className="col-sm-3">
+                        <label htmlFor="pick-team">Pick visiting team</label>
+                        <select id="pick-team" className="form-control">
+                            {options}
+                        </select>
+                    </div>
+                    <div className="col-sm-3">
+                        <TextInput inputId={'start-signup'} label="Signup start" ref="date" defaultValue={datetimeString}/>
+                    </div>
+                    <div className="col-sm-3">
+                        <TextInput inputId={'end-signup'} label="Signup deadline" ref="date" defaultValue={datetimeString}/>
+                    </div>
+                    <div className="col-sm-3">
+                        <TextInput inputId={'kickoff'} label="Game date" ref="date" defaultValue={dateString}/>
+                    </div>
+                </div>
+                <div className="row">
+                    <div className="col-sm-12 text-center">
+                        <button className="btn btn-success" onClick={this.props.save}><i className="fa fa-save"></i> Save game</button>
+                    </div>
+                </div>
+            </div>
+        );
+    }
+});
+
+var GameListing = React.createClass({
+    render : function() {
+        return (
+            <table className="table table-striped sans">
+            {this.props.games.map(function(value, i){
+                return (
+                    <tr key={i}>
+                        <td></td>
+                    </tr>
+                );
+            }.bind(this))}
+            </table>
         );
     }
 });
@@ -809,7 +1198,8 @@ var TextInput = React.createClass({
             required: false,
             handlePress : null,
             handleChange : null,
-            inputId : null
+            inputId : null,
+            defaultValue : null
         };
     },
 
@@ -843,7 +1233,7 @@ var TextInput = React.createClass({
                 {label} {required}
                 <input type="text" className="form-control" id={this.props.inputId}
                     name={this.props.inputId} placeholder={this.props.placeholder} onFocus={this.handleFocus}
-                    onChange={this.props.handleChange} onBlur={this.handleBlur} onKeyPress={this.props.handlePress}/>
+                    onChange={this.props.handleChange} onBlur={this.handleBlur} onKeyPress={this.props.handlePress} defaultValue={this.props.defaultValue}/>
             </div>
         );
     }
