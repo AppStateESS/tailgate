@@ -21,13 +21,87 @@ class Game extends \Resource
      * @var \Variable\DateTime
      */
     protected $kickoff;
-    
+
+    /**
+     * Unix time of start time
+     * @var \Variable\DateTime
+     */
+    protected $signup_start;
+
+    /**
+     * Unix time of end time
+     * @var \Variable\DateTime
+     */
+    protected $signup_end;
+
+    /**
+     * If true, the game is complete
+     * @var \Variable\Bool
+     */
+    protected $completed;
     protected $table = 'tg_game';
 
     public function __construct()
     {
+        parent::__construct();
         $this->visitor_id = new \Variable\Integer(null, 'visitor_id');
         $this->kickoff = new \Variable\DateTime(null, 'kickoff');
+        $this->kickoff->setFormat('%s');
+        $this->signup_start = new \Variable\DateTime(null, 'signup_start');
+        $this->signup_start->setFormat('%s');
+        $this->signup_end = new \Variable\DateTime(null, 'signup_end');
+        $this->signup_end->setFormat('%s');
+        $this->completed = new \Variable\Bool(null, 'completed');
+    }
+
+    public function getCompleted()
+    {
+        return $this->completed->get();
+    }
+
+    public function getKickoff()
+    {
+        return $this->kickoff->get();
+    }
+
+    public function getSignupEnd()
+    {
+        return $this->signup_end->get();
+    }
+    
+    public function getSignupStart()
+    {
+        return $this->signup_start->get();
+    }
+    
+    public function getVisitorId()
+    {
+        return $this->visitor_id->get();
+    }
+
+    public function setCompleted($completed)
+    {
+        $this->completed->set((bool) $completed);
+    }
+
+    public function setKickoff($date)
+    {
+        $this->kickoff->set($date);
+    }
+
+    public function setSignupStart($date)
+    {
+        $this->signup_start->set($date);
+    }
+
+    public function setSignupEnd($date)
+    {
+        $this->signup_end->set($date);
+    }
+
+    public function setVisitorId($id)
+    {
+        $this->visitor_id->set($id);
     }
 
 }
