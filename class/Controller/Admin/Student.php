@@ -35,7 +35,6 @@ class Student extends Base
         if (!$request->isVar('command')) {
             throw new \Exception('Bad command');
         }
-
         switch ($request->getVar('command')) {
             case 'ban':
                 $factory->ban($request->getVar('id'), $request->getVar('reason'));
@@ -43,6 +42,18 @@ class Student extends Base
 
             case 'unban':
                 $factory->unban($request->getVar('id'));
+                break;
+            
+            case 'ineligible':
+                $factory->ineligible($request->getVar('id'), $request->getVar('reason'));
+                break;
+            
+            case 'eligible':
+                $factory->eligible($request->getVar('id'));
+                break;
+            
+            case 'delete':
+                $factory->delete($request->getVar('id'));
                 break;
             
             default:
