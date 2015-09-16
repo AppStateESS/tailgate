@@ -75,7 +75,7 @@ class Student extends \Resource
         $this->signup_date = new \Variable\DateTime(null, 'signup_date');
         $this->banned = new \Variable\Bool(false, 'banned');
         $this->banned_reason = new \Variable\TextOnly(null, 'banned_reason');
-        $this->banned_date = new \Variable\DateTime(null, 'banned_date');
+        $this->banned_date = new \Variable\DateTime(0, 'banned_date');
     }
 
     public function incrementWins()

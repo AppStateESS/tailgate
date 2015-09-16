@@ -19,14 +19,23 @@ class Game extends Base
 
         switch ($command) {
             case 'list':
-                $json = $factory->getList();
+                $json['currentGame'] = $factory->getCurrentAsArray();
+                $json['listing'] = $factory->getList();
+                break;
+            
+            case 'getCurrent':
+                $json = $factory->getCurrentAsArray();
+                break;
+            
+            case 'getAvailableSpots':
+                $json = array('available_spots'=>$factory->totalAvailableSpots());
                 break;
         }
 
         $view = new \View\JsonView($json);
         return $view;
     }
-
+    
     public function post(\Request $request)
     {
         $factory = new Factory;
@@ -43,7 +52,7 @@ class Game extends Base
             case 'changeDate':
                 $view = $this->changeDate();
                 break;
-
+            
             default:
                 throw new \Exception('Bad command:' . $request->getVar('command'));
         }
@@ -75,7 +84,6 @@ class Game extends Base
         
         $factory->save($game);
         $garray = $game->getStringVars();
-        $garray = $factory->gameTime($garray);
         $garray = $factory->addVisitorInformation($garray);
         $view = new \View\JsonView($garray);
         return $view;

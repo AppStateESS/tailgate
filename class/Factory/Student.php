@@ -12,13 +12,23 @@ class Student extends Base
 {
     protected $table = 'tg_student';
 
-    public function hasAccount($username)
+    public function getByUsername($username)
     {
         $db = \Database::getDB();
         $tbl = $db->addTable('tg_student');
         $tbl->addFieldConditional('username', $username);
         $result = $db->selectOneRow();
-        return (bool) $result;
+        if (empty($result)) {
+            return null;
+        }
+        $student = new Resource;
+        $student->setVars($result);
+        return $student;
+    }
+    
+    public function getCurrentStudent()
+    {
+        return $this->getByUsername(\Current_User::getUsername());
     }
 
     public function postNewStudent()
@@ -63,6 +73,14 @@ class Student extends Base
         $db->setLimit($limit);
         $result = $db->select();
         return $result;
+    }
+    
+    public function getById($student_id)
+    {
+        $student = new Resource;
+        $student->setId($student_id);
+        self::loadByID($student);
+        return $student;
     }
 
     public function ban($student_id, $reason)

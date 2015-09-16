@@ -51,12 +51,20 @@ var Setup = React.createClass({
         });
     },
 
+    startLottery : function() {
+        this.changeTab('lottery');
+    },
+
     render : function() {
         var pageContent;
 
         switch(this.state.currentTab) {
             case 'games':
-            pageContent = <Games />;
+            pageContent = <Games startLottery={this.startLottery}/>;
+            break;
+
+            case 'lottery':
+            pageContent = <RunLottery />;
             break;
 
             case 'visitors':
@@ -82,7 +90,7 @@ var Setup = React.createClass({
         return (
             <div>
                 <ul className="nav nav-tabs">
-                  <li role="presentation" className={this.state.currentTab === 'games' ? 'active' : ''} onClick={this.changeTab.bind(null, 'games')}><a style={{cursor:'pointer'}}>Games</a></li>
+                  <li role="presentation" className={this.state.currentTab === 'games' || this.state.currentTab === 'lottery' ? 'active' : ''} onClick={this.changeTab.bind(null, 'games')}><a style={{cursor:'pointer'}}>Games</a></li>
                   <li role="presentation" className={this.state.currentTab === 'visitors' ? 'active' : ''} onClick={this.changeTab.bind(null, 'visitors')}><a style={{cursor:'pointer'}}>Visitors</a></li>
                   <li role="presentation" className={this.state.currentTab === 'lots' ? 'active' : ''} onClick={this.changeTab.bind(null, 'lots')}><a style={{cursor:'pointer'}}>Lots</a></li>
                   <li role="presentation" className={this.state.currentTab === 'students' ? 'active' : ''} onClick={this.changeTab.bind(null, 'students')}><a style={{cursor:'pointer'}}>Students</a></li>
@@ -92,6 +100,101 @@ var Setup = React.createClass({
                 <hr />
                 {pageContent}
                 <Modal />
+            </div>
+        );
+    }
+});
+
+var RunLottery = React.createClass({
+    getInitialState: function() {
+        return {
+            currentGame : {},
+            spotsLeft : 0,
+            messageLog : ''
+        };
+    },
+
+    loadGame : function() {
+        var xhr = $.getJSON('tailgate/Admin/Game', {
+            command : 'getCurrent'
+        });
+        return xhr;
+    },
+
+    getTotalSpots : function() {
+        var xhr = $.getJSON('tailgate/Admin/Lottery', {
+            command : 'getAvailableSpots'
+        });
+        return xhr;
+    },
+
+    concatMessage : function(messageAdd)
+    {
+        var message = this.state.messageLog;
+        this.setState({
+            messageLog : message + "\n" + messageAdd
+        });
+    },
+
+    chooseWinners : function() {
+        var xhr = $.post('tailgate/Admin/Lottery', {
+            command : 'chooseWinners'
+        },function(){}, 'json');
+        return xhr;
+    },
+
+    closeLottery : function() {
+        var xhr = $.get('tailgate/Admin/Lottery', {
+            command : 'complete'
+        });
+    },
+
+
+    componentDidMount: function() {
+        var gameXHR = this.loadGame();
+
+
+        gameXHR.done(function(data) {
+            var currentGame = data;
+            this.setState({
+                currentGame : currentGame
+            });
+            if (currentGame.completed === '1') {
+                this.concatMessage('This lottery has already been run.');
+                return;
+            }
+            this.concatMessage('Starting lottery. Do not refresh or leave page.');
+            this.concatMessage('Checking number of available spots.');
+            var totalSpotsXHR = this.getTotalSpots();
+            totalSpotsXHR.done(function(data){
+                var totalSpots = data.available_spots;
+                this.concatMessage(totalSpots + ' spots are available.');
+                this.setState({
+                    spotsLeft : totalSpots,
+                });
+
+                this.concatMessage('Assigning winners.');
+                var winnersXHR = this.chooseWinners();
+                winnersXHR.done(function(data){
+                    this.concatMessage(data.spots_filled + ' spots filled.');
+                    this.concatMessage(data.spots_left + ' spots left.');
+                    this.setState({
+                        spotsLeft : data.spots_left
+                    });
+
+                    this.concatMessage('Closing lottery.');
+                    var closeXHR = this.closeLottery();
+                }.bind(this));
+
+            }.bind(this));
+        }.bind(this));
+    },
+
+    render : function() {
+        return (
+            <div>
+                <h4>Running lottery for {this.state.currentGame.university} {this.state.currentGame.mascot} - {this.state.currentGame.kickoff_format}</h4>
+                <div><pre style={{height : '200px', width : '100%'}}>{this.state.messageLog}</pre></div>
             </div>
         );
     }
@@ -866,8 +969,8 @@ var Games = React.createClass({
     getInitialState: function() {
         return {
             visitors : [],
-            games : [],
-            currentGame : null,
+            games : null,
+            currentGame : {},
             message : ''
         };
     },
@@ -876,17 +979,10 @@ var Games = React.createClass({
         $.getJSON('tailgate/Admin/Game', {
             command : 'list'
         }).done(function(data){
-            if (typeof data[0] !== 'undefined') {
-                this.setState({
-                    currentGame : data.shift(),
-                    games : data
-                });
-            } else {
-                this.setState({
-                    currentGame : null,
-                    games : data
-                });
-            }
+            this.setState({
+                currentGame : data.currentGame,
+                games : data.listing
+            });
         }.bind(this));
     },
 
@@ -894,12 +990,12 @@ var Games = React.createClass({
         this.loadVisitors();
         this.loadGames();
         if (this.isMounted()) {
-            $('#start-signup').datetimepicker({
+            $('#signup-start').datetimepicker({
                 timepicker:true,
                 format: 'n/j/Y H:i'
             });
 
-            $('#end-signup').datetimepicker({
+            $('#signup-end').datetimepicker({
                 timepicker:true,
                 format: 'n/j/Y H:i'
             });
@@ -914,8 +1010,8 @@ var Games = React.createClass({
     saveGame : function() {
         var visitor_id = $('#pick-team').val();
         var kickoff = this.getUnixTime($('#kickoff').val());
-        var startSignup = new Date($('#start-signup').val()).getTime() / 1000;
-        var endSignup = new Date($('#end-signup').val()).getTime() / 1000;
+        var startSignup = new Date($('#signup-start').val()).getTime() / 1000;
+        var endSignup = new Date($('#signup-end').val()).getTime() / 1000;
 
         if ((startSignup < endSignup)) {
             if (endSignup < kickoff) {
@@ -941,25 +1037,26 @@ var Games = React.createClass({
     },
 
     render : function() {
-        var game = null;
         var previousGames = null;
         var currentGame = null;
         var message = null;
+        var title = 'Current game';
+
         if (this.state.message.length > 0) {
             message = <div className="alert alert-danger">{this.state.message}</div>;
         }
 
-        if (this.state.games.length === 0) {
+        if (this.state.games === null) {
             previousGames = <p>No games found</p>;
         } else {
             previousGames = <GameListing games={this.state.games} />;
         }
 
-
-        if (this.state.currentGame) {
-            currentGame = <GameInfo game={this.state.currentGame}/>;
-        } else if (this.state.visitors.length > 0)  {
+        if (this.state.currentGame === null)  {
             currentGame = <GameForm visitors={this.state.visitors} save={this.saveGame} />;
+        } else if (Object.keys(this.state.currentGame).length > 0) {
+            currentGame = <GameInfo game={this.state.currentGame} startLottery={this.props.startLottery}/>;
+            title = 'Add new game';
         } else {
             currentGame = null;
         }
@@ -969,7 +1066,7 @@ var Games = React.createClass({
                 <div className="well">
                     <div className="row">
                         <div className="col-sm-12">
-                            <h3>Current game</h3>
+                            <h3>{title}</h3>
                             {message}
                         </div>
                     </div>
@@ -1002,13 +1099,13 @@ var GameInfo = React.createClass({
     updateGame : function(game) {
         if (game.signup_start >= game.signup_end ||
             game.signup_end >= game.kickoff) {
+                console.log('I cannot do that');
             return;
         }
 
         this.setState({
             game : game
         });
-
         $('#signup-start').datetimepicker({
             value : game.signup_start_ts,
             maxDate : game.signup_end_ts.substr(0, 10)
@@ -1071,23 +1168,20 @@ var GameInfo = React.createClass({
         });
     },
 
-    signupStartDate : function()
-    {
+    signupStartDate : function() {
         $('#signup-start').datetimepicker('show');
     },
 
-    signupEndDate : function()
-    {
+    signupEndDate : function() {
         $('#signup-end').datetimepicker('show');
     },
 
-    kickoffDate : function()
-    {
+    kickoffDate : function() {
         $('#kickoff').datetimepicker('show');
     },
 
-
     render : function() {
+
         return (
         <div>
             <h4>{this.props.game.university} {this.props.game.mascot}</h4>
@@ -1113,12 +1207,73 @@ var GameInfo = React.createClass({
                     </div>
                 </div>
             </div>
+            <LotteryRun game={this.state.game} startLottery={this.props.startLottery}/>
         </div>
         );
     }
 });
 
+var LotteryRun = React.createClass({
+    getInitialState: function() {
+        return {
+            start : false
+        };
+    },
+
+    confirmLottery : function() {
+        this.setState({
+            start : true
+        });
+    },
+
+    stopLottery : function() {
+        this.setState({
+            start : false
+        });
+    },
+
+    render : function() {
+        var button = null;
+        var ctime = Date.now() / 1000;
+        var currentTime = Math.floor(ctime);
+        if (this.props.game.signup_end < currentTime) {
+            if (this.state.start) {
+                button = (
+                    <div>
+                        <p>Are you sure you want to start the lottery?</p>
+                        <button style={{marginRight : '1em'}} className="btn btn-success btn-lg" onClick={this.props.startLottery}><i className="fa fa-check"></i> Confirm: Start lottery</button>
+                        <button className="btn btn-danger btn-lg" onClick={this.stopLottery}><i className="fa fa-times"></i> Cancel running lottery</button>
+                    </div>
+                );
+            } else {
+                button = <button className="btn btn-primary btn-lg" onClick={this.confirmLottery}>Start lottery</button>;
+            }
+        }
+        return (
+            <div className="text-center">{button}</div>
+        );
+    }
+});
+
 var GameForm = React.createClass({
+    componentDidMount: function() {
+        if (this.isMounted()) {
+            $('#signup-start').datetimepicker({
+                timepicker:true,
+                format: 'n/j/Y H:i'
+            });
+
+            $('#signup-end').datetimepicker({
+                timepicker:true,
+                format: 'n/j/Y H:i'
+            });
+
+            $('#kickoff').datetimepicker({
+                timepicker:false,
+                format: 'n/j/Y'
+            });
+        }
+    },
 
     render : function() {
         var date = new Date();
@@ -1141,10 +1296,10 @@ var GameForm = React.createClass({
                         </select>
                     </div>
                     <div className="col-sm-3">
-                        <TextInput inputId={'start-signup'} label="Signup start" ref="date" defaultValue={datetimeString}/>
+                        <TextInput inputId={'signup-start'} label="Signup start" ref="date" defaultValue={datetimeString}/>
                     </div>
                     <div className="col-sm-3">
-                        <TextInput inputId={'end-signup'} label="Signup deadline" ref="date" defaultValue={datetimeString}/>
+                        <TextInput inputId={'signup-end'} label="Signup deadline" ref="date" defaultValue={datetimeString}/>
                     </div>
                     <div className="col-sm-3">
                         <TextInput inputId={'kickoff'} label="Game date" ref="date" defaultValue={dateString}/>
@@ -1167,7 +1322,7 @@ var GameListing = React.createClass({
             {this.props.games.map(function(value, i){
                 return (
                     <tr key={i}>
-                        <td></td>
+                        <td>{value.university} {value.mascot} - {value.kickoff_format}</td>
                     </tr>
                 );
             }.bind(this))}

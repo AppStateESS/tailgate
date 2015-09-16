@@ -40,6 +40,8 @@ class Game extends \Resource
      */
     protected $completed;
     protected $table = 'tg_game';
+    protected $university;
+    protected $mascot;
 
     public function __construct()
     {
@@ -64,16 +66,26 @@ class Game extends \Resource
         return $this->kickoff->get();
     }
 
+    public function getMascot()
+    {
+        return $this->mascot;
+    }
+
     public function getSignupEnd()
     {
         return $this->signup_end->get();
     }
-    
+
     public function getSignupStart()
     {
         return $this->signup_start->get();
     }
-    
+
+    public function getUniversity()
+    {
+        return $this->university;
+    }
+
     public function getVisitorId()
     {
         return $this->visitor_id->get();
@@ -89,6 +101,11 @@ class Game extends \Resource
         $this->kickoff->set($date);
     }
 
+    public function setMascot($mascot)
+    {
+        $this->mascot = $mascot;
+    }
+
     public function setSignupStart($date)
     {
         $this->signup_start->set($date);
@@ -99,9 +116,21 @@ class Game extends \Resource
         $this->signup_end->set($date);
     }
 
+    public function setUniversity($university)
+    {
+        $this->university = $university;
+    }
+
     public function setVisitorId($id)
     {
         $this->visitor_id->set($id);
+    }
+    
+    public function getStringVars()
+    {
+        $game = parent::getStringVars();
+        $factory = new \tailgate\Factory\Game;
+        return $factory->gameTime($game);
     }
 
 }

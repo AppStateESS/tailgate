@@ -33,16 +33,31 @@ class Student extends Base
     protected function getJsonView($data, \Request $request)
     {
         $command = $request->getVar('command');
-        $factory = new Factory;
 
         switch ($command) {
             case 'content':
                 $json = $this->getContent();
                 break;
+
+            case 'get':
+                $json = $this->getStudent();
+                break;
         }
 
         $view = new \View\JsonView($json);
         return $view;
+    }
+
+    private function getStudent()
+    {
+        $factory = new Factory;
+        $student_id = filter_input(INPUT_GET, 'student_id', FILTER_VALIDATE_INT);
+        if ($student_id) {
+            $student = $factory->getById($student_id);
+            return $student->getStringVars();
+        } else {
+            throw new \Exception('Incorrect student ID');
+        }
     }
 
     public function post(\Request $request)
@@ -64,7 +79,7 @@ class Student extends Base
 
         return $response;
     }
-    
+
     private function getContent()
     {
         $json['welcome'] = \Settings::get('tailgate', 'welcome');
@@ -77,41 +92,37 @@ class Student extends Base
         $factory = new Factory;
 
         if (\Current_User::isLogged()) {
-            if ($factory->hasAccount(\Current_User::getUsername())) {
-                return $this->showStatus();
+            $student = $factory->getByUsername(\Current_User::getUsername());
+            if ($student) {
+                // student is logged in and has account
+                return $this->showStatus($student->getId());
             } else {
+                // student is logged in but doens't have an account
                 return $this->createAccount();
             }
         } else {
+            // student is not logged in
             return $this->newAccountInformation();
         }
     }
 
-    private function showStatus()
+    private function showStatus($student_id)
     {
-        $template = new \Template;
-        $template->setModuleTemplate('tailgate', '');
+        \tailgate\Factory\React::load('User/Status/', true, true);
+        javascript('jquery');
+        $content = <<<EOF
+<script type="text/javascript">var student_id='$student_id';</script>
+<div id="studentStatus"></div>
+EOF;
+
+        return $content;
     }
 
     private function createAccount()
     {
+        \tailgate\Factory\React::load('User/Signup/', true, true);
+
         javascript('jquery');
-        $development = true;
-
-        if ($development) {
-            $script_file = 'src/script.jsx';
-            $type = 'text/jsx';
-        } else {
-            $script_file = 'build/script.js';
-            $type = 'text/javascript';
-        }
-
-        $data['development'] = $development;
-        $data['addons'] = true;
-        javascript('react', $data);
-        $script = '<script type="' . $type . '" src="' . PHPWS_SOURCE_HTTP .
-                'mod/tailgate/javascript/User/Signup/' . $script_file . '"></script>';
-        \Layout::addJSHeader($script);
 
         $content = <<<EOF
 <h2>New account signup</h2>

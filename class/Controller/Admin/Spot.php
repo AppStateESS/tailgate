@@ -18,7 +18,7 @@ class Spot extends Base
 
         switch ($command) {
             case 'list':
-                 $json = $factory->getList();
+                $json = $factory->getList();
                 break;
         }
 
