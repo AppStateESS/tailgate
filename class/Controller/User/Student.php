@@ -51,9 +51,8 @@ class Student extends Base
     private function getStudent()
     {
         $factory = new Factory;
-        $student_id = filter_input(INPUT_GET, 'student_id', FILTER_VALIDATE_INT);
-        if ($student_id) {
-            $student = $factory->getById($student_id);
+        $student = $factory->getCurrentStudent();
+        if ($student) {
             return $student->getStringVars();
         } else {
             throw new \Exception('Incorrect student ID');
