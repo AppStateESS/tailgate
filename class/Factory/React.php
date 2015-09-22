@@ -23,9 +23,7 @@ class React
         $data['addons'] = $addons;
         javascript('react', $data);
         $root_directory = PHPWS_SOURCE_HTTP . 'mod/tailgate/javascript/';
-        $script_header = <<<EOF
-    <script type="$type" src="$root_directory$directory$script_file"></script>';
-EOF;
+        $script_header = "<script type='$type' src='$root_directory$directory$script_file'></script>";
         \Layout::addJSHeader($script_header);
     }
 
