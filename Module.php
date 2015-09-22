@@ -40,6 +40,7 @@ class Module extends \Module implements \SettingDefaults
     public function getSettingDefaults()
     {
         $settings['new_account_information'] = '<p>Fill out a description of the Tailgate process in administration.</p>';
+        $settings['reply_to'] = null;
         return $settings;
     }
 
