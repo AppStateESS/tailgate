@@ -107,6 +107,15 @@ class Game extends Base
         $db = \Database::getDB();
         $tbl = $db->addTable('tg_game');
         $tbl->addFieldConditional('id', (int)$game_id);
+        $tbl->addValue('lottery_run', 1);
+        $db->update();
+    }
+
+    public function completeGame($game_id)
+    {
+        $db = \Database::getDB();
+        $tbl = $db->addTable('tg_game');
+        $tbl->addFieldConditional('id', (int)$game_id);
         $tbl->addValue('completed', 1);
         $db->update();
     }
