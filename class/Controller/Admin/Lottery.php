@@ -16,17 +16,12 @@ class Lottery extends Base
     {
         $command = $request->getVar('command');
         $factory = new Factory;
-        $json = array('success'=>true);
+        $json = array('success' => true);
 
         switch ($command) {
             case 'getAvailableSpots':
                 $json = array('available_spots' => $factory->totalAvailableSpots());
                 break;
-            
-            case 'complete':
-                $factory->complete();
-                break;
-                
         }
 
         $view = new \View\JsonView($json);
@@ -35,6 +30,7 @@ class Lottery extends Base
 
     public function post(\Request $request)
     {
+        $factory = new Factory;
         $view = new \View\JsonView(array('success' => true));
 
         if (!$request->isVar('command')) {
@@ -43,6 +39,14 @@ class Lottery extends Base
         switch ($request->getVar('command')) {
             case 'chooseWinners':
                 $view = $this->chooseWinners();
+                break;
+            
+            case 'complete':
+                $factory->completeGame();
+                break;
+            
+            case 'notify':
+                $factory->notify();
                 break;
 
             default:
@@ -61,5 +65,4 @@ class Lottery extends Base
         $view = new \View\JsonView($data);
         return $view;
     }
-
 }
