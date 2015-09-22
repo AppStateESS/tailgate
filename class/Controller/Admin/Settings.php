@@ -2,13 +2,13 @@
 
 namespace tailgate\Controller\Admin;
 
-use tailgate\Factory\Content as Factory;
+use tailgate\Factory\Settings as Factory;
 
 /**
  * @license http://opensource.org/licenses/lgpl-3.0.html
  * @author Matthew McNaney <mcnaney at gmail dot com>
  */
-class Content extends Base
+class Settings extends Base
 {
 
     protected function getJsonView($data, \Request $request)
@@ -19,6 +19,10 @@ class Content extends Base
         switch ($command) {
             case 'list':
                 $json = $factory->getList();
+                break;
+            
+            case 'testEmail':
+                $json = array('success'=> filter_input(INPUT_GET, 'replyTo', FILTER_VALIDATE_EMAIL));
                 break;
         }
         $view = new \View\JsonView($json);
@@ -36,10 +40,10 @@ class Content extends Base
         }
         switch ($request->getVar('command')) {
             case 'save':
-                $factory->postContent();
+                $factory->postSettings();
                 break;
         }
-        \PHPWS_Core::goBack('tailgate/Admin/Content?command=list');
+        \PHPWS_Core::reroute('tailgate/Admin/');
     }
     
     
