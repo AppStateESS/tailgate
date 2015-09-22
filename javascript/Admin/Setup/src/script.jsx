@@ -83,8 +83,8 @@ var Setup = React.createClass({
             pageContent = <Reports/>;
             break;
 
-            case 'content':
-            pageContent = <Content/>;
+            case 'settings':
+            pageContent = <Settings replyTo={this.state.replyTo} newStudent={this.state.newStudent}/>;
             break;
         }
         return (
@@ -95,7 +95,7 @@ var Setup = React.createClass({
                   <li role="presentation" className={this.state.currentTab === 'lots' ? 'active' : ''} onClick={this.changeTab.bind(null, 'lots')}><a style={{cursor:'pointer'}}>Lots</a></li>
                   <li role="presentation" className={this.state.currentTab === 'students' ? 'active' : ''} onClick={this.changeTab.bind(null, 'students')}><a style={{cursor:'pointer'}}>Students</a></li>
                   <li role="presentation" className={this.state.currentTab === 'reports' ? 'active' : ''} onClick={this.changeTab.bind(null, 'reports')}><a style={{cursor:'pointer'}}>Reports</a></li>
-                  <li role="presentation" className={this.state.currentTab === 'content' ? 'active' : ''} onClick={this.changeTab.bind(null, 'content')}><a style={{cursor:'pointer'}}>Content</a></li>
+                  <li role="presentation" className={this.state.currentTab === 'settings' ? 'active' : ''} onClick={this.changeTab.bind(null, 'settings')}><a style={{cursor:'pointer'}}>Settings</a></li>
                 </ul>
                 <hr />
                 {pageContent}
@@ -105,6 +105,9 @@ var Setup = React.createClass({
     }
 });
 
+/**
+ * Switching the tab to this lottery starts it up.
+ */
 var RunLottery = React.createClass({
     getInitialState: function() {
         return {
@@ -147,8 +150,15 @@ var RunLottery = React.createClass({
         var xhr = $.get('tailgate/Admin/Lottery', {
             command : 'complete'
         });
+        return xhr;
     },
 
+    notifyWinners : function() {
+        var xhr = $.post('tailgate/Admin/Lottery', {
+            command : 'notify'
+        }, null, 'json');
+        return xhr;
+    },
 
     componentDidMount: function() {
         var gameXHR = this.loadGame();
@@ -159,7 +169,7 @@ var RunLottery = React.createClass({
             this.setState({
                 currentGame : currentGame
             });
-            if (currentGame.completed === '1') {
+            if (currentGame.lottery_run === '1') {
                 this.concatMessage('This lottery has already been run.');
                 return;
             }
@@ -182,8 +192,13 @@ var RunLottery = React.createClass({
                         spotsLeft : data.spots_left
                     });
 
-                    this.concatMessage('Closing lottery.');
-                    var closeXHR = this.closeLottery();
+                    this.concatMessage('Notifying winners and losers.');
+                    var notifyXHR = this.notifyWinners();
+                    notifyXHR.done(function(data){
+                        this.concatMessage('Finished. Closing lottery.');
+                        var closeXHR = this.closeLottery();
+                    });
+
                 }.bind(this));
 
             }.bind(this));
@@ -613,19 +628,21 @@ NoIcon = React.createClass({
 
 
 
-var Content = React.createClass({
+var Settings = React.createClass({
     getInitialState: function() {
         return {
             newAccountInformation : '',
+            replyTo : ''
         };
     },
 
     componentDidMount : function() {
-        $.getJSON('tailgate/Admin/Content', {
+        $.getJSON('tailgate/Admin/Settings', {
             command : 'list'
         }).done(function(data){
             this.setState({
-                newAccountInformation : data.new_account_information
+                newAccountInformation : data.new_account_information,
+                replyTo : data.reply_to
             });
         }.bind(this));
     },
@@ -633,16 +650,34 @@ var Content = React.createClass({
     componentDidUpdate : function(props, state) {
         this.newAccountEditor = CKEDITOR.replace('newAccountInformation');
         this.newAccountEditor.setData(this.state.newAccountInformation);
+        $('#replyTo').val(this.state.replyTo);
+    },
+
+    submitForm : function(e) {
+        var replyTo = $('#replyTo').val();
+        var goodEmail = false;
+        e.preventDefault();
+        $.getJSON('tailgate/Admin/Settings', {
+            command : 'testEmail',
+            replyTo : replyTo
+        }).done(function(data){
+            if (data.success === false) {
+                $('#replyTo').css('borderColor', 'red');
+            } else {
+                $('#settingsForm').submit();
+            }
+        });
     },
 
     render : function() {
         return (
             <div>
-                <form method="post" action="tailgate/Admin/Content/">
+                <form method="post" action="tailgate/Admin/Settings/" id="settingsForm">
                     <input type="hidden" name="command" value="save"/>
+                    <TextInput required={true} inputId={'replyTo'} label={'Reply to email address'} placeholder={'Enter an email address students can reply to'}/>
                     <label>Tailgate new student account information</label>
                     <textarea id="newAccountInformation" className="form-control" name="newAccountInformation" defaultValue={this.state.newAccountInformation} />
-                    <div style={{marginTop : '1em'}}><button className="btn btn-success"><i className="fa fa-save"></i> Save content</button></div>
+                    <div style={{marginTop : '1em'}}><button className="btn btn-success" onClick={this.submitForm}><i className="fa fa-save"></i> Save content</button></div>
                 </form>
             </div>
         );
@@ -1052,11 +1087,15 @@ var Games = React.createClass({
             previousGames = <GameListing games={this.state.games} />;
         }
 
-        if (this.state.currentGame === null)  {
-            currentGame = <GameForm visitors={this.state.visitors} save={this.saveGame} />;
-        } else if (Object.keys(this.state.currentGame).length > 0) {
-            currentGame = <GameInfo game={this.state.currentGame} startLottery={this.props.startLottery}/>;
+        if (this.state.currentGame === null) {
             title = 'Add new game';
+            if(this.state.visitors.length === 0) {
+                currentGame = <div><p>Create some visitors first.</p></div>;
+            } else {
+                currentGame = <GameForm visitors={this.state.visitors} save={this.saveGame} />;
+            }
+        } else if (Object.keys(this.state.currentGame).length > 0) {
+            currentGame = <GameInfo game={this.state.currentGame} startLottery={this.props.startLottery} loadCurrentGame={this.loadGames}/>;
         } else {
             currentGame = null;
         }
@@ -1092,7 +1131,9 @@ var GameInfo = React.createClass({
     },
 
     componentDidMount : function() {
-        this.initializeDateTime(this.props.game);
+        if (this.props.game.lottery_run == '0') {
+            this.initializeDateTime(this.props.game);
+        }
         this.updateGame(this.props.game);
     },
 
@@ -1106,21 +1147,23 @@ var GameInfo = React.createClass({
         this.setState({
             game : game
         });
-        $('#signup-start').datetimepicker({
-            value : game.signup_start_ts,
-            maxDate : game.signup_end_ts.substr(0, 10)
-        });
+        if (game.lottery_run == '0') {
+            $('#signup-start').datetimepicker({
+                value : game.signup_start_ts,
+                maxDate : game.signup_end_ts.substr(0, 10)
+            });
 
-        $('#signup-end').datetimepicker({
-            value : game.signup_end_ts,
-            minDate : game.signup_start_ts.substr(0, 10),
-            maxDate : game.kickoff_ts
-        });
+            $('#signup-end').datetimepicker({
+                value : game.signup_end_ts,
+                minDate : game.signup_start_ts.substr(0, 10),
+                maxDate : game.kickoff_ts
+            });
 
-        $('#kickoff').datetimepicker({
-            value : game.kickoff_ts,
-            minDate : game.signup_end_ts.substr(0, 10)
-        });
+            $('#kickoff').datetimepicker({
+                value : game.kickoff_ts,
+                minDate : game.signup_end_ts.substr(0, 10)
+            });
+        }
     },
 
     initializeDateTime : function(game)
@@ -1168,6 +1211,14 @@ var GameInfo = React.createClass({
         });
     },
 
+    completeLottery : function() {
+        $.post('tailgate/Admin/Lottery', {
+            command : 'complete',
+            game_id : this.props.game.id
+        });
+        this.props.loadCurrentGame();
+    },
+
     signupStartDate : function() {
         $('#signup-start').datetimepicker('show');
     },
@@ -1181,33 +1232,38 @@ var GameInfo = React.createClass({
     },
 
     render : function() {
-
+        var button = null;
+        if (this.props.game.lottery_run == '0') {
+            button = <LotteryRun game={this.state.game} startLottery={this.props.startLottery}/>;
+        } else if (this.props.game.kickoff < Math.floor(Date.now() / 1000)) {
+            button = <button className="btn btn-primary" onClick={this.completeLottery}>Complete lottery</button>;
+        }
         return (
         <div>
             <h4>{this.props.game.university} {this.props.game.mascot}</h4>
             <div className="row">
                 <div className="col-sm-4">
                     <div className="alert alert-success">
-                        <button className="pull-right btn btn-sm btn-primary" id="signup-start" onClick={this.signupStartDate}>Edit</button>
+                        {this.props.game.lottery_run == '0' ? <button className="pull-right btn btn-sm btn-primary" id="signup-start" onClick={this.signupStartDate}>Edit</button> : null}
                         <big><strong>Signup start</strong></big><br />
                         {this.state.game.signup_start_format}
                     </div>
                 </div>
                 <div className="col-sm-4">
                     <div className="alert alert-success">
-                        <button className="pull-right btn btn-sm btn-primary" id="signup-end" onClick={this.signupEndDate}>Edit</button>
+                        {this.props.game.lottery_run == '0' ? <button className="pull-right btn btn-sm btn-primary" id="signup-end" onClick={this.signupEndDate}>Edit</button> : null}
                         <big><strong>Signup end</strong></big><br />
                         {this.state.game.signup_end_format}
                     </div>
                 </div>
                 <div className="col-sm-4">
                     <div className="alert alert-success">
-                        <button className="pull-right btn btn-sm btn-primary" id="kickoff" onClick={this.kickoffDate}>Edit</button>
+                        {this.props.game.lottery_run == '0' ? <button className="pull-right btn btn-sm btn-primary" id="kickoff" onClick={this.kickoffDate}>Edit</button> : null}
                         <big><strong>Kickoff:</strong></big><br />{this.state.game.kickoff_format}
                     </div>
                 </div>
             </div>
-            <LotteryRun game={this.state.game} startLottery={this.props.startLottery}/>
+            {button}
         </div>
         );
     }
@@ -1319,13 +1375,15 @@ var GameListing = React.createClass({
     render : function() {
         return (
             <table className="table table-striped sans">
-            {this.props.games.map(function(value, i){
-                return (
-                    <tr key={i}>
-                        <td>{value.university} {value.mascot} - {value.kickoff_format}</td>
-                    </tr>
-                );
-            }.bind(this))}
+                <tbody>
+                {this.props.games.map(function(value, i){
+                    return (
+                        <tr key={i}>
+                            <td>{value.university} {value.mascot} - {value.kickoff_format}</td>
+                        </tr>
+                    );
+                }.bind(this))}
+                </tbody>
             </table>
         );
     }
@@ -1357,7 +1415,6 @@ var TextInput = React.createClass({
             defaultValue : null
         };
     },
-
 
     handleBlur : function(e) {
         if (this.props.required && e.target.value.length < 1) {
