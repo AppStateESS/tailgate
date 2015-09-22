@@ -39,6 +39,12 @@ class Game extends \Resource
      * @var \Variable\Bool
      */
     protected $completed;
+    /**
+     * If true, the lottey is complete
+     * @var \Variable\Bool
+     */
+    protected $lottery_run;
+    
     protected $table = 'tg_game';
     protected $university;
     protected $mascot;
@@ -53,6 +59,7 @@ class Game extends \Resource
         $this->signup_start->setFormat('%s');
         $this->signup_end = new \Variable\DateTime(null, 'signup_end');
         $this->signup_end->setFormat('%s');
+        $this->lottery_run = new \Variable\Bool(null, 'lottery_run');
         $this->completed = new \Variable\Bool(null, 'completed');
     }
 
@@ -66,6 +73,11 @@ class Game extends \Resource
         return $this->kickoff->get();
     }
 
+    public function getLotteryRun()
+    {
+        return $this->lottery_run->get();
+    }
+    
     public function getMascot()
     {
         return $this->mascot;
@@ -101,6 +113,11 @@ class Game extends \Resource
         $this->kickoff->set($date);
     }
 
+    public function setLotteryRun($run)
+    {
+        $this->lottery_run->set($run);
+    }
+    
     public function setMascot($mascot)
     {
         $this->mascot = $mascot;
