@@ -20,10 +20,10 @@ class Student extends Base
             $command = $request->getVar('command');
         }
 
-
         switch ($command) {
             case 'landing':
                 $content = $this->landing();
+                break;
         }
 
         $view = new \View\HtmlView($content);
