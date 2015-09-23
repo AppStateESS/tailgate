@@ -91,6 +91,15 @@ class Game extends Base
         $game->setVars($row);
         return $game;
     }
+    
+    public static function getCurrentId()
+    {
+        $db = \Database::getDB();
+        $tbl->addFieldConditional('completed', 0);
+        $tbl->addField('id');
+        $row = $db->fetchColumn();
+        return $row;
+    }
 
     public function getCurrentAsArray()
     {
@@ -101,12 +110,12 @@ class Game extends Base
         $vars = $game->getStringVars();
         return $vars;
     }
-    
+
     public function completeLottery($game_id)
     {
         $db = \Database::getDB();
         $tbl = $db->addTable('tg_game');
-        $tbl->addFieldConditional('id', (int)$game_id);
+        $tbl->addFieldConditional('id', (int) $game_id);
         $tbl->addValue('lottery_run', 1);
         $db->update();
     }
@@ -115,9 +124,17 @@ class Game extends Base
     {
         $db = \Database::getDB();
         $tbl = $db->addTable('tg_game');
-        $tbl->addFieldConditional('id', (int)$game_id);
+        $tbl->addFieldConditional('id', (int) $game_id);
         $tbl->addValue('completed', 1);
         $db->update();
+    }
+
+    public static function getById($id)
+    {
+        $resource = new Resource;
+        $resource->setid($id);
+        self::loadById($resource);
+        return $resource;
     }
 
 }
