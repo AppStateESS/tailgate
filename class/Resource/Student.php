@@ -57,6 +57,9 @@ class Student extends \Resource
      * @var \Variable\DateTime
      */
     protected $signup_date;
+    
+    protected $email;
+    
     protected $table = 'tg_student';
 
     public function __construct()
@@ -106,6 +109,11 @@ class Student extends \Resource
     public function getEligible()
     {
         return $this->eligible->get();
+    }
+    
+    public function getEmail()
+    {
+        return $this->email;
     }
 
     public function getFirstName()
