@@ -12,6 +12,18 @@ use tailgate\Resource\Lottery as Resource;
 class Lottery extends Base
 {
 
+    public function getHtmlView($data, \Request $request)
+    {
+        $command = $request->getVar('command');
+        switch ($command) {
+            case 'confirm':
+                $content = $this->confirmWinner();
+                break;
+        }
+        $view = new \View\HtmlView($content);
+        return $view;
+    }
+
     protected function getJsonView($data, \Request $request)
     {
         $command = $request->getVar('command');
@@ -25,7 +37,7 @@ class Lottery extends Base
             case 'getAvailableLots':
                 $json = $factory->getAvailableLots();
                 break;
-            
+
             case 'getSpotInfo':
                 $lottery_id = filter_input(INPUT_GET, 'lotteryId', FILTER_SANITIZE_NUMBER_INT);
                 $json = $factory->getSpotByLotteryId($lottery_id);
@@ -90,6 +102,24 @@ class Lottery extends Base
         $number = $lotteryFactory->pickLot($lottery_id, $lot_id);
         $view = new \View\JsonView(array('number' => $number));
         return $view;
+    }
+
+    private function confirmWinner()
+    {
+        $hash = filter_input(INPUT_GET, 'hash', FILTER_SANITIZE_STRING);
+        $template = new \Template;
+        $template->setModuleTemplate('tailgate', 'User/confirmation.html');
+
+        $factory = new Factory;
+
+        $factory->isWinner(\tailgate\Factory\Game::getCurrentId());
+
+        $factory->confirm($hash);
+
+
+        $template->add('login', \Server::getSiteUrl() . 'admin/');
+        $content = $template->get();
+        return $content;
     }
 
 }
