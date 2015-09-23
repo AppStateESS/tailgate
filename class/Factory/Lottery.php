@@ -3,6 +3,7 @@
 namespace tailgate\Factory;
 
 use tailgate\Resource\Lottery as Resource;
+use tailgate\Factory\Student as StudentFactory;
 
 /**
  * @license http://opensource.org/licenses/lgpl-3.0.html
@@ -13,7 +14,7 @@ class Lottery extends Base
 
     public function getByStudentId($student_id, $game_id = null)
     {
-        $factory = new \tailgate\Factory\Game;
+        $factory = new Game;
         if (empty($game_id)) {
             $game = $factory->getCurrent();
             $game_id = $game->getId();
@@ -43,7 +44,7 @@ class Lottery extends Base
         $now = time();
         $game = new \tailgate\Resource\Game;
         $game->setId($game_id);
-        $gameFactory = new \tailgate\Factory\Game;
+        $gameFactory = new Game;
         if (!$gameFactory->loadByID($game)) {
             throw new \Exception('Game does not exist.');
         }
@@ -155,7 +156,7 @@ class Lottery extends Base
     public function getAvailableSpots($game_id = 0, $lot_id = 0)
     {
         if (empty($game_id)) {
-            $factory = new \tailgate\Factory\Game;
+            $factory = new Game;
             $game = $factory->getCurrent();
             $game_id = $game->getId();
         }
@@ -193,7 +194,7 @@ class Lottery extends Base
     public function getAvailableLots($game_id = 0)
     {
         if (empty($game_id)) {
-            $factory = new \tailgate\Factory\Game;
+            $factory = new Game;
             $game = $factory->getCurrent();
             $game_id = $game->getId();
         }
@@ -262,7 +263,34 @@ class Lottery extends Base
         return $db->selectOneRow();
     }
 
-    public function notify()
+    public function notify($game_id = 0)
+    {
+
+        if (empty($game_id)) {
+            $factory = new Game;
+            $game = $factory->getCurrent();
+            $game_id = $game->getId();
+        }
+
+        $db = \Database::getDB();
+        $tbl = $db->addTable('tg_lottery');
+        $tbl->addFieldConditional('game_id', $game_id);
+        $result = $db->select();
+
+        if (empty($result)) {
+            throw new \Exception('No lottery entries for this game');
+        }
+
+        foreach ($result as $row) {
+            if ($row['winner'] == '1') {
+                $this->sendWinnerEmail($row);
+            } else {
+                $this->sendLoserEmail($row);
+            }
+        }
+    }
+
+    private function getSwiftTransport()
     {
         require_once PHPWS_SOURCE_DIR . 'lib/vendor/autoload.php';
         switch (SWIFT_MAIL_TRANSPORT_TYPE) {
@@ -279,17 +307,56 @@ class Lottery extends Base
             default:
                 throw new \Exception('Wrong Swift Mail transport type');
         }
+        return $transport;
+    }
 
-        $subject = 'Congratulations! You won a tailgating spot.';
-        
+    private function sendWinnerEmail($lottery)
+    {
+        $transport = $this->getSwiftTransport();
+
+        $game = Game::getById($lottery['game_id']);
+        $student = StudentFactory::getById($lottery['student_id']);
+
+        $variables = $game->getStringVars();
+//        var_dump($variables);exit;
+        $variables['confirmation_link'] = \Server::getSiteUrl() . 'tailgate/User/Lottery/?command=confirm&amp;hash=' .
+                $lottery['confirmation'];
+
+        $tpl = new \Template();
+        $tpl->setModuleTemplate('tailgate', 'Admin/Lottery/Winner.html');
+        $tpl->addVariables($variables);
+        var_dump($variables);
+        $content = $tpl->get();
+        echo $content;
+        exit;
+
         $message = \Swift_Message::newInstance();
-        $message->setSubject($subject);
-        $message->setFrom(\PHPWS_Settings::get('tailgate', 'from_address'));
-        $message->setTo($to);
+        $message->setSubject('Tailgate successful');
+        $message->setFrom(\Settings::get('tailgate', 'reply_to'));
+        $message->setTo($student->getEmail());
         $message->setBody($content, 'text/html');
 
         $mailer = \Swift_Mailer::newInstance($transport);
         $mailer->send($message);
     }
+
+    private function sendLoserEmail($lottery)
+    {
+        $this->getSwiftTransport();
+    }
+    
+    public function confirm($hash)
+    {
+        $gfactory = new Game;
+        $game = $gfactory->getCurrent();
+        $db = \Database::getDB();
+        $t = $db->addTable('tg_lottery');
+        $t->addFieldConditional('game_id', $game->getId());
+        $t->addFieldConditional('confirmation', $hash);
+        $t->addValue('confirmed', 1);
+        $db->update();
+    }
+    
+    public function isWinner($game_id, )
 
 }
