@@ -145,9 +145,10 @@ class Game extends \Resource
     
     public function getStringVars()
     {
-        $game = parent::getStringVars();
+        $vars = parent::getStringVars();
         $factory = new \tailgate\Factory\Game;
-        return $factory->gameTime($game);
+        $vars = $factory->addVisitorInformation($vars);
+        return $factory->gameTime($vars);
     }
 
 }
