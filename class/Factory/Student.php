@@ -25,7 +25,7 @@ class Student extends Base
         $student->setVars($result);
         return $student;
     }
-    
+
     public function getCurrentStudent()
     {
         return $this->getByUsername(\Current_User::getUsername());
@@ -74,13 +74,21 @@ class Student extends Base
         $result = $db->select();
         return $result;
     }
-    
-    public function getById($student_id)
+
+    public static function getById($student_id)
     {
-        $student = new Resource;
-        $student->setId($student_id);
-        self::loadByID($student);
-        return $student;
+        $db = \Database::getDB();
+        $student = $db->addTable('tg_student');
+        $users = $db->addTable('users');
+        $users->addField('email');
+        
+        $conditional = $db->createConditional($student->getField('username'), $users->getField('username'));
+        $db->joinResources($student, $users, $conditional);
+        
+        $row = $db->selectOneRow();
+        $stdObj = new Resource;
+        $stdObj->setVars($row);
+        return $stdObj;
     }
 
     public function ban($student_id, $reason)
@@ -123,13 +131,12 @@ class Student extends Base
         $student->setIneligibleReason('');
         self::saveResource($student);
     }
-    
+
     public function delete($student_id)
     {
         $student = new Resource;
         $student->setId($student_id);
         self::deleteResource($student);
     }
-            
 
 }
