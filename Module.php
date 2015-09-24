@@ -37,6 +37,14 @@ class Module extends \Module implements \SettingDefaults
         }
     }
 
+    public function runTime(\Request $request)
+    {
+        if (\PHPWS_Core::atHome()) {
+            require_once PHPWS_SOURCE_DIR . 'mod/tailgate/conf/defines.php';
+            \tailgate\Controller\User\Game::userStatusSidebar();
+        }
+    }
+    
     public function getSettingDefaults()
     {
         $settings['new_account_information'] = '<p>Fill out a description of the Tailgate process in administration.</p>';
