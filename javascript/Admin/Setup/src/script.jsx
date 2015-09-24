@@ -41,8 +41,24 @@ var Setup = React.createClass({
 
     getInitialState: function() {
         return {
-            currentTab : 'games'
+            currentTab : 'games',
+            currentGame : {}
         };
+    },
+
+    componentDidMount: function() {
+        this.loadGame();
+    },
+
+    loadGame : function() {
+        var xhr = $.getJSON('tailgate/Admin/Game', {
+            command : 'getCurrent'
+        });
+        xhr.done(function(data){
+            this.setState({
+                currentGame : data
+            });
+        }.bind(this));
     },
 
     changeTab : function(e) {
@@ -64,7 +80,7 @@ var Setup = React.createClass({
             break;
 
             case 'lottery':
-            pageContent = <RunLottery />;
+            pageContent = <RunLottery currentGame={this.state.currentGame} loadGame={this.loadGame}/>;
             break;
 
             case 'visitors':
@@ -111,18 +127,11 @@ var Setup = React.createClass({
 var RunLottery = React.createClass({
     getInitialState: function() {
         return {
-            currentGame : {},
             spotsLeft : 0,
             messageLog : ''
         };
     },
 
-    loadGame : function() {
-        var xhr = $.getJSON('tailgate/Admin/Game', {
-            command : 'getCurrent'
-        });
-        return xhr;
-    },
 
     getTotalSpots : function() {
         var xhr = $.getJSON('tailgate/Admin/Lottery', {
@@ -147,8 +156,8 @@ var RunLottery = React.createClass({
     },
 
     closeLottery : function() {
-        var xhr = $.get('tailgate/Admin/Lottery', {
-            command : 'complete'
+        var xhr = $.post('tailgate/Admin/Lottery', {
+            command : 'completeLottery'
         });
         return xhr;
     },
@@ -161,46 +170,40 @@ var RunLottery = React.createClass({
     },
 
     componentDidMount: function() {
-        var gameXHR = this.loadGame();
+        var currentGame = this.props.currentGame;
 
-
-        gameXHR.done(function(data) {
-            var currentGame = data;
+        if (currentGame.lottery_run === '1') {
+            this.concatMessage('This lottery has already been run.');
+            return;
+        }
+        this.concatMessage('Starting lottery. Do not refresh or leave page.');
+        this.concatMessage('Checking number of available spots.');
+        var totalSpotsXHR = this.getTotalSpots();
+        totalSpotsXHR.done(function(data){
+            var totalSpots = data.available_spots;
+            this.concatMessage(totalSpots + ' spots are available.');
             this.setState({
-                currentGame : currentGame
+                spotsLeft : totalSpots,
             });
-            if (currentGame.lottery_run === '1') {
-                this.concatMessage('This lottery has already been run.');
-                return;
-            }
-            this.concatMessage('Starting lottery. Do not refresh or leave page.');
-            this.concatMessage('Checking number of available spots.');
-            var totalSpotsXHR = this.getTotalSpots();
-            totalSpotsXHR.done(function(data){
-                var totalSpots = data.available_spots;
-                this.concatMessage(totalSpots + ' spots are available.');
+
+            this.concatMessage('Assigning winners.');
+            var winnersXHR = this.chooseWinners();
+            winnersXHR.done(function(data){
+                this.concatMessage(data.spots_filled + ' spots filled.');
+                this.concatMessage(data.spots_left + ' spots left.');
                 this.setState({
-                    spotsLeft : totalSpots,
+                    spotsLeft : data.spots_left
                 });
 
-                this.concatMessage('Assigning winners.');
-                var winnersXHR = this.chooseWinners();
-                winnersXHR.done(function(data){
-                    this.concatMessage(data.spots_filled + ' spots filled.');
-                    this.concatMessage(data.spots_left + ' spots left.');
-                    this.setState({
-                        spotsLeft : data.spots_left
-                    });
-
-                    this.concatMessage('Notifying winners and losers.');
-                    var notifyXHR = this.notifyWinners();
-                    notifyXHR.done(function(data){
-                        this.concatMessage('Finished. Closing lottery.');
-                        var closeXHR = this.closeLottery();
-                    });
-
+                this.concatMessage('Notifying winners and losers.');
+                var notifyXHR = this.notifyWinners();
+                notifyXHR.done(function(data){
+                    this.concatMessage('Finished. Closing lottery.');
+                    var closeXHR = this.closeLottery();
+                    closeXHR.done(function(data){
+                        this.props.loadGame();
+                    }.bind(this));
                 }.bind(this));
-
             }.bind(this));
         }.bind(this));
     },
@@ -208,8 +211,8 @@ var RunLottery = React.createClass({
     render : function() {
         return (
             <div>
-                <h4>Running lottery for {this.state.currentGame.university} {this.state.currentGame.mascot} - {this.state.currentGame.kickoff_format}</h4>
-                <div><pre style={{height : '200px', width : '100%'}}>{this.state.messageLog}</pre></div>
+                <h4>Running lottery for {this.props.currentGame.university} {this.props.currentGame.mascot} - {this.props.currentGame.kickoff_format}</h4>
+                <div><pre style={{height : '300px', width : '100%'}}>{this.state.messageLog}</pre></div>
             </div>
         );
     }
@@ -1211,9 +1214,9 @@ var GameInfo = React.createClass({
         });
     },
 
-    completeLottery : function() {
+    completeGame : function() {
         $.post('tailgate/Admin/Lottery', {
-            command : 'complete',
+            command : 'completeGame',
             game_id : this.props.game.id
         });
         this.props.loadCurrentGame();
@@ -1236,7 +1239,7 @@ var GameInfo = React.createClass({
         if (this.props.game.lottery_run == '0') {
             button = <LotteryRun game={this.state.game} startLottery={this.props.startLottery}/>;
         } else if (this.props.game.kickoff < Math.floor(Date.now() / 1000)) {
-            button = <button className="btn btn-primary" onClick={this.completeLottery}>Complete lottery</button>;
+            button = <button className="btn btn-primary" onClick={this.completeGame}>Complete lottery</button>;
         }
         return (
         <div>
