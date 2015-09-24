@@ -50,8 +50,7 @@ class Student extends Base
 
     private function getStudent()
     {
-        $factory = new Factory;
-        $student = $factory->getCurrentStudent();
+        $student = Factory::getCurrentStudent();
         if ($student) {
             return $student->getStringVars();
         } else {
@@ -71,7 +70,7 @@ class Student extends Base
 
         switch ($request->getVar('command')) {
             case 'createNewAccount':
-                $factory->postNewStudent();
+                $factory->postNewStudent(\Current_User::getId());
                 \PHPWS_Core::reroute('tailgate/');
                 break;
         }
@@ -91,7 +90,7 @@ class Student extends Base
         $factory = new Factory;
 
         if (\Current_User::isLogged()) {
-            $student = $factory->getByUsername(\Current_User::getUsername());
+            $student = $factory->getById(\Current_User::getId());
             if ($student) {
                 // student is logged in and has account
                 return $this->showStatus($student->getId());
