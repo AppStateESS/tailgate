@@ -38,4 +38,17 @@ class Game extends Base
         }
     }
 
+    public static function userStatusSidebar()
+    {
+        $vars['current_game'] = Factory::getGameStatus();
+        $vars['student_status'] = \tailgate\Factory\Lottery::getStudentStatus();
+
+        $template = new \Template;
+        $template->addVariables($vars);
+        $template->setModuleTemplate('tailgate', 'User/sidebar.html');
+        $content = $template->get();
+
+        \Layout::add($content, 'tailgate', 'user_info');
+    }
+
 }
