@@ -265,7 +265,6 @@ class Lottery extends Base
 
     public function notify($game_id = 0)
     {
-
         if (empty($game_id)) {
             $factory = new Game;
             $game = $factory->getCurrent();
@@ -318,17 +317,13 @@ class Lottery extends Base
         $student = StudentFactory::getById($lottery['student_id']);
 
         $variables = $game->getStringVars();
-//        var_dump($variables);exit;
         $variables['confirmation_link'] = \Server::getSiteUrl() . 'tailgate/User/Lottery/?command=confirm&amp;hash=' .
                 $lottery['confirmation'];
 
         $tpl = new \Template();
         $tpl->setModuleTemplate('tailgate', 'Admin/Lottery/Winner.html');
         $tpl->addVariables($variables);
-        var_dump($variables);
         $content = $tpl->get();
-        echo $content;
-        exit;
 
         $message = \Swift_Message::newInstance();
         $message->setSubject('Tailgate successful');
@@ -344,7 +339,7 @@ class Lottery extends Base
     {
         $this->getSwiftTransport();
     }
-    
+
     public function confirm($hash)
     {
         $gfactory = new Game;
@@ -356,7 +351,26 @@ class Lottery extends Base
         $t->addValue('confirmed', 1);
         $db->update();
     }
-    
-    public function isWinner($game_id, )
+
+    public function isWinner($game_id, $student_id)
+    {
+        $db = \Database::getDB();
+        $tbl = $db->addTable('tg_lottery');
+        $tbl->addFieldConditional('game_id', $game_id);
+        $tbl->addFieldConditional('student_id', $student_id);
+        $tbl->addFieldConditional('winner', 1);
+        $row = $db->selectOneRow();
+        return (bool) $row;
+    }
+
+    public static function getStudentStatus()
+    {
+        if (\Current_User::isLogged()) {
+            $content = '<a class="btn btn-primary btn-sm" href="./tailgate">Check lottery status</a>';
+        } else {
+            $content = '<a class="btn btn-primary btn-sm" href="./admin">Login</a>';
+        }
+        return $content;
+    }
 
 }
