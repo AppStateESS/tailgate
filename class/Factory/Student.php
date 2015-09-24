@@ -12,36 +12,18 @@ class Student extends Base
 {
     protected $table = 'tg_student';
 
-    public function getByUsername($username)
+    public static function getCurrentStudent()
     {
-        $db = \Database::getDB();
-        $tbl = $db->addTable('tg_student');
-        $tbl->addFieldConditional('username', $username);
-        $result = $db->selectOneRow();
-        if (empty($result)) {
-            return null;
-        }
-        $student = new Resource;
-        $student->setVars($result);
-        return $student;
+        return self::getById(\Current_User::getId());
     }
 
-    public function getCurrentStudent()
-    {
-        return $this->getByUsername(\Current_User::getUsername());
-    }
-
-    public function postNewStudent()
+    public function postNewStudent($user_id)
     {
         $student = new Resource;
 
-        $username = filter_input(INPUT_POST, 'username', FILTER_SANITIZE_STRING);
-        if (empty($username)) {
-            $username = \Current_User::getUsername();
-        }
-        $student->setUsername($username);
         $student->setFirstName(filter_input(INPUT_POST, 'firstName', FILTER_SANITIZE_STRING));
         $student->setLastName(filter_input(INPUT_POST, 'lastName', FILTER_SANITIZE_STRING));
+        $student->setUserId($user_id);
         $student->stampSignupDate();
 
         self::saveResource($student);
@@ -77,15 +59,22 @@ class Student extends Base
 
     public static function getById($student_id)
     {
+        if (!$student_id) {
+            return null;
+        }
         $db = \Database::getDB();
         $student = $db->addTable('tg_student');
         $users = $db->addTable('users');
         $users->addField('email');
+        $users->addField('username');
         
-        $conditional = $db->createConditional($student->getField('username'), $users->getField('username'));
+        $conditional = $db->createConditional($student->getField('user_id'), $users->getField('id'));
         $db->joinResources($student, $users, $conditional);
         
         $row = $db->selectOneRow();
+        if (!$row) {
+            return $row;
+        }
         $stdObj = new Resource;
         $stdObj->setVars($row);
         return $stdObj;
