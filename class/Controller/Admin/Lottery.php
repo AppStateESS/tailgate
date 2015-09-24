@@ -22,6 +22,9 @@ class Lottery extends Base
             case 'getAvailableSpots':
                 $json = array('available_spots' => $factory->totalAvailableSpots());
                 break;
+
+            default:
+                throw new \Exception('Bad command:' . $request->getVar('command'));
         }
 
         $view = new \View\JsonView($json);
@@ -40,13 +43,17 @@ class Lottery extends Base
             case 'chooseWinners':
                 $view = $this->chooseWinners();
                 break;
-            
+
             case 'complete':
                 $factory->completeGame();
                 break;
-            
+
             case 'notify':
                 $factory->notify();
+                break;
+            
+            case 'completeLottery':
+                $factory->completeLottery();
                 break;
 
             default:
@@ -65,4 +72,5 @@ class Lottery extends Base
         $view = new \View\JsonView($data);
         return $view;
     }
+
 }
