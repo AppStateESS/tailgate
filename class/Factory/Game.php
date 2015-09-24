@@ -71,6 +71,10 @@ class Game extends Base
         self::saveResource($game);
     }
 
+    /**
+     * 
+     * @return \tailgate\Resource\Game
+     */
     public function getCurrent()
     {
         $game = new Resource;
@@ -91,13 +95,14 @@ class Game extends Base
         $game->setVars($row);
         return $game;
     }
-    
+
     public static function getCurrentId()
     {
         $db = \Database::getDB();
+        $tbl = $db->addTable('tg_game');
         $tbl->addFieldConditional('completed', 0);
         $tbl->addField('id');
-        $row = $db->fetchColumn();
+        $row = $db->selectColumn();
         return $row;
     }
 
@@ -135,6 +140,22 @@ class Game extends Base
         $resource->setid($id);
         self::loadById($resource);
         return $resource;
+    }
+
+    public static function getGameStatus()
+    {
+        $factory = new self;
+        $game = $factory->getCurrent();
+        
+        if (empty($game)) {
+            return '<p>No game scheduled. Check back later.</p>';
+        }
+        
+        $gamevars = $game->getStringVars();
+        $gameinfo =  '<p>' . $gamevars['university'] . '<br />' . $gamevars['mascot'] .
+                '<br />' . $gamevars['kickoff_format'] . '</p>';
+        
+        return $gameinfo;
     }
 
 }
