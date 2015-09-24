@@ -8,12 +8,27 @@ namespace tailgate\Resource;
  */
 class Student extends \Resource
 {
+    
+    /**
+     * User id
+     * @var \Variable\Integer
+     */
+    protected $user_id;
+    
     /**
      * Username of student
      * @var \Variable\Alphanumeric
      */
     protected $username;
+
+    /**
+     * @var \Variable\TextOnly
+     */
     protected $first_name;
+
+    /**
+     * @var \Variable\TextOnly
+     */
     protected $last_name;
 
     /**
@@ -58,6 +73,9 @@ class Student extends \Resource
      */
     protected $signup_date;
     
+    /**
+     * @var \Variable\Email
+     */
     protected $email;
     
     protected $table = 'tg_student';
@@ -65,8 +83,10 @@ class Student extends \Resource
     public function __construct()
     {
         parent::__construct();
+        $this->user_id = new \Variable\Integer(0, 'user_id');
         $this->username = new \Variable\TextOnly(null, 'username');
         $this->username->setLimit(100);
+        $this->username->setIsTableColumn(false);
         $this->first_name = new \Variable\TextOnly(null, 'first_name');
         $this->first_name->setLimit(100);
         $this->last_name = new \Variable\TextOnly(null, 'last_name');
@@ -79,6 +99,8 @@ class Student extends \Resource
         $this->banned = new \Variable\Bool(false, 'banned');
         $this->banned_reason = new \Variable\TextOnly(null, 'banned_reason');
         $this->banned_date = new \Variable\DateTime(0, 'banned_date');
+        $this->email = new \Variable\Email(null, 'email');
+        $this->email->setIsTableColumn(false);
     }
 
     public function incrementWins()
@@ -110,10 +132,10 @@ class Student extends \Resource
     {
         return $this->eligible->get();
     }
-    
+
     public function getEmail()
     {
-        return $this->email;
+        return $this->email->get();
     }
 
     public function getFirstName()
@@ -165,7 +187,12 @@ class Student extends \Resource
     {
         $this->eligible->set($eligible);
     }
-
+    
+    public function setEmail($email)
+    {
+        $this->email->set($email);
+    }
+    
     public function setFirstName($first_name)
     {
         $this->first_name->set($first_name);
@@ -179,6 +206,11 @@ class Student extends \Resource
     public function setLastName($last_name)
     {
         $this->last_name->set($last_name);
+    }
+    
+    public function setUserId($user_id)
+    {
+        $this->user_id->set($user_id);
     }
 
     public function setUsername($username)
