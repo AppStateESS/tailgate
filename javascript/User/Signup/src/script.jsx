@@ -20,10 +20,17 @@ Signup = React.createClass({
     render : function() {
         return (
             <div>
+                <p>Before getting started, please enter your first and last name.</p>
                 <form method="post" action="tailgate/User/Student">
                     <input type="hidden" name="command" value="createNewAccount" />
-                    <TextInput inputId="firstName" label={'First name'} required={true}/>
-                    <TextInput inputId="lastName" label={'Last name'} required={true}/>
+                    <div className="row">
+                        <div className="col-sm-6">
+                            <TextInput inputId="firstName" label={'First name'} required={true}/>
+                        </div>
+                        <div className="col-sm-6">
+                            <TextInput inputId="lastName" label={'Last name'} required={true}/>
+                        </div>
+                    </div>
                     <div className="text-center" style={{marginTop : '1em'}}>
                         <button className="btn btn-primary" onClick={this.checkNames}><i className="fa fa-check"></i> Create new account</button>
                     </div>
