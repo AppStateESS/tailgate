@@ -3,6 +3,7 @@
 namespace tailgate\Controller\User;
 
 use tailgate\Factory\Lottery as Factory;
+use tailgate\Factory\Student as StudentFactory;
 use tailgate\Resource\Lottery as Resource;
 
 /**
@@ -50,8 +51,7 @@ class Lottery extends Base
 
     private function getLottery()
     {
-        $studentFactory = new \tailgate\Factory\Student;
-        $student = $studentFactory->getCurrentStudent();
+        $student = StudentFactory::getCurrentStudent();
         $factory = new Factory;
         $game_id = filter_input(INPUT_GET, 'game_id', FILTER_SANITIZE_NUMBER_INT);
         $student_id = $student->getId();
@@ -85,16 +85,14 @@ class Lottery extends Base
     {
         $lottery = new \tailgate\Factory\Lottery;
         $game_id = filter_input(INPUT_POST, 'game_id', FILTER_SANITIZE_NUMBER_INT);
-        $studentFactory = new \tailgate\Factory\Student;
-        $student = $studentFactory->getCurrentStudent();
+        $student = StudentFactory::getCurrentStudent();
         $student_id = $student->getId();
         $lottery->apply($student_id, $game_id);
     }
 
     private function pickLot()
     {
-        $studentFactory = new \tailgate\Factory\Student;
-        $student = $studentFactory->getCurrentStudent();
+        $student = StudentFactory::getCurrentStudent();
         $student_id = $student->getId();
         $lotteryFactory = new Factory;
         $lot_id = filter_input(INPUT_POST, 'lotId', FILTER_SANITIZE_NUMBER_INT);
@@ -108,15 +106,10 @@ class Lottery extends Base
     {
         $hash = filter_input(INPUT_GET, 'hash', FILTER_SANITIZE_STRING);
         $template = new \Template;
-        $template->setModuleTemplate('tailgate', 'User/confirmation.html');
 
         $factory = new Factory;
-
-        $factory->isWinner(\tailgate\Factory\Game::getCurrentId());
-
         $factory->confirm($hash);
-
-
+        $template->setModuleTemplate('tailgate', 'User/confirmation.html');
         $template->add('login', \Server::getSiteUrl() . 'admin/');
         $content = $template->get();
         return $content;
