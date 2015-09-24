@@ -2,7 +2,7 @@ var Status = React.createClass({
     getInitialState: function() {
         return {
             student : {},
-            currentGame : {},
+            currentGame : {id : 0},
             lottery : null,
             spot : {}
         };
@@ -108,9 +108,10 @@ var GameStatus = React.createClass({
     render : function() {
         var content = null;
         var timestamp = Math.floor(Date.now() / 1000);
-
         if (this.props.game.id === undefined) {
             content = <div className="alert alert-info">The next lottery has not been created yet. Check back later.</div>;
+        } else if(this.props.game.id === 0) {
+            content = null;
         } else {
             if (this.props.game.lottery_run === '1') {
                 // lottery has been run
@@ -213,6 +214,9 @@ var ConfirmSpot = React.createClass({
             });
             return (
                 <div className="row">
+                    <div className="col-sm-12">
+                        <p>You have confirmed your winning ticket. Pick the lot you wish to tailgate in below. Choose quickly, other winners may be picking spots while you decide.</p>
+                    </div>
                     <div className="col-sm-4">
                         <select id="lot-choice" className="form-control">
                             {options}
@@ -220,10 +224,6 @@ var ConfirmSpot = React.createClass({
                     </div>
                     <div className="col-sm-4">
                         <button className="btn btn-primary" onClick={this.confirmSpot}>Choose tailgating lot</button>
-                    </div>
-                    <div className="col-sm-12">
-                        <hr />
-                        <p>Choose quickly, other winners may be picking spots while you decide.</p>
                     </div>
                 </div>
             );
