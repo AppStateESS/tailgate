@@ -27,7 +27,7 @@ abstract class Base extends \Http\Controller
         $development = true;
         $script = 'Admin/Setup/';
 
-        \tailgate\Factory\React::load($script, $development);
+        \tailgate\Factory\React::load($script, 'script', $development);
 
         $content = <<<EOF
 <h2>Tailgate</h2>

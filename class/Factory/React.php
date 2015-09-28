@@ -9,13 +9,13 @@ namespace tailgate\Factory;
 class React
 {
 
-    public static function load($directory, $development = true, $addons = true)
+    public static function load($directory, $filename, $development = true, $addons = true)
     {
         if ($development) {
-            $script_file = 'src/script.jsx';
+            $script_file = 'src/' . $filename . '.jsx';
             $type = 'text/jsx';
         } else {
-            $script_file = 'build/script.js';
+            $script_file = 'build/' . $filename . '.js';
             $type = 'text/javascript';
         }
 
