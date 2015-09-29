@@ -35,6 +35,12 @@ class Game extends \Resource
     protected $signup_end;
 
     /**
+     * Unix time of deadline for pickup
+     * @var \Variable\Datetime
+     */
+    protected $pickup_deadline;
+    
+    /**
      * If true, the game is complete
      * @var \Variable\Bool
      */
@@ -59,6 +65,8 @@ class Game extends \Resource
         $this->signup_start->setFormat('%s');
         $this->signup_end = new \Variable\DateTime(null, 'signup_end');
         $this->signup_end->setFormat('%s');
+        $this->pickup_deadline = new \Variable\DateTime(null, 'pickup_deadline');
+        $this->pickup_deadline->setFormat('%s');
         $this->lottery_run = new \Variable\Bool(null, 'lottery_run');
         $this->completed = new \Variable\Bool(null, 'completed');
     }
@@ -83,6 +91,11 @@ class Game extends \Resource
         return $this->mascot;
     }
 
+    public function getPickupDeadline()
+    {
+        return $this->pickup_deadline->get();
+    }
+    
     public function getSignupEnd()
     {
         return $this->signup_end->get();
@@ -122,6 +135,11 @@ class Game extends \Resource
     {
         $this->mascot = $mascot;
     }
+    
+    public function setPickupDeadline($date)
+    {
+        $this->pickup_deadline->set($date);
+    }
 
     public function setSignupStart($date)
     {
@@ -147,7 +165,6 @@ class Game extends \Resource
     {
         $vars = parent::getStringVars();
         $factory = new \tailgate\Factory\Game;
-        $vars = $factory->addVisitorInformation($vars);
         return $factory->gameTime($vars);
     }
 
