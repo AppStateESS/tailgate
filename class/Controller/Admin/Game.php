@@ -16,11 +16,17 @@ class Game extends Base
     {
         $command = $request->getVar('command');
         $factory = new Factory;
+        $lotteryFactory = new \tailgate\Factory\Lottery;
 
         switch ($command) {
             case 'list':
                 $json['currentGame'] = $factory->getCurrentAsArray();
                 $json['listing'] = $factory->getList();
+                if ($json['currentGame']['lottery_run']) {
+                    $json['available_spots'] = count($lotteryFactory->getAvailableSpots());
+                } else {
+                    $json['available_spots'] = $lotteryFactory->totalAvailableSpots();
+                }
                 break;
             
             case 'getCurrent':
@@ -68,6 +74,8 @@ class Game extends Base
         $kickoff = filter_input(INPUT_POST, 'kickoff', FILTER_SANITIZE_STRING);
         $signup_start = filter_input(INPUT_POST, 'signup_start', FILTER_SANITIZE_STRING);
         $signup_end = filter_input(INPUT_POST, 'signup_end', FILTER_SANITIZE_STRING);
+        $pickup_deadline = filter_input(INPUT_POST, 'pickup_deadline', FILTER_SANITIZE_STRING);
+        
         $game = new Resource;
         $game->setId($game_id);
         $factory->load($game);
@@ -78,6 +86,8 @@ class Game extends Base
             $game->setSignupStart(strtotime($signup_start));
         } elseif (!empty($signup_end)) {
             $game->setSignupEnd(strtotime($signup_end));
+        } elseif (!empty($pickup_deadline)) {
+            $game->setPickupDeadline(strtotime($pickup_deadline));
         } else {
             throw new \Exception('Date not sent');
         }
