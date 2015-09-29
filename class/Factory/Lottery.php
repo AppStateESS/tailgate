@@ -277,7 +277,7 @@ class Lottery extends Base
         $result = $db->select();
 
         if (empty($result)) {
-            throw new \Exception('No lottery entries for this game');
+            return null;
         }
 
         foreach ($result as $row) {
@@ -371,6 +371,15 @@ class Lottery extends Base
             $content = '<a class="btn btn-primary btn-sm" href="./admin">Login</a>';
         }
         return $content;
+    }
+    
+    public function pickedUp($lottery_id)
+    {
+        $db = \Database::getDB();
+        $tbl = $db->addTable('tg_lottery');
+        $tbl->addValue('picked_up', 1);
+        $tbl->addFieldConditional('id', $lottery_id);
+        $db->update();
     }
 
 }
