@@ -21,7 +21,7 @@ var tgMixin = {
                 data = [];
             }
             if (this.isMounted()) {
-                this.setState({
+                    this.setState({
                     visitors : data
                 });
             }
@@ -35,19 +35,20 @@ var tgMixin = {
 
 };
 
-
 var Setup = React.createClass({
     mixins: [React.addons.PureRenderMixin],
 
     getInitialState: function() {
         return {
             currentTab : 'games',
-            currentGame : {}
+            currentGame : {},
+            lots : []
         };
     },
 
     componentDidMount: function() {
         this.loadGame();
+        this.loadLots();
     },
 
     loadGame : function() {
@@ -58,6 +59,21 @@ var Setup = React.createClass({
             this.setState({
                 currentGame : data
             });
+        }.bind(this));
+    },
+
+    loadLots: function() {
+        $.getJSON('tailgate/Admin/Lot', {
+            command : 'list'
+        }).done(function(data){
+            if (data.length < 1) {
+                data = [];
+            }
+
+            this.setState({
+                lots : data
+            });
+
         }.bind(this));
     },
 
@@ -76,7 +92,7 @@ var Setup = React.createClass({
 
         switch(this.state.currentTab) {
             case 'games':
-            pageContent = <Games startLottery={this.startLottery}/>;
+            pageContent = <Games startLottery={this.startLottery} lots={this.state.lots}/>;
             break;
 
             case 'lottery':
@@ -88,7 +104,7 @@ var Setup = React.createClass({
             break;
 
             case 'lots':
-            pageContent = <Lots/>;
+            pageContent = <Lots lots={this.state.lots} loadLots={this.loadLots}/>;
             break;
 
             case 'students':
@@ -171,7 +187,6 @@ var RunLottery = React.createClass({
 
     componentDidMount: function() {
         var currentGame = this.props.currentGame;
-
         if (currentGame.lottery_run === '1') {
             this.concatMessage('This lottery has already been run.');
             return;
@@ -195,15 +210,23 @@ var RunLottery = React.createClass({
                     spotsLeft : data.spots_left
                 });
 
-                this.concatMessage('Notifying winners and losers.');
-                var notifyXHR = this.notifyWinners();
-                notifyXHR.done(function(data){
+                if (data.spots_filled === '0') {
                     this.concatMessage('Finished. Closing lottery.');
                     var closeXHR = this.closeLottery();
                     closeXHR.done(function(data){
                         this.props.loadGame();
                     }.bind(this));
-                }.bind(this));
+                } else {
+                    this.concatMessage('Notifying winners and losers.');
+                    var notifyXHR = this.notifyWinners();
+                    notifyXHR.done(function(data){
+                        this.concatMessage('Finished. Closing lottery.');
+                        var closeXHR = this.closeLottery();
+                        closeXHR.done(function(data){
+                            this.props.loadGame();
+                        }.bind(this));
+                    }.bind(this));
+                }
             }.bind(this));
         }.bind(this));
     },
@@ -358,35 +381,14 @@ var Lots = React.createClass({
 
     getInitialState : function() {
         return {
-            lots : [],
             showForm: false
         };
     },
 
-    componentDidMount: function() {
-        this.loadLots();
-    },
-
-    loadLots: function() {
-        $.getJSON('tailgate/Admin/Lot', {
-            command : 'list'
-        }).done(function(data){
-            if (data.length < 1) {
-                data = [];
-            }
-
-            this.setState({
-                lots : data
-            });
-
-        }.bind(this));
-    },
-
-
     render : function() {
         var lotForm;
         if (this.state.showForm) {
-            lotForm = <LotForm closeForm={this.hideForm} loadLots={this.loadLots}/>;
+            lotForm = <LotForm closeForm={this.hideForm} loadLots={this.props.loadLots}/>;
         } else {
             lotForm = null;
         }
@@ -394,7 +396,7 @@ var Lots = React.createClass({
             <div>
                 <p><button className="btn btn-success" onClick={this.showForm}><i className="fa fa-plus"></i> Add Tailgating Lot</button></p>
                 {lotForm}
-                <LotListing lots={this.state.lots} />
+                <LotListing lots={this.props.lots} />
             </div>
         );
     }
@@ -571,34 +573,63 @@ var Spots = React.createClass({
         }.bind(this));
     },
 
+    pickup : function(index) {
+        var allSpots = this.state.spots;
+        var spot = allSpots[index];
+        $.post('tailgate/Admin/Lottery/', {
+            command : 'pickup',
+            lotteryId : spot.lottery_id
+        }, null, 'json').done(function(){
+            spot.picked_up = '1';
+            allSpots[index] = spot;
+            this.setState({
+                spots : allSpots
+            });
+        }.bind(this));
+    },
+
     render : function() {
         if (this.state.spots.length === 0) {
             return <Waiting/>;
         }
+        var pickedUp;
+        var lotteryInfo;
+        var pickupClick;
         return (
             <div>
-                <table className="table table-striped">
+                <table className="table table-striped sans">
                     <tbody>
                         <tr>
                             <th className="col-sm-1">
                                 Number
                             </th>
-                            <th className="col-sm-3 text-center">
-                                Selected
+                            <th className="col-sm-1">Picked up</th>
+                            <th className="col-sm-3">
+                                Lottery winner
                             </th>
-                            <th className="col-sm-3 text-center">
-                                Picked up
-                            </th>
-                            <th>
+                            <th className="col-sm-3">
                                 Reserved
                             </th>
                         </tr>
                         {this.state.spots.map(function(value, i){
+                            pickedUp = null;
+                            if (value.spot_id === null) {
+                                lotteryInfo = <div className="text-muted"><em>Not selected</em></div>;
+                            } else {
+                                if (value.picked_up === '0') {
+                                    var pickupClick = this.pickup.bind(this,i);
+                                    pickedUp = <button title="Click when student arrives to pick up tag" className="btn btn-sm btn-danger" onClick={pickupClick}><i className="fa fa-times"></i></button>;
+                                } else {
+                                    pickedUp = <span className="text-success"><YesIcon/></span>;
+                                }
+                                lotteryInfo = <div><strong>{value.first_name} {value.last_name}</strong></div>;
+                            }
+
                             return (
                                 <tr key={i}>
-                                    <td className="text-right">{value.number}</td>
-                                    <td className="text-center">{value.selected === '1' ? <YesIcon/> : <NoIcon/>}</td>
-                                    <td className="text-center">{value.picked_up === '1' ? <YesIcon/> : <NoIcon/>}</td>
+                                    <td className="text-center">{value.number}</td>
+                                    <td>{pickedUp}</td>
+                                    <td className="text-left">{lotteryInfo}</td>
                                     <td>{value.reserved === '1' ?
                                             <YesButton handleClick={this.toggleReserve.bind(this, i)} label={'Reserved'}/> :
                                                 <NoButton handleClick={this.toggleReserve.bind(this, i)} label={'Not reserved'}/>}</td>
@@ -607,7 +638,7 @@ var Spots = React.createClass({
                         }.bind(this))}
                     </tbody>
                 </table>
-                <div className="text-center"><button className="btn btn-sm btn-danger" onClick={this.props.close}><i className="fa fa-times"></i> Close spot listing</button></div>
+                <div className="text-center"><button className="btn btn-sm btn-danger" onClick={this.props.close}><i className="fa fa-times"></i> Close</button></div>
             </div>
         );
     }
@@ -616,7 +647,7 @@ var Spots = React.createClass({
 YesIcon = React.createClass({
     render : function() {
         return (
-            <Icon iconClass={'fa-check fa-success'} />
+            <Icon iconClass={'fa-check text-success'} />
         );
     }
 });
@@ -628,8 +659,6 @@ NoIcon = React.createClass({
         );
     }
 });
-
-
 
 var Settings = React.createClass({
     getInitialState: function() {
@@ -816,8 +845,8 @@ var StudentRow = React.createClass({
                 <td>{value.id}</td>
                 <td>{value.last_name}</td>
                 <td>{value.first_name}</td>
-                <td>{value.username}</td>
-                <td className="text-right">{value.wins}</td>
+                <td><a href="mailto:{value.email}">{value.username} <i className="fa fa-envelope-o"></i></a></td>
+                <td className="text-right col-sm-1">{value.wins}</td>
                 <td className="text-center"><EligibleIcon value={value} handleClick={this.eligible}/></td>
                 <td className="text-center"><BannedIcon value={value} handleClick={this.bannedReason}/></td>
                 <td><button className="btn btn-sm btn-danger" onClick={this.deleteStudent}><i className="fa fa-trash-o"></i> Delete</button></td>
@@ -825,7 +854,6 @@ var StudentRow = React.createClass({
         );
     }
 });
-
 
 var EligibleIcon = React.createClass({
     hover : function(e) {
@@ -891,7 +919,6 @@ var Icon = React.createClass({
         );
     }
 });
-
 
 var Students = React.createClass({
 
@@ -1007,6 +1034,7 @@ var Games = React.createClass({
     getInitialState: function() {
         return {
             visitors : [],
+            availableSpots : 0,
             games : null,
             currentGame : {},
             message : ''
@@ -1019,6 +1047,7 @@ var Games = React.createClass({
         }).done(function(data){
             this.setState({
                 currentGame : data.currentGame,
+                availableSpots : data.available_spots,
                 games : data.listing
             });
         }.bind(this));
@@ -1038,6 +1067,11 @@ var Games = React.createClass({
                 format: 'n/j/Y H:i'
             });
 
+            $('#pickup-deadline').datetimepicker({
+                timepicker:true,
+                format: 'n/j/Y H:i'
+            });
+
             $('#kickoff').datetimepicker({
                 timepicker:false,
                 format: 'n/j/Y'
@@ -1050,21 +1084,32 @@ var Games = React.createClass({
         var kickoff = this.getUnixTime($('#kickoff').val());
         var startSignup = new Date($('#signup-start').val()).getTime() / 1000;
         var endSignup = new Date($('#signup-end').val()).getTime() / 1000;
+        var pickupDeadline = new Date($('#pickup-deadline').val()).getTime() / 1000;
 
         if ((startSignup < endSignup)) {
-            if (endSignup < kickoff) {
-                $.post('tailgate/Admin/Game', {
-                    command : 'add',
-                    visitor_id : visitor_id,
-                    kickoff : kickoff,
-                    signup_start : startSignup,
-                    signup_end : endSignup
-                }).done(function(){
-                    this.loadGames();
-                }.bind(this));
+            if (endSignup < pickupDeadline) {
+                if (pickupDeadline < kickoff) {
+                    $.post('tailgate/Admin/Game', {
+                        command : 'add',
+                        visitor_id : visitor_id,
+                        kickoff : kickoff,
+                        signup_start : startSignup,
+                        signup_end : endSignup,
+                        pickup_deadline : pickupDeadline
+                    }).done(function(){
+                        this.loadGames();
+                        this.setState({
+                            message : ''
+                        });
+                    }.bind(this));
+                } else {
+                    this.setState({
+                        message : 'Pickup date must be less than gate date'
+                    });
+                }
             } else {
                 this.setState({
-                    message : 'Signup end must be less than gate date'
+                    message : 'Signup deadline must be less than pickup date'
                 });
             }
         } else {
@@ -1094,11 +1139,13 @@ var Games = React.createClass({
             title = 'Add new game';
             if(this.state.visitors.length === 0) {
                 currentGame = <div><p>Create some visitors first.</p></div>;
+            } else if(this.props.lots.length === 0) {
+                currentGame = <div><p>Create some tailgate lots first.</p></div>;
             } else {
                 currentGame = <GameForm visitors={this.state.visitors} save={this.saveGame} />;
             }
         } else if (Object.keys(this.state.currentGame).length > 0) {
-            currentGame = <GameInfo game={this.state.currentGame} startLottery={this.props.startLottery} loadCurrentGame={this.loadGames}/>;
+            currentGame = <GameInfo game={this.state.currentGame} startLottery={this.props.startLottery} loadCurrentGame={this.loadGames} availableSpots={this.state.availableSpots}/>;
         } else {
             currentGame = null;
         }
@@ -1129,7 +1176,8 @@ var GameInfo = React.createClass({
 
     getInitialState: function() {
         return {
-            game : {}
+            game : {},
+            message : null
         };
     },
 
@@ -1141,16 +1189,34 @@ var GameInfo = React.createClass({
     },
 
     updateGame : function(game) {
-        if (game.signup_start >= game.signup_end ||
-            game.signup_end >= game.kickoff) {
-                console.log('I cannot do that');
+        if (game.signup_start >= game.signup_end) {
+            this.setState({
+                message : 'Signup start must precede signup deadline'
+            });
+            return;
+        } else if (game.signup_end >= game.pickup_deadline) {
+            this.setState({
+                message : 'Signup deadline must precede pickup deadline'
+            });
+            return;
+        } else if (game.pickup_deadline >= game.kickoff) {
+            this.setState({
+                message : 'Pickup deadline must precede kickoff'
+            });
+            return;
+        } else if (this.state.message !== null) {
+            this.setState({
+                message : null
+            });
             return;
         }
 
         this.setState({
             game : game
         });
+
         if (game.lottery_run == '0') {
+
             $('#signup-start').datetimepicker({
                 value : game.signup_start_ts,
                 maxDate : game.signup_end_ts.substr(0, 10)
@@ -1159,12 +1225,18 @@ var GameInfo = React.createClass({
             $('#signup-end').datetimepicker({
                 value : game.signup_end_ts,
                 minDate : game.signup_start_ts.substr(0, 10),
+                maxDate : game.pickup_deadline_ts.substr(0, 10)
+            });
+
+            $('#pickup-deadline').datetimepicker({
+                value : game.pickup_deadline_ts,
+                minDate : game.signup_end_ts.substr(0, 10),
                 maxDate : game.kickoff_ts
             });
 
             $('#kickoff').datetimepicker({
                 value : game.kickoff_ts,
-                minDate : game.signup_end_ts.substr(0, 10)
+                minDate : game.pickup_deadline_ts.substr(0, 10)
             });
         }
     },
@@ -1193,6 +1265,20 @@ var GameInfo = React.createClass({
                     command : 'changeDate',
                     game_id : game.id,
                     signup_end : ct
+                }, function(){}, 'json').done(function(data){
+                    this.updateGame(data);
+                }.bind(this));
+            }.bind(this),
+        });
+
+        $('#pickup-deadline').datetimepicker({
+            timepicker:true,
+            format: 'Y/m/d H:i',
+            onChangeDateTime : function(ct, i) {
+                $.post('tailgate/Admin/Game', {
+                    command : 'changeDate',
+                    game_id : game.id,
+                    pickup_deadline : ct
                 }, function(){}, 'json').done(function(data){
                     this.updateGame(data);
                 }.bind(this));
@@ -1230,36 +1316,57 @@ var GameInfo = React.createClass({
         $('#signup-end').datetimepicker('show');
     },
 
+    pickupDeadlineDate : function() {
+        $('#pickup-deadline').datetimepicker('show');
+    },
+
     kickoffDate : function() {
         $('#kickoff').datetimepicker('show');
     },
 
     render : function() {
         var button = null;
+        var message = null;
+
         if (this.props.game.lottery_run == '0') {
             button = <LotteryRun game={this.state.game} startLottery={this.props.startLottery}/>;
         } else if (this.props.game.kickoff < Math.floor(Date.now() / 1000)) {
             button = <button className="btn btn-primary" onClick={this.completeGame}>Complete lottery</button>;
         }
+
+        if (this.state.message) {
+            message = <div className="alert alert-danger"><i className="fa fa-exclamation-circle"></i> {this.state.message}</div>;
+        } else {
+            message = null;
+        }
+
         return (
         <div>
-            <h4>{this.props.game.university} {this.props.game.mascot}</h4>
+            <h4>{this.props.game.university} {this.props.game.mascot} - Available spots: {this.props.availableSpots}</h4>
+            {message}
             <div className="row">
-                <div className="col-sm-4">
+                <div className="col-sm-3">
                     <div className="alert alert-success">
                         {this.props.game.lottery_run == '0' ? <button className="pull-right btn btn-sm btn-primary" id="signup-start" onClick={this.signupStartDate}>Edit</button> : null}
                         <big><strong>Signup start</strong></big><br />
                         {this.state.game.signup_start_format}
                     </div>
                 </div>
-                <div className="col-sm-4">
+                <div className="col-sm-3">
                     <div className="alert alert-success">
                         {this.props.game.lottery_run == '0' ? <button className="pull-right btn btn-sm btn-primary" id="signup-end" onClick={this.signupEndDate}>Edit</button> : null}
-                        <big><strong>Signup end</strong></big><br />
+                        <big><strong>Signup deadline</strong></big><br />
                         {this.state.game.signup_end_format}
                     </div>
                 </div>
-                <div className="col-sm-4">
+                <div className="col-sm-3">
+                    <div className="alert alert-success">
+                        {this.props.game.lottery_run == '0' ? <button className="pull-right btn btn-sm btn-primary" id="pickup-deadline" onClick={this.pickupDeadlineDate}>Edit</button> : null}
+                        <big><strong>Pickup Deadline</strong></big><br />
+                        {this.state.game.pickup_deadline_format}
+                    </div>
+                </div>
+                <div className="col-sm-3">
                     <div className="alert alert-success">
                         {this.props.game.lottery_run == '0' ? <button className="pull-right btn btn-sm btn-primary" id="kickoff" onClick={this.kickoffDate}>Edit</button> : null}
                         <big><strong>Kickoff:</strong></big><br />{this.state.game.kickoff_format}
@@ -1327,6 +1434,11 @@ var GameForm = React.createClass({
                 format: 'n/j/Y H:i'
             });
 
+            $('#pickup-deadline').datetimepicker({
+                timepicker:true,
+                format: 'n/j/Y H:i'
+            });
+
             $('#kickoff').datetimepicker({
                 timepicker:false,
                 format: 'n/j/Y'
@@ -1348,20 +1460,25 @@ var GameForm = React.createClass({
         return (
             <div>
                 <div className="row">
-                    <div className="col-sm-3">
+                    <div className="col-sm-6">
                         <label htmlFor="pick-team">Pick visiting team</label>
                         <select id="pick-team" className="form-control">
                             {options}
                         </select>
                     </div>
-                    <div className="col-sm-3">
+                    <div className="col-sm-6">
+                        <TextInput inputId={'kickoff'} label="Game date" ref="date" defaultValue={dateString}/>
+                    </div>
+                </div>
+                <div className="row">
+                    <div className="col-sm-4">
                         <TextInput inputId={'signup-start'} label="Signup start" ref="date" defaultValue={datetimeString}/>
                     </div>
-                    <div className="col-sm-3">
+                    <div className="col-sm-4">
                         <TextInput inputId={'signup-end'} label="Signup deadline" ref="date" defaultValue={datetimeString}/>
                     </div>
-                    <div className="col-sm-3">
-                        <TextInput inputId={'kickoff'} label="Game date" ref="date" defaultValue={dateString}/>
+                    <div className="col-sm-4">
+                        <TextInput inputId={'pickup-deadline'} label="Pickup deadline" ref="date" defaultValue={datetimeString}/>
                     </div>
                 </div>
                 <div className="row">
