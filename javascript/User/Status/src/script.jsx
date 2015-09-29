@@ -63,10 +63,16 @@ var Status = React.createClass({
     },
 
     render : function() {
+        var content;
+        if (this.state.currentGame.id === 0) {
+            content = <h4>No games scheduled. Try back later.</h4>;
+        } else {
+            content = <Game game={this.state.currentGame} lottery={this.state.lottery} spot={this.state.spot} reload={this.loadData}/>;
+        }
         return (
             <div>
                 <h2>Welcome {this.state.student.first_name} {this.state.student.last_name}</h2>
-                {this.state.currentGame ? <Game game={this.state.currentGame} lottery={this.state.lottery} spot={this.state.spot} reload={this.loadData}/> : <div>No games scheduled.</div>}
+                {content}
             </div>
         );
     }
