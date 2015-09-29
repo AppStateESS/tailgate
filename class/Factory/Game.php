@@ -38,10 +38,12 @@ class Game extends Base
         $game['kickoff_format'] = strftime(TAILGATE_DATE_FORMAT, $game['kickoff']);
         $game['signup_start_format'] = strftime(TAILGATE_TIME_FORMAT . ', ' . TAILGATE_DATE_FORMAT, $game['signup_start']);
         $game['signup_end_format'] = strftime(TAILGATE_TIME_FORMAT . ', ' . TAILGATE_DATE_FORMAT, $game['signup_end']);
+        $game['pickup_deadline_format'] = strftime(TAILGATE_TIME_FORMAT . ', ' . TAILGATE_DATE_FORMAT, $game['pickup_deadline']);
 
         $game['kickoff_ts'] = strftime('%Y/%m/%d', $game['kickoff']);
         $game['signup_start_ts'] = strftime('%Y/%m/%d %H:%M', $game['signup_start']);
         $game['signup_end_ts'] = strftime('%Y/%m/%d %H:%M', $game['signup_end']);
+        $game['pickup_deadline_ts'] = strftime('%Y/%m/%d %H:%M', $game['pickup_deadline']);
         return $game;
     }
 
@@ -49,7 +51,7 @@ class Game extends Base
     {
         $db = \Database::getDB();
         $tbl = $db->addTable('tg_visitor');
-        $tbl->addFieldConditional('id', $game['id']);
+        $tbl->addFieldConditional('id', $game['visitor_id']);
         $row = $db->selectOneRow();
         $game['university'] = $row['university'];
         $game['mascot'] = $row['mascot'];
@@ -63,11 +65,13 @@ class Game extends Base
         $kickoff = filter_input(INPUT_POST, 'kickoff', FILTER_SANITIZE_NUMBER_INT);
         $signup_start = filter_input(INPUT_POST, 'signup_start', FILTER_SANITIZE_NUMBER_INT);
         $signup_end = filter_input(INPUT_POST, 'signup_end', FILTER_SANITIZE_NUMBER_INT);
+        $pickup_deadline = filter_input(INPUT_POST, 'pickup_deadline', FILTER_SANITIZE_NUMBER_INT);
 
         $game->setVisitorId($visitor_id);
         $game->setKickoff((int) $kickoff);
         $game->setSignupStart((int) $signup_start);
         $game->setSignupEnd((int) $signup_end);
+        $game->setPickupDeadline((int) $pickup_deadline);
         self::saveResource($game);
     }
 
@@ -82,13 +86,14 @@ class Game extends Base
         $db = \Database::getDB();
         $tbl = $db->addTable('tg_game');
         $tbl2 = $db->addTable('tg_visitor');
-        $cd = $db->createConditional($tbl->getField('visitor_id'), $tbl2->getField('id'), '=');
-        $db->joinResources($tbl, $tbl2, $cd);
         $tbl2->addField('university');
         $tbl2->addField('mascot');
+        $cd = $db->createConditional($tbl->getField('visitor_id'), $tbl2->getField('id'), '=');
+        $db->joinResources($tbl, $tbl2, $cd);
 
         $tbl->addFieldConditional('completed', 0);
         $row = $db->selectOneRow();
+
         if (empty($row)) {
             return null;
         }
