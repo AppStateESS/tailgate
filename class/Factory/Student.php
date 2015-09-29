@@ -35,8 +35,13 @@ class Student extends Base
             $order_by = 'last_name';
         }
         $db = $this->getListDB($mode, $order_by, $order_dir);
-        $tbl = $db->getTable($this->table);
-
+        $student = $db->getTable($this->table);
+        $users = $db->addTable('users');
+        $users->addField('email');
+        $users->addField('username');
+        $conditional = $db->createConditional($student->getField('user_id'), $users->getField('id'));
+        $db->joinResources($student, $users, $conditional);        
+        
         $limit = filter_input(INPUT_GET, 'limit', FILTER_SANITIZE_NUMBER_INT);
         if (empty($limit)) {
             $limit = 50;
@@ -45,9 +50,9 @@ class Student extends Base
         $search = filter_input(INPUT_GET, 'search', FILTER_SANITIZE_STRING);
 
         if (!empty($search)) {
-            $c1 = $db->createConditional($tbl->getField('first_name'), "%$search%", 'like');
-            $c2 = $db->createConditional($tbl->getField('last_name'), "%$search%", 'like');
-            $c3 = $db->createConditional($tbl->getField('username'), "%$search%", 'like');
+            $c1 = $db->createConditional($student->getField('first_name'), "%$search%", 'like');
+            $c2 = $db->createConditional($student->getField('last_name'), "%$search%", 'like');
+            $c3 = $db->createConditional($student->getField('username'), "%$search%", 'like');
             $c4 = $db->createConditional($c1, $c2, 'or');
             $c5 = $db->createConditional($c3, $c4, 'or');
             $db->addConditional($c5);
@@ -67,10 +72,10 @@ class Student extends Base
         $users = $db->addTable('users');
         $users->addField('email');
         $users->addField('username');
-        
+
         $conditional = $db->createConditional($student->getField('user_id'), $users->getField('id'));
         $db->joinResources($student, $users, $conditional);
-        
+
         $row = $db->selectOneRow();
         if (!$row) {
             return $row;
