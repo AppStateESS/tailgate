@@ -55,6 +55,10 @@ class Lottery extends Base
             case 'completeLottery':
                 $factory->completeLottery();
                 break;
+            
+            case 'pickup':
+                $this->postPickUp();
+                break;
 
             default:
                 throw new \Exception('Bad command:' . $request->getVar('command'));
@@ -63,6 +67,13 @@ class Lottery extends Base
         return $response;
     }
 
+    private function postPickUp()
+    {
+        $lottery_id = filter_input(INPUT_POST, 'lotteryId', FILTER_SANITIZE_NUMBER_INT);
+        $factory = new Factory;
+        $factory->pickedUp($lottery_id);
+    }
+    
     private function chooseWinners()
     {
         $factory = new Factory;
