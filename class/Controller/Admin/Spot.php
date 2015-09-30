@@ -39,6 +39,10 @@ class Spot extends Base
             case 'reserve':
                 $factory->reserve(filter_input(INPUT_POST, 'id', FILTER_SANITIZE_NUMBER_INT), filter_input(INPUT_POST, 'reserved', FILTER_SANITIZE_NUMBER_INT));
                 break;
+            
+            case 'sober':
+                $factory->sober(filter_input(INPUT_POST, 'id', FILTER_SANITIZE_NUMBER_INT), filter_input(INPUT_POST, 'sober', FILTER_SANITIZE_NUMBER_INT));
+                break;
         }
         return $response;
     }

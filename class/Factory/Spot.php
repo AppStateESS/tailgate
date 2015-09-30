@@ -53,5 +53,13 @@ class Spot extends Base
         $spot->setReserved($reserve);
         $spot->save();
     }
+    
+    public function sober($spot_id, $sober)
+    {
+        $spot = new Resource;
+        $this->loadByID($spot, $spot_id);
+        $spot->setSober($sober);
+        $spot->save();
+    }
 
 }

@@ -40,7 +40,7 @@ var Setup = React.createClass({
 
     getInitialState: function() {
         return {
-            currentTab : 'games',
+            currentTab : 'lots',
             currentGame : {},
             lots : []
         };
@@ -89,7 +89,10 @@ var Setup = React.createClass({
 
     render : function() {
         var pageContent;
-
+        var canAdd = false;
+        if (this.state.currentGame.id !== undefined) {
+            canAdd = true;
+        }
         switch(this.state.currentTab) {
             case 'games':
             pageContent = <Games startLottery={this.startLottery} lots={this.state.lots}/>;
@@ -108,7 +111,7 @@ var Setup = React.createClass({
             break;
 
             case 'students':
-            pageContent = <Students/>;
+            pageContent = <Students canAdd={canAdd} game={this.state.currentGame}/>;
             break;
 
             case 'reports':
@@ -236,30 +239,6 @@ var RunLottery = React.createClass({
             <div>
                 <h4>Running lottery for {this.props.currentGame.university} {this.props.currentGame.mascot} - {this.props.currentGame.kickoff_format}</h4>
                 <div><pre style={{height : '300px', width : '100%'}}>{this.state.messageLog}</pre></div>
-            </div>
-        );
-    }
-});
-
-var Modal = React.createClass({
-    render: function() {
-        return (
-            <div id="admin-modal" className="modal fade">
-                <div className="modal-dialog">
-                    <div className="modal-content">
-                        <div className="modal-header">
-                            <button aria-label="Close" className="close" data-dismiss="modal" type="button">
-                                <span aria-hidden="true">&times;</span>
-                            </button>
-                            <h4 className="modal-title"></h4>
-                        </div>
-                        <div className="modal-body">
-                        </div>
-                        <div className="modal-footer">
-                            <button className="btn btn-default" data-dismiss="modal" type="button">Close</button>
-                        </div>
-                    </div>
-                </div>
             </div>
         );
     }
@@ -573,6 +552,30 @@ var Spots = React.createClass({
         }.bind(this));
     },
 
+    toggleSober : function(key,e) {
+        var allSpots = this.state.spots;
+        var spot = allSpots[key];
+        // flops the value for the change
+        var sober = spot.sober === '1' ? '0' : '1';
+
+        $.post('tailgate/Admin/Spot', {
+            command : 'sober',
+            id : spot.id,
+            sober : sober
+        })
+        .done(function(){
+            spot.sober = sober;
+            allSpots[key] = spot;
+            this.setState({
+                spots : allSpots
+            });
+        }.bind(this))
+        .fail(function(){
+            var error_message = 'Error: Could not update the spot';
+            console.log(error_message);
+        }.bind(this));
+    },
+
     pickup : function(index) {
         var allSpots = this.state.spots;
         var spot = allSpots[index];
@@ -603,12 +606,15 @@ var Spots = React.createClass({
                             <th className="col-sm-1">
                                 Number
                             </th>
-                            <th className="col-sm-1">Picked up</th>
+                            <th className="col-sm-2">Picked up</th>
                             <th className="col-sm-3">
                                 Lottery winner
                             </th>
                             <th className="col-sm-3">
                                 Reserved
+                            </th>
+                            <th className="col-sm-3">
+                                Sobriety
                             </th>
                         </tr>
                         {this.state.spots.map(function(value, i){
@@ -633,6 +639,7 @@ var Spots = React.createClass({
                                     <td>{value.reserved === '1' ?
                                             <YesButton handleClick={this.toggleReserve.bind(this, i)} label={'Reserved'}/> :
                                                 <NoButton handleClick={this.toggleReserve.bind(this, i)} label={'Not reserved'}/>}</td>
+                                    <td>{value.sober === '1' ? <Sober toggle={this.toggleSober.bind(this, i)} /> : <Alcohol toggle={this.toggleSober.bind(this, i)} />}</td>
                                 </tr>
                             );
                         }.bind(this))}
@@ -644,18 +651,18 @@ var Spots = React.createClass({
     }
 });
 
-YesIcon = React.createClass({
+var Sober = React.createClass({
     render : function() {
         return (
-            <Icon iconClass={'fa-check text-success'} />
+            <button className="btn btn-default btn-sm" onClick={this.props.toggle}><i className="fa fa-ban"></i> Sober only</button>
         );
     }
 });
 
-NoIcon = React.createClass({
+var Alcohol = React.createClass({
     render : function() {
         return (
-            <Icon iconClass={'fa-times text-danger'} />
+            <button className="btn btn-default btn-sm" onClick={this.props.toggle}><span className="text-success"><i className="fa fa-beer"></i> Alcohol allowed</span></button>
         );
     }
 });
@@ -716,30 +723,109 @@ var Settings = React.createClass({
     }
 });
 
-var YesButton = React.createClass({
-        render : function () {
-            return (
-                <button onClick={this.props.handleClick} className="btn btn-sm btn-success">
-                    <i className="fa fa-check"></i> {this.props.label}
-                </button>
-            );
-        }
-});
-
-var NoButton = React.createClass({
-        render : function () {
-            return (
-                <button onClick={this.props.handleClick}  className="btn btn-sm btn-default">
-                    <i className="fa fa-times"></i> {this.props.label}
-                </button>
-            );
-        }
-});
-
 var Waiting = React.createClass({
     render : function() {
         return (
             <div className="text-center"><i className="fa fa-cog fa-spin"></i> Loading...</div>
+        );
+    }
+});
+
+var Students = React.createClass({
+
+    getInitialState: function() {
+        return {
+            students: [],
+            limit : limitDefault,
+            search : null
+        };
+    },
+
+    componentDidMount: function() {
+        this.loadStudents(this.state.limit);
+    },
+
+    searchRows : function(e)
+    {
+        var search_phrase =  e.target.value;
+        var search_length = search_phrase.length;
+
+        window.setTimeout(function(){
+            if (search_length > 2) {
+                this.loadStudents(this.state.limit, search_phrase);
+            } else if (search_length === 0) {
+                this.loadStudents(this.state.limit, '');
+            }
+        }.bind(this), 600);
+    },
+
+    loadStudents : function(limit, search) {
+        if (limit === undefined) {
+            limit = this.state.limit;
+        }
+        if (search === undefined) {
+            search = this.state.search;
+        }
+
+        if (search !== this.state.search) {
+            limit = limitDefault;
+        }
+        $.getJSON('tailgate/Admin/Student/', {
+            command : 'list',
+            limit : limit,
+            search : search
+        }).done(function(data){
+            this.setState({
+                students : data,
+                limit : limit,
+                search : search
+            });
+        }.bind(this));
+    },
+
+    preventSpaces : function(e)
+    {
+        if (e.charCode == '32') {
+            e.preventDefault();
+        }
+    },
+
+    render: function() {
+        var nextLimit = this.state.limit + limitDefault;
+        var nextButton = null;
+        if (this.state.limit <= this.state.students.length) {
+            nextButton = <button className="btn btn-default" onClick={this.loadStudents.bind(null, nextLimit, this.state.search)}><i className="fa fa-plus"></i> Show more rows</button>;
+        }
+        return (
+            <div>
+                <div className="row">
+                    <div className="col-sm-4">
+                        <TextInput placeholder={'Search'} handleChange={this.searchRows} handlePress={this.preventSpaces}/>
+                    </div>
+                </div>
+                <table className="table table-striped sans">
+                    <thead>
+                        <tr>
+                            <th>Id</th>
+                            <th>Last Name</th>
+                            <th>First Name</th>
+                            <th>Username</th>
+                            <th>Wins</th>
+                            <th className="text-center">Eligible</th>
+                            <th className="text-center">Allowed</th>
+                            <th>&nbsp;</th>
+                        </tr>
+                    </thead>
+                    <tbody id="studentList">
+                        {this.state.students.map(function(value,i){
+                            return (
+                                <StudentRow key={i} student={value} resetRows={this.loadStudents} canAdd={this.props.canAdd}/>
+                            );
+                        }.bind(this))}
+                    </tbody>
+                </table>
+                {nextButton}
+            </div>
         );
     }
 });
@@ -840,6 +926,7 @@ var StudentRow = React.createClass({
 
     render : function() {
         var value = this.props.student;
+
         return(
             <tr>
                 <td>{value.id}</td>
@@ -849,172 +936,10 @@ var StudentRow = React.createClass({
                 <td className="text-right col-sm-1">{value.wins}</td>
                 <td className="text-center"><EligibleIcon value={value} handleClick={this.eligible}/></td>
                 <td className="text-center"><BannedIcon value={value} handleClick={this.bannedReason}/></td>
-                <td><button className="btn btn-sm btn-danger" onClick={this.deleteStudent}><i className="fa fa-trash-o"></i> Delete</button></td>
+                <td>
+                    <button className="btn btn-sm btn-danger" style={{marginRight : '1em'}} onClick={this.deleteStudent}><i className="fa fa-trash-o"></i> Delete</button>
+                </td>
             </tr>
-        );
-    }
-});
-
-var EligibleIcon = React.createClass({
-    hover : function(e) {
-        if (this.props.value.eligible == '0') {
-            $(e.target).tooltip('show');
-        } else {
-            $(e.target).tooltip('destroy');
-        }
-    },
-
-    render : function() {
-        var title = null;
-        var iconClass = null;
-        if (this.props.value.eligible == '1') {
-            iconClass = 'fa-check text-success';
-            title = 'Eligible';
-        } else {
-            iconClass = 'fa-times text-danger';
-            title = 'Reason: ' + this.props.value.ineligible_reason;
-        }
-        return (
-            <Icon iconClass={iconClass} handleClick={this.props.handleClick} handleOver={this.hover} title={title} />
-        );
-    }
-});
-
-var BannedIcon = React.createClass({
-
-    hover : function(e) {
-        if (this.props.value.banned == '1') {
-            $(e.target).tooltip('show');
-        } else {
-            $(e.target).tooltip('destroy');
-        }
-    },
-
-    render : function() {
-        var title = null;
-        var bannedDate = new Date(this.props.value.banned_date * 1000);
-        var iconClass = null;
-        if (this.props.value.banned == '1') {
-            iconClass = 'fa-times text-danger';
-            title = 'Banned: ' + bannedDate.toLocaleDateString() + "\nReason: " + this.props.value.banned_reason;
-        } else {
-            iconClass = 'fa-check text-success';
-            title = 'Click to ban student';
-        }
-        return (
-            <Icon iconClass={iconClass} handleClick={this.props.handleClick} handleOver={this.hover} title={title} />
-        );
-    }
-});
-
-var Icon = React.createClass({
-
-    render : function () {
-        var style = null;
-        if (typeof this.props.handleClick === 'function') {
-            style = {cursor : 'pointer'};
-        }
-        return (
-            <i style={style} className={'fa fa-check fa-lg ' + this.props.iconClass} onClick={this.props.handleClick} onMouseOver={this.props.handleOver} title={this.props.title}></i>
-        );
-    }
-});
-
-var Students = React.createClass({
-
-    getInitialState: function() {
-        return {
-            students: [],
-            limit : limitDefault,
-            search : null
-        };
-    },
-
-    componentDidMount: function() {
-        this.loadStudents(this.state.limit);
-    },
-
-    searchRows : function(e)
-    {
-        var search_phrase =  e.target.value;
-        var search_length = search_phrase.length;
-
-        window.setTimeout(function(){
-            if (search_length > 2) {
-                this.loadStudents(this.state.limit, search_phrase);
-            } else if (search_length === 0) {
-                this.loadStudents(this.state.limit, '');
-            }
-        }.bind(this), 600);
-    },
-
-    loadStudents : function(limit, search) {
-        if (limit === undefined) {
-            limit = this.state.limit;
-        }
-        if (search === undefined) {
-            search = this.state.search;
-        }
-
-        if (search !== this.state.search) {
-            limit = limitDefault;
-        }
-        $.getJSON('tailgate/Admin/Student/', {
-            command : 'list',
-            limit : limit,
-            search : search
-        }).done(function(data){
-            this.setState({
-                students : data,
-                limit : limit,
-                search : search
-            });
-        }.bind(this));
-    },
-
-    preventSpaces : function(e)
-    {
-        if (e.charCode == '32') {
-            e.preventDefault();
-        }
-    },
-
-    render: function() {
-        var nextLimit = this.state.limit + limitDefault;
-        var nextButton = null;
-        if (this.state.limit <= this.state.students.length) {
-            nextButton = <button className="btn btn-default" onClick={this.loadStudents.bind(null, nextLimit, this.state.search)}><i className="fa fa-plus"></i> Show more rows</button>;
-        }
-        return (
-            <div>
-                <div className="row">
-                    <div className="col-sm-4">
-                        <TextInput placeholder={'Search'} handleChange={this.searchRows} handlePress={this.preventSpaces}/>
-                    </div>
-                </div>
-                <table className="table table-striped sans">
-                    <thead>
-                        <tr>
-                            <th>Id</th>
-                            <th>Last Name</th>
-                            <th>First Name</th>
-                            <th>Username</th>
-                            <th>Wins</th>
-                            <th className="text-center">Eligible</th>
-                            <th className="text-center">Allowed</th>
-                            <th>&nbsp;</th>
-                        </tr>
-                    </thead>
-                    <tbody id="studentList">
-                        {this.state.students.map(function(value,i){
-                            return (
-                                <StudentRow key={i} student={value} resetRows={this.loadStudents}/>
-                            );
-                        }.bind(this))}
-                    </tbody>
-                </table>
-                {nextButton}
-            </div>
         );
     }
 });
@@ -1570,6 +1495,132 @@ var TextInput = React.createClass({
         );
     }
 });
+
+var Modal = React.createClass({
+    render: function() {
+        return (
+            <div id="admin-modal" className="modal fade">
+                <div className="modal-dialog">
+                    <div className="modal-content">
+                        <div className="modal-header">
+                            <button aria-label="Close" className="close" data-dismiss="modal" type="button">
+                                <span aria-hidden="true">&times;</span>
+                            </button>
+                            <h4 className="modal-title"></h4>
+                        </div>
+                        <div className="modal-body">
+                        </div>
+                        <div className="modal-footer">
+                            <button className="btn btn-default" data-dismiss="modal" type="button">Close</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        );
+    }
+});
+
+var Icon = React.createClass({
+
+    render : function () {
+        var style = null;
+        if (typeof this.props.handleClick === 'function') {
+            style = {cursor : 'pointer'};
+        }
+        return (
+            <i style={style} className={'fa fa-check fa-lg ' + this.props.iconClass} onClick={this.props.handleClick} onMouseOver={this.props.handleOver} title={this.props.title}></i>
+        );
+    }
+});
+
+var EligibleIcon = React.createClass({
+    hover : function(e) {
+        if (this.props.value.eligible == '0') {
+            $(e.target).tooltip('show');
+        } else {
+            $(e.target).tooltip('destroy');
+        }
+    },
+
+    render : function() {
+        var title = null;
+        var iconClass = null;
+        if (this.props.value.eligible == '1') {
+            iconClass = 'fa-check text-success';
+            title = 'Eligible';
+        } else {
+            iconClass = 'fa-times text-danger';
+            title = 'Reason: ' + this.props.value.ineligible_reason;
+        }
+        return (
+            <Icon iconClass={iconClass} handleClick={this.props.handleClick} handleOver={this.hover} title={title} />
+        );
+    }
+});
+
+var BannedIcon = React.createClass({
+
+    hover : function(e) {
+        if (this.props.value.banned == '1') {
+            $(e.target).tooltip('show');
+        } else {
+            $(e.target).tooltip('destroy');
+        }
+    },
+
+    render : function() {
+        var title = null;
+        var bannedDate = new Date(this.props.value.banned_date * 1000);
+        var iconClass = null;
+        if (this.props.value.banned == '1') {
+            iconClass = 'fa-times text-danger';
+            title = 'Banned: ' + bannedDate.toLocaleDateString() + "\nReason: " + this.props.value.banned_reason;
+        } else {
+            iconClass = 'fa-check text-success';
+            title = 'Click to ban student';
+        }
+        return (
+            <Icon iconClass={iconClass} handleClick={this.props.handleClick} handleOver={this.hover} title={title} />
+        );
+    }
+});
+
+var YesIcon = React.createClass({
+    render : function() {
+        return (
+            <Icon iconClass={'fa-check text-success'} />
+        );
+    }
+});
+
+var NoIcon = React.createClass({
+    render : function() {
+        return (
+            <Icon iconClass={'fa-times text-danger'} />
+        );
+    }
+});
+
+var YesButton = React.createClass({
+        render : function () {
+            return (
+                <button onClick={this.props.handleClick} className="btn btn-sm btn-success">
+                    <i className="fa fa-check"></i> {this.props.label}
+                </button>
+            );
+        }
+});
+
+var NoButton = React.createClass({
+        render : function () {
+            return (
+                <button onClick={this.props.handleClick}  className="btn btn-sm btn-default">
+                    <i className="fa fa-times"></i> {this.props.label}
+                </button>
+            );
+        }
+});
+
 
 // This script will not run after compiled UNLESS the below is wrapped in $(window).load(function(){...});
 React.render(<Setup/>, document.getElementById('tailgate-setup'));

@@ -25,6 +25,12 @@ class Spot extends \Resource
      * @var Variable\Bool
      */
     protected $reserved;
+    
+    /**
+     * Indicates spot is reserved for non-alcoholic tailgating
+     * @var Variable\Bool
+     */
+    protected $sober;
 
     /**
      * If true, spot may be included in lottery.
@@ -40,6 +46,7 @@ class Spot extends \Resource
         $this->lot_id = new \Variable\Integer(null, 'lot_id');
         $this->number = new \Variable\Integer(null, 'number');
         $this->reserved = new \Variable\Bool(false, 'reserved');
+        $this->sober = new \Variable\Bool(false, 'sober');
         $this->active = new \Variable\Bool(true, 'active');
     }
 
@@ -57,6 +64,11 @@ class Spot extends \Resource
     {
         return $this->reserved->get();
     }
+    
+    public function getSober()
+    {
+        return $this->sober->get();
+    }
 
     public function setLotId($lot_id)
     {
@@ -71,6 +83,11 @@ class Spot extends \Resource
     public function setReserved($reserved)
     {
         $this->reserved->set($reserved);
+    }
+    
+    public function setSober($sober)
+    {
+        $this->sober->set($sober);
     }
 
 }
