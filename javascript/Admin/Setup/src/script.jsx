@@ -960,6 +960,7 @@ var Games = React.createClass({
         return {
             visitors : [],
             availableSpots : 0,
+            submissions : 0,
             games : null,
             currentGame : {},
             message : ''
@@ -1070,7 +1071,7 @@ var Games = React.createClass({
                 currentGame = <GameForm visitors={this.state.visitors} save={this.saveGame} />;
             }
         } else if (Object.keys(this.state.currentGame).length > 0) {
-            currentGame = <GameInfo game={this.state.currentGame} startLottery={this.props.startLottery} loadCurrentGame={this.loadGames} availableSpots={this.state.availableSpots}/>;
+            currentGame = <GameInfo game={this.state.currentGame} startLottery={this.props.startLottery} submissions={this.state.submissions} loadCurrentGame={this.loadGames} availableSpots={this.state.availableSpots}/>;
         } else {
             currentGame = null;
         }
@@ -1267,7 +1268,7 @@ var GameInfo = React.createClass({
 
         return (
         <div>
-            <h4>{this.props.game.university} {this.props.game.mascot} - Available spots: {this.props.availableSpots}</h4>
+            <h4>{this.props.game.university} {this.props.game.mascot} - Total submissions: {this.props.submissions}, Available spots: {this.props.availableSpots}</h4>
             {message}
             <div className="row">
                 <div className="col-sm-3">
