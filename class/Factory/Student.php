@@ -14,7 +14,30 @@ class Student extends Base
 
     public static function getCurrentStudent()
     {
-        return self::getById(\Current_User::getId());
+        return self::getByUserId(\Current_User::getId());
+    }
+
+    public static function getByUserId($user_id)
+    {
+        if (!$user_id) {
+            return null;
+        }
+        $db = \Database::getDB();
+        $student = $db->addTable('tg_student');
+        $student->addFieldConditional('user_id', $user_id);
+        $users = $db->addTable('users');
+        $users->addField('email');
+        $users->addField('username');
+
+        $conditional = $db->createConditional($student->getField('user_id'), $users->getField('id'));
+        $db->joinResources($student, $users, $conditional);
+        $row = $db->selectOneRow();
+        if (!$row) {
+            return null;
+        }
+        $stdObj = new Resource;
+        $stdObj->setVars($row);
+        return $stdObj;
     }
 
     public function postNewStudent($user_id)
@@ -40,8 +63,8 @@ class Student extends Base
         $users->addField('email');
         $users->addField('username');
         $conditional = $db->createConditional($student->getField('user_id'), $users->getField('id'));
-        $db->joinResources($student, $users, $conditional);        
-        
+        $db->joinResources($student, $users, $conditional);
+
         $limit = filter_input(INPUT_GET, 'limit', FILTER_SANITIZE_NUMBER_INT);
         if (empty($limit)) {
             $limit = 50;
@@ -69,13 +92,13 @@ class Student extends Base
         }
         $db = \Database::getDB();
         $student = $db->addTable('tg_student');
+        $student->addFieldConditional('id', $student_id);
         $users = $db->addTable('users');
         $users->addField('email');
         $users->addField('username');
 
         $conditional = $db->createConditional($student->getField('user_id'), $users->getField('id'));
         $db->joinResources($student, $users, $conditional);
-
         $row = $db->selectOneRow();
         if (!$row) {
             return $row;
