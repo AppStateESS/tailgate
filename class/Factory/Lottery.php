@@ -181,6 +181,8 @@ class Lottery extends Base
         $spotTable->addField('number');
         $spotTable->addField('id');
         $spotTable->addField('lot_id');
+        $spotTable->addField('sober');
+        
         $spotTable->addFieldConditional('active', 1);
         $spotTable->addFieldConditional('reserved', 0);
         $cond = $db->createConditional($spotTable->getField('lot_id'), $lotTable->getField('id'), '=');
@@ -223,31 +225,45 @@ class Lottery extends Base
         return $db->select();
     }
 
-    public function pickLot($lottery_id, $lot_id)
+    public function pickSpot($lottery_id, $spot_id)
     {
         if (empty($lottery_id)) {
             throw new \Exception('Missing lottery id');
         }
 
-        if (empty($lot_id)) {
-            throw new \Exception('Missing lot id');
+        if (empty($spot_id)) {
+            throw new \Exception('Missing spot id');
         }
 
         $lottery = new Resource;
         $lottery->setId($lottery_id);
         $this->load($lottery);
-
-        $spots = $this->getAvailableSpots($lottery->getGameId(), $lot_id);
-        if (empty($spots)) {
-            throw new \Exception('No available spots');
+        $lot_id = Spot::getLotIdFromId($spot_id);
+        if (empty($lot_id)) {
+            throw new \Exception('Unknown spot id: ' . $spot_id);
         }
-        $spot = array_pop($spots);
-        $lottery->setSpotId($spot['id']);
-        $lottery->setLotId($spot['lot_id']);
-        $this->save($lottery);
-        return $lottery->getSpotId();
+        
+        if ($this->spotTaken($lottery->getGameId(), $spot_id)) {
+            return false;
+        } else {
+            $lottery->setSpotId($spot_id);
+            $lottery->setLotId($lot_id);
+            self::saveResource($lottery);
+            return true;
+        }
+
     }
 
+    private function spotTaken($game_id, $spot_id)
+    {
+        $db = \Database::getDB();
+        $tbl = $db->addTable('tg_lottery');
+        $tbl->addFieldConditional('game_id', $game_id);
+        $tbl->addFieldConditional('spot_id', $spot_id);
+        $result = $db->selectOneRow();
+        return (bool)$result;
+    }
+    
     public function getSpotByLotteryId($lottery_id)
     {
         $lottery = new Resource;
@@ -256,6 +272,7 @@ class Lottery extends Base
 
         $db = \Database::getDB();
         $spotTable = $db->addTable('tg_spot');
+        $spotTable->addFieldConditional('id', $lottery->getSpotId());
         $lotTable = $db->addTable('tg_lot');
         $lotTable->addField('title');
         $cond = $db->createConditional($spotTable->getField('lot_id'), $lotTable->getField('id'), '=');
@@ -280,11 +297,12 @@ class Lottery extends Base
             return null;
         }
 
+        $game = Game::getById($game_id);
         foreach ($result as $row) {
             if ($row['winner'] == '1') {
-                $this->sendWinnerEmail($row);
+                $this->sendWinnerEmail($row, $game);
             } else {
-                $this->sendLoserEmail($row);
+                $this->sendLoserEmail($row, $game);
             }
         }
     }
@@ -309,11 +327,10 @@ class Lottery extends Base
         return $transport;
     }
 
-    private function sendWinnerEmail($lottery)
+    private function sendWinnerEmail($lottery, \tailgate\Resource\Game $game)
     {
         $transport = $this->getSwiftTransport();
 
-        $game = Game::getById($lottery['game_id']);
         $student = StudentFactory::getById($lottery['student_id']);
 
         $variables = $game->getStringVars();
