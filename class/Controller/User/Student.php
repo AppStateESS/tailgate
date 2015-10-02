@@ -90,7 +90,7 @@ class Student extends Base
         $factory = new Factory;
 
         if (\Current_User::isLogged()) {
-            $student = $factory->getById(\Current_User::getId());
+            $student = $factory->getCurrentStudent();
             if ($student) {
                 // student is logged in and has account
                 return $this->showStatus($student->getId());
