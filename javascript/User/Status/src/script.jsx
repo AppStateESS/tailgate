@@ -23,6 +23,7 @@ var Status = React.createClass({
             }).done(function(data) {
                 currentGame = data;
                 if (currentGame) {
+                    // get the student's lottery submission for the current game
                     $.getJSON('tailgate/User/Lottery', {
                         command: 'get',
                         game_id: data.id
@@ -64,10 +65,10 @@ var Status = React.createClass({
 
     render : function() {
         var content;
-        if (this.state.currentGame.id === 0) {
+        if (this.state.currentGame === null) {
             content = <h4>No games scheduled. Try back later.</h4>;
         } else {
-            content = <Game game={this.state.currentGame} lottery={this.state.lottery} spot={this.state.spot} reload={this.loadData}/>;
+            content = <Game game={this.state.currentGame} lottery={this.state.lottery} spot={this.state.spot} updateLottery={this.loadData}/>;
         }
         return (
             <div>
@@ -94,7 +95,7 @@ var Game = React.createClass({
         return (
             <div>
                 {this.props.game.length > 0 ? <h3>{this.props.game.university} {this.props.game.mascot} - {this.props.game.kickoff_format}</h3> : null}
-                <GameStatus game={this.props.game} lottery={this.props.lottery} spot={this.props.spot} updateLottery={this.props.reload}/>
+                <GameStatus game={this.props.game} lottery={this.props.lottery} spot={this.props.spot} updateLottery={this.props.updateLottery}/>
             </div>
         );
     }
@@ -179,7 +180,8 @@ var GameStatus = React.createClass({
 var ConfirmSpot = React.createClass({
     getInitialState: function() {
         return {
-            availableLots: []
+            availableSpots: [],
+            message : null
         };
     },
 
@@ -190,46 +192,65 @@ var ConfirmSpot = React.createClass({
     },
 
     componentDidMount: function() {
+        this.loadAvailableSpots();
+    },
 
+
+    loadAvailableSpots : function() {
         $.getJSON('tailgate/User/Lottery', {
-            command: 'getAvailableLots'
+            command : 'spotChoice'
         }).done(function(data){
             this.setState({
-                availableLots : data
+                availableSpots : data
             });
         }.bind(this));
     },
 
     confirmSpot : function() {
-        var lotId = $('#lot-choice').val();
+        var spotId = $(React.findDOMNode(this.refs.spotChoice)).val();
+        //var spotId = $('#spot-choice').val();
         var lotteryId = this.props.lottery.id;
         $.post('tailgate/User/Lottery', {
-            command : 'pickLot',
-            lotId : lotId,
+            command : 'pickSpot',
+            spotId : spotId,
             lotteryId : lotteryId
         },null, 'json').done(function(data){
-            this.props.updateLottery();
+            if (data.success) {
+                this.props.updateLottery();
+            } else {
+                this.setState({
+                    message : <div className="alert alert-danger">Your requested spot was chosen by someone else. Pick again.</div>
+                });
+                this.loadAvailableSpots();
+            }
+            //this.props.updateLottery();
         }.bind(this));
     },
 
     render : function() {
-        var availableLots = this.state.availableLots;
-        if (availableLots.length > 0) {
-            var options = availableLots.map(function(val, i){
-                return (<option key={i} value={val.lot_id}>{val.lot_title} - {val.available} slots</option>);
+        var sober;
+        if (this.state.availableSpots.length > 0) {
+            var options = this.state.availableSpots.map(function(val, i){
+                if (val.sober === '1') {
+                    sober = '(Non-alcoholic)';
+                } else {
+                    sober = '';
+                }
+                return (<option key={i} value={val.id}>{val.lot_title + ', #' + val.number + ' ' + sober}</option>);
             });
             return (
                 <div className="row">
                     <div className="col-sm-12">
-                        <p>You have confirmed your winning ticket. Pick the lot you wish to tailgate in below. Choose quickly, other winners may be picking spots while you decide.</p>
+                        <p>You have confirmed your winning ticket. Pick the spot you wish to tailgate in below. Choose quickly, other winners may be picking spots while you decide.</p>
+                        {this.state.message}
                     </div>
                     <div className="col-sm-4">
-                        <select id="lot-choice" className="form-control">
+                        <select ref="spotChoice" className="form-control">
                             {options}
                         </select>
                     </div>
                     <div className="col-sm-4">
-                        <button className="btn btn-primary" onClick={this.confirmSpot}>Choose tailgating lot</button>
+                        <button className="btn btn-primary" onClick={this.confirmSpot}>Choose tailgating spot</button>
                     </div>
                 </div>
             );
