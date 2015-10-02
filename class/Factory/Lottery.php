@@ -206,7 +206,7 @@ class Lottery extends Base
         $lotteryTable->addFieldConditional('spot_id', 0, '!=');
         $lotteryTable->addFieldConditional('game_id', $game_id);
         $lotteryTable->addField('spot_id');
-
+        
         $db = \Database::getDB();
         $spotTable = $db->addTable('tg_spot');
         $lotTable = $db->addTable('tg_lot');
@@ -397,6 +397,16 @@ class Lottery extends Base
         $tbl->addValue('picked_up', 1);
         $tbl->addFieldConditional('id', $lottery_id);
         $db->update();
+    }
+    
+    public static function getTotalSubmissions($game_id)
+    {
+        $db = \Database::getDB();
+        $tbl = $db->addTable('tg_lottery');
+        $tbl->addFieldConditional('game_id', $game_id);
+        $tbl->addField('id', 'count')->showCount(true);
+        $count = $db->selectColumn();
+        return $count;
     }
 
 }
