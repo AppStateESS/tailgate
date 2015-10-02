@@ -141,25 +141,39 @@ class Game extends Base
 
     public static function getById($id)
     {
-        $resource = new Resource;
-        $resource->setid($id);
-        self::loadById($resource);
-        return $resource;
+        $game = new Resource;
+
+        $db = \Database::getDB();
+        $tbl = $db->addTable('tg_game');
+        $tbl2 = $db->addTable('tg_visitor');
+        $tbl2->addField('university');
+        $tbl2->addField('mascot');
+        $cd = $db->createConditional($tbl->getField('visitor_id'), $tbl2->getField('id'), '=');
+        $db->joinResources($tbl, $tbl2, $cd);
+
+        $tbl->addFieldConditional('id', $id);
+        $row = $db->selectOneRow();
+
+        if (empty($row)) {
+            return null;
+        }
+        $game->setVars($row);
+        return $game;
     }
 
     public static function getGameStatus()
     {
         $factory = new self;
         $game = $factory->getCurrent();
-        
+
         if (empty($game)) {
             return '<p>No game scheduled. Check back later.</p>';
         }
-        
+
         $gamevars = $game->getStringVars();
-        $gameinfo =  '<p>' . $gamevars['university'] . '<br />' . $gamevars['mascot'] .
+        $gameinfo = '<p>' . $gamevars['university'] . '<br />' . $gamevars['mascot'] .
                 '<br />' . $gamevars['kickoff_format'] . '</p>';
-        
+
         return $gameinfo;
     }
 
