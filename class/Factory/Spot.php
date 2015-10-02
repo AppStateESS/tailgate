@@ -61,5 +61,15 @@ class Spot extends Base
         $spot->setSober($sober);
         $spot->save();
     }
+    
+    public static function getLotIdFromId($spot_id)
+    {
+        $db = \Database::getDB();
+        $tbl = $db->addTable('tg_spot');
+        $tbl->addField('lot_id');
+        $tbl->addFieldConditional('id', $spot_id);
+        $row = $db->selectOneRow();
+        return isset($row['lot_id']) ? $row['lot_id'] : null;
+    }
 
 }
