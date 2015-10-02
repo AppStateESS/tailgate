@@ -43,6 +43,10 @@ class Lottery extends Base
                 $lottery_id = filter_input(INPUT_GET, 'lotteryId', FILTER_SANITIZE_NUMBER_INT);
                 $json = $factory->getSpotByLotteryId($lottery_id);
                 break;
+
+            case 'spotChoice':
+                $json = $factory->getAvailableSpots();
+                break;
         }
 
         $view = new \View\JsonView($json);
@@ -73,8 +77,8 @@ class Lottery extends Base
                 $this->apply();
                 break;
 
-            case 'pickLot':
-                $view = $this->pickLot();
+            case 'pickSpot':
+                $view = $this->pickSpot();
                 break;
         }
         $response = new \Response($view);
@@ -90,15 +94,16 @@ class Lottery extends Base
         $lottery->apply($student_id, $game_id);
     }
 
-    private function pickLot()
+    private function pickSpot()
     {
         $student = StudentFactory::getCurrentStudent();
         $student_id = $student->getId();
         $lotteryFactory = new Factory;
-        $lot_id = filter_input(INPUT_POST, 'lotId', FILTER_SANITIZE_NUMBER_INT);
+        $spot_id = filter_input(INPUT_POST, 'spotId', FILTER_SANITIZE_NUMBER_INT);
         $lottery_id = filter_input(INPUT_POST, 'lotteryId', FILTER_SANITIZE_NUMBER_INT);
-        $number = $lotteryFactory->pickLot($lottery_id, $lot_id);
-        $view = new \View\JsonView(array('number' => $number));
+        $result = $lotteryFactory->pickSpot($lottery_id, $spot_id);
+        
+        $view = new \View\JsonView(array('success' => $result));
         return $view;
     }
 
