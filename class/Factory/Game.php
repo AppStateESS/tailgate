@@ -79,7 +79,7 @@ class Game extends Base
      * 
      * @return \tailgate\Resource\Game
      */
-    public function getCurrent()
+    public static function getCurrent()
     {
         $game = new Resource;
 
@@ -121,7 +121,7 @@ class Game extends Base
         return $vars;
     }
 
-    public function completeLottery($game_id)
+    public static function completeLottery($game_id)
     {
         $db = \Database::getDB();
         $tbl = $db->addTable('tg_game');
@@ -130,7 +130,7 @@ class Game extends Base
         $db->update();
     }
 
-    public function completeGame($game_id)
+    public static function completeGame($game_id)
     {
         $db = \Database::getDB();
         $tbl = $db->addTable('tg_game');
@@ -161,18 +161,42 @@ class Game extends Base
         return $game;
     }
 
-    public static function getGameStatus()
+    public static function getGameStatus(\tailgate\Resource\Game $game)
     {
-        $factory = new self;
-        $game = $factory->getCurrent();
-
-        if (empty($game)) {
-            return '<p>No game scheduled. Check back later.</p>';
-        }
-
         $gamevars = $game->getStringVars();
         $gameinfo = '<p>' . $gamevars['university'] . '<br />' . $gamevars['mascot'] .
                 '<br />' . $gamevars['kickoff_format'] . '</p>';
+
+        $now = time();
+
+        $start = $game->getSignupStart();
+        $end = $game->getSignupEnd();
+        $pickup = $game->getPickupDeadline();
+        $kickoff = $game->getKickoff();
+
+        if ($start > $now) {
+            $status = 'Signup starts on ' . strftime(TAILGATE_TIME_FORMAT, $start) . ', ' .
+                    strftime(TAILGATE_DATE_FORMAT, $start);
+            $color = 'info';
+        } elseif ($end > $now) {
+            $status = 'Signup available until ' . strftime(TAILGATE_TIME_FORMAT, $end) . ', ' .
+                    strftime(TAILGATE_DATE_FORMAT, $end);
+            $color = 'success';
+        } elseif ($pickup > $now) {
+            if ($game->getLotteryRun()) {
+                $status = 'Lottery complete. Winners may pick up tickets until ' . strftime(TAILGATE_TIME_FORMAT, $pickup) . ', ' .
+                        strftime(TAILGATE_DATE_FORMAT, $pickup);
+                $color = 'danger';
+            } else {
+                $status = 'Lottery to be run soon! Check back later to see if you won.';
+                $color = 'warning';
+            }
+        } elseif ($kickoff > $now) {
+            $status = 'Lottery process complete. Pickup deadline has passed. Unclaimed spaces offered on first come, first serve basis.';
+            $color = 'info';
+        }
+
+        $gameinfo .= "<div style='white-space:normal' class='alert alert-$color'>$status</div>";
 
         return $gameinfo;
     }
