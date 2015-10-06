@@ -3,6 +3,7 @@
 namespace tailgate\Factory;
 
 use tailgate\Resource\Lottery as Resource;
+use tailgate\Factory\Game as GameFactory;
 use tailgate\Factory\Student as StudentFactory;
 
 /**
@@ -14,9 +15,8 @@ class Lottery extends Base
 
     public function getByStudentId($student_id, $game_id = null)
     {
-        $factory = new Game;
         if (empty($game_id)) {
-            $game = $factory->getCurrent();
+            $game = GameFactory::getCurrent();
             $game_id = $game->getId();
         }
 
@@ -44,7 +44,7 @@ class Lottery extends Base
         $now = time();
         $game = new \tailgate\Resource\Game;
         $game->setId($game_id);
-        $gameFactory = new Game;
+        $gameFactory = new GameFactory;
         if (!$gameFactory->loadByID($game)) {
             throw new \Exception('Game does not exist.');
         }
@@ -100,21 +100,22 @@ class Lottery extends Base
      */
     public function chooseWinners()
     {
-        $gameFactory = new Game;
-        $currentGame = $gameFactory->getCurrent();
+        $currentGame = GameFactory::getCurrent();
         $total_spots = $this->totalAvailableSpots();
 
         $db = \Database::getDB();
         $tbl = $db->addTable('tg_lottery');
         $tbl->addField('id');
+        $tbl->addField('student_id');
         $tbl->addFieldConditional('winner', 0);
         $tbl->addFieldConditional('game_id', $currentGame->getId());
         $tbl->randomOrder();
-        $result = $db->select();
+        
         for ($i = 0; $i < $total_spots; $i++) {
-            $id = $db->selectColumn();
-            if ($id) {
-                $this->flagWinner($id);
+            $row = $db->selectOneRow();
+            if ($row['id']) {
+                $this->flagWinner($row['id']);
+                Student::incrementWins($row['student_id']);
             } else {
                 break;
             }
@@ -135,29 +136,26 @@ class Lottery extends Base
 
     public function completeLottery($game_id = 0)
     {
-        $factory = new Game;
         if (empty($game_id)) {
-            $game = $factory->getCurrent();
+            $game = GameFactory::getCurrent();
             $game_id = $game->getId();
         }
-        $game = $factory->completeLottery($game_id);
+        $game = GameFactory::completeLottery($game_id);
     }
 
     public function completeGame($game_id = 0)
     {
-        $factory = new Game;
         if (empty($game_id)) {
-            $game = $factory->getCurrent();
-            $game_id = $game->getId();
+            $game_id = GameFactory::getCurrentId();
         }
-        $game = $factory->completeGame($game_id);
+        $game = GameFactory::completeGame($game_id);
     }
 
     public function getAvailableSpots($game_id = 0, $lot_id = 0)
     {
         if (empty($game_id)) {
-            $factory = new Game;
-            $game = $factory->getCurrent();
+            $factory = new GameFactory;
+            $game = GameFactory::getCurrent();
             $game_id = $game->getId();
         }
 
@@ -182,7 +180,7 @@ class Lottery extends Base
         $spotTable->addField('id');
         $spotTable->addField('lot_id');
         $spotTable->addField('sober');
-        
+
         $spotTable->addFieldConditional('active', 1);
         $spotTable->addFieldConditional('reserved', 0);
         $cond = $db->createConditional($spotTable->getField('lot_id'), $lotTable->getField('id'), '=');
@@ -196,8 +194,8 @@ class Lottery extends Base
     public function getAvailableLots($game_id = 0)
     {
         if (empty($game_id)) {
-            $factory = new Game;
-            $game = $factory->getCurrent();
+            $factory = new GameFactory;
+            $game = GameFactory::getCurrent();
             $game_id = $game->getId();
         }
 
@@ -206,7 +204,7 @@ class Lottery extends Base
         $lotteryTable->addFieldConditional('spot_id', 0, '!=');
         $lotteryTable->addFieldConditional('game_id', $game_id);
         $lotteryTable->addField('spot_id');
-        
+
         $db = \Database::getDB();
         $spotTable = $db->addTable('tg_spot');
         $lotTable = $db->addTable('tg_lot');
@@ -242,7 +240,7 @@ class Lottery extends Base
         if (empty($lot_id)) {
             throw new \Exception('Unknown spot id: ' . $spot_id);
         }
-        
+
         if ($this->spotTaken($lottery->getGameId(), $spot_id)) {
             return false;
         } else {
@@ -251,7 +249,6 @@ class Lottery extends Base
             self::saveResource($lottery);
             return true;
         }
-
     }
 
     private function spotTaken($game_id, $spot_id)
@@ -261,9 +258,9 @@ class Lottery extends Base
         $tbl->addFieldConditional('game_id', $game_id);
         $tbl->addFieldConditional('spot_id', $spot_id);
         $result = $db->selectOneRow();
-        return (bool)$result;
+        return (bool) $result;
     }
-    
+
     public function getSpotByLotteryId($lottery_id)
     {
         $lottery = new Resource;
@@ -283,8 +280,7 @@ class Lottery extends Base
     public function notify($game_id = 0)
     {
         if (empty($game_id)) {
-            $factory = new Game;
-            $game = $factory->getCurrent();
+            $game = GameFactory::getCurrent();
             $game_id = $game->getId();
         }
 
@@ -309,6 +305,12 @@ class Lottery extends Base
 
     private function getSwiftTransport()
     {
+        static $transport;
+
+        if (!empty($transport)) {
+            return $transport;
+        }
+
         require_once PHPWS_SOURCE_DIR . 'lib/vendor/autoload.php';
         switch (SWIFT_MAIL_TRANSPORT_TYPE) {
             case 1:
@@ -329,21 +331,35 @@ class Lottery extends Base
 
     private function sendWinnerEmail($lottery, \tailgate\Resource\Game $game)
     {
-        $transport = $this->getSwiftTransport();
-
-        $student = StudentFactory::getById($lottery['student_id']);
-
         $variables = $game->getStringVars();
         $variables['confirmation_link'] = \Server::getSiteUrl() . 'tailgate/User/Lottery/?command=confirm&amp;hash=' .
                 $lottery['confirmation'];
-
         $tpl = new \Template();
         $tpl->setModuleTemplate('tailgate', 'Admin/Lottery/Winner.html');
         $tpl->addVariables($variables);
         $content = $tpl->get();
 
+        $this->sendEmail('Tailgate successful', $lottery['student_id'], $content);
+    }
+
+    private function sendLoserEmail($lottery, \tailgate\Resource\Game $game)
+    {
+        $variables = $game->getStringVars();
+        $tpl = new \Template();
+        $tpl->setModuleTemplate('tailgate', 'Admin/Lottery/Loser.html');
+        $tpl->addVariables($variables);
+        $content = $tpl->get();
+
+        $this->sendEmail('Tailgate unsuccessful', $lottery['student_id'], $content);
+    }
+
+    private function sendEmail($subject, $student_id, $content)
+    {
+        $transport = $this->getSwiftTransport();
+        $student = StudentFactory::getById($student_id);
+
         $message = \Swift_Message::newInstance();
-        $message->setSubject('Tailgate successful');
+        $message->setSubject($subject);
         $message->setFrom(\Settings::get('tailgate', 'reply_to'));
         $message->setTo($student->getEmail());
         $message->setBody($content, 'text/html');
@@ -352,14 +368,9 @@ class Lottery extends Base
         $mailer->send($message);
     }
 
-    private function sendLoserEmail($lottery)
-    {
-        $this->getSwiftTransport();
-    }
-
     public function confirm($hash)
     {
-        $gfactory = new Game;
+        $gfactory = new GameFactory;
         $game = $gfactory->getCurrent();
         $db = \Database::getDB();
         $t = $db->addTable('tg_lottery');
@@ -389,7 +400,7 @@ class Lottery extends Base
         }
         return $content;
     }
-    
+
     public function pickedUp($lottery_id)
     {
         $db = \Database::getDB();
@@ -398,9 +409,12 @@ class Lottery extends Base
         $tbl->addFieldConditional('id', $lottery_id);
         $db->update();
     }
-    
+
     public static function getTotalSubmissions($game_id)
     {
+        if (empty($game_id)) {
+            throw new \Exception('Game id is zero');
+        }
         $db = \Database::getDB();
         $tbl = $db->addTable('tg_lottery');
         $tbl->addFieldConditional('game_id', $game_id);
