@@ -24,6 +24,8 @@ class Lot extends Base
 
         if ($spots) {
             $this->createNewSpots($spots, $lot);
+        } else {
+            throw new \Exception('Cannot create an empty lot');
         }
     }
 
