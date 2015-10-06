@@ -23,6 +23,10 @@ class Lottery extends Base
                 $json = array('available_spots' => $factory->totalAvailableSpots());
                 break;
 
+            case 'submissionCount':
+                $json = array('submissions' => $this->getTotalSubmissions());
+                break;
+
             default:
                 throw new \Exception('Bad command:' . $request->getVar('command'));
         }
@@ -51,11 +55,11 @@ class Lottery extends Base
             case 'notify':
                 $factory->notify();
                 break;
-            
+
             case 'completeLottery':
                 $factory->completeLottery();
                 break;
-            
+
             case 'pickup':
                 $this->postPickUp();
                 break;
@@ -73,7 +77,7 @@ class Lottery extends Base
         $factory = new Factory;
         $factory->pickedUp($lottery_id);
     }
-    
+
     private function chooseWinners()
     {
         $factory = new Factory;
@@ -82,6 +86,18 @@ class Lottery extends Base
         $data = array('spots_filled' => $winners, 'spots_left' => $spots_left);
         $view = new \View\JsonView($data);
         return $view;
+    }
+
+    private function getTotalSubmissions()
+    {
+        $factory = new Factory;
+        $current_game = \tailgate\Factory\Game::getCurrentId();
+        if (empty($current_game)) {
+            $submissions = 0;
+        } else {
+            $submissions = $factory->getTotalSubmissions($current_game);
+        }
+        return $submissions;
     }
 
 }
