@@ -40,7 +40,7 @@ var Setup = React.createClass({
 
     getInitialState: function() {
         return {
-            currentTab : 'lots',
+            currentTab : 'games',
             currentGame : {},
             lots : []
         };
@@ -90,7 +90,7 @@ var Setup = React.createClass({
     render : function() {
         var pageContent;
         var canAdd = false;
-        if (this.state.currentGame.id !== undefined) {
+        if (this.state.currentGame && this.state.currentGame.id !== undefined) {
             canAdd = true;
         }
         switch(this.state.currentTab) {
@@ -112,10 +112,6 @@ var Setup = React.createClass({
 
             case 'students':
             pageContent = <Students canAdd={canAdd} game={this.state.currentGame}/>;
-            break;
-
-            case 'reports':
-            pageContent = <Reports/>;
             break;
 
             case 'settings':
@@ -443,8 +439,8 @@ var LotForm = React.createClass({
 
     save : function() {
         var title = $('#lotTitle').val();
-        var totalSpaces = $('#totalSpaces').val();
-        if (title.length > 0 && totalSpaces.length > 0) {
+        var totalSpaces = +$('#totalSpaces').val();
+        if (title.length > 0 && totalSpaces > 0) {
             $.post('tailgate/Admin/Lot', {
                 command : 'add',
                 title: title,
@@ -624,9 +620,9 @@ var Spots = React.createClass({
                             } else {
                                 if (value.picked_up === '0') {
                                     var pickupClick = this.pickup.bind(this,i);
-                                    pickedUp = <button title="Click when student arrives to pick up tag" className="btn btn-sm btn-danger" onClick={pickupClick}><i className="fa fa-times"></i></button>;
+                                    pickedUp = <button title="Click when student arrives to pick up tag" className="btn btn-sm btn-danger" onClick={pickupClick}><i className="fa fa-thumbs-down"></i></button>;
                                 } else {
-                                    pickedUp = <span className="text-success"><YesIcon/></span>;
+                                    pickedUp = <span className="text-success"><i className="fa fa-thumbs-o-up text-success"></i></span>;
                                 }
                                 lotteryInfo = <div><strong>{value.first_name} {value.last_name}</strong></div>;
                             }
@@ -944,15 +940,6 @@ var StudentRow = React.createClass({
     }
 });
 
-var Reports = React.createClass({
-
-    render: function() {
-        return (
-            <div>Reports</div>
-        );
-    }
-});
-
 var Games = React.createClass({
     mixins: [tgMixin],
 
@@ -979,9 +966,20 @@ var Games = React.createClass({
         }.bind(this));
     },
 
+    loadSubmissions : function() {
+        $.getJSON('tailgate/Admin/Lottery', {
+            command : 'submissionCount'
+        }).done(function(data){
+            this.setState({
+                submissions:data.submissions
+            });
+        }.bind(this));
+    },
+
     componentDidMount : function() {
         this.loadVisitors();
         this.loadGames();
+        this.loadSubmissions();
         if (this.isMounted()) {
             $('#signup-start').datetimepicker({
                 timepicker:true,
@@ -1003,6 +1001,12 @@ var Games = React.createClass({
                 format: 'n/j/Y'
             });
         }
+    },
+
+    updateGame : function(data) {
+        this.setState({
+            currentGame : data
+        });
     },
 
     saveGame : function() {
@@ -1071,7 +1075,7 @@ var Games = React.createClass({
                 currentGame = <GameForm visitors={this.state.visitors} save={this.saveGame} />;
             }
         } else if (Object.keys(this.state.currentGame).length > 0) {
-            currentGame = <GameInfo game={this.state.currentGame} startLottery={this.props.startLottery} submissions={this.state.submissions} loadCurrentGame={this.loadGames} availableSpots={this.state.availableSpots}/>;
+            currentGame = <GameInfo updateGame={this.updateGame} game={this.state.currentGame} startLottery={this.props.startLottery} submissions={this.state.submissions} loadCurrentGame={this.loadGames} availableSpots={this.state.availableSpots}/>;
         } else {
             currentGame = null;
         }
@@ -1101,14 +1105,15 @@ var Games = React.createClass({
 var GameInfo = React.createClass({
 
     getInitialState: function() {
+        // allowEdit = true allows you to force a date change
         return {
-            game : {},
-            message : null
+            message : null,
+            allowEdit : false
         };
     },
 
     componentDidMount : function() {
-        if (this.props.game.lottery_run == '0') {
+        if (this.props.game.lottery_run === '0' || this.state.allowEdit) {
             this.initializeDateTime(this.props.game);
         }
         this.updateGame(this.props.game);
@@ -1137,12 +1142,9 @@ var GameInfo = React.createClass({
             return;
         }
 
-        this.setState({
-            game : game
-        });
+        this.props.updateGame(game);
 
-        if (game.lottery_run == '0') {
-
+        if (game.lottery_run == '0' || this.state.allowEdit) {
             $('#signup-start').datetimepicker({
                 value : game.signup_start_ts,
                 maxDate : game.signup_end_ts.substr(0, 10)
@@ -1253,12 +1255,14 @@ var GameInfo = React.createClass({
     render : function() {
         var button = null;
         var message = null;
+        var timestamp = Math.floor(Date.now() / 1000);
 
         if (this.props.game.lottery_run == '0') {
-            button = <LotteryRun game={this.state.game} startLottery={this.props.startLottery}/>;
+            button = <LotteryRun game={this.props.game} startLottery={this.props.startLottery}/>;
         } else if (this.props.game.kickoff < Math.floor(Date.now() / 1000)) {
             button = <button className="btn btn-primary" onClick={this.completeGame}>Complete lottery</button>;
         }
+
 
         if (this.state.message) {
             message = <div className="alert alert-danger"><i className="fa fa-exclamation-circle"></i> {this.state.message}</div>;
@@ -1266,36 +1270,41 @@ var GameInfo = React.createClass({
             message = null;
         }
 
+        var signupStartColor = this.props.game.signup_start > timestamp ? 'success' : 'info';
+        var signupEndColor = this.props.game.signup_end > timestamp ? 'success' : 'info';
+        var pickupColor = this.props.game.pickup_deadline > timestamp ? 'success' : 'info';
+        var kickoffColor = this.props.game.kickoff > timestamp ? 'success' : 'info';
+
         return (
         <div>
             <h4>{this.props.game.university} {this.props.game.mascot} - Total submissions: {this.props.submissions}, Available spots: {this.props.availableSpots}</h4>
             {message}
             <div className="row">
                 <div className="col-sm-3">
-                    <div className="alert alert-success">
-                        {this.props.game.lottery_run == '0' ? <button className="pull-right btn btn-sm btn-primary" id="signup-start" onClick={this.signupStartDate}>Edit</button> : null}
+                    <div className={'alert alert-' + signupStartColor}>
+                        {this.props.game.lottery_run == '0' || this.state.allowEdit ? <button className="pull-right btn btn-sm btn-primary" id="signup-start" onClick={this.signupStartDate}>Edit</button> : null}
                         <big><strong>Signup start</strong></big><br />
-                        {this.state.game.signup_start_format}
+                        {this.props.game.signup_start_format}
                     </div>
                 </div>
                 <div className="col-sm-3">
-                    <div className="alert alert-success">
-                        {this.props.game.lottery_run == '0' ? <button className="pull-right btn btn-sm btn-primary" id="signup-end" onClick={this.signupEndDate}>Edit</button> : null}
+                    <div className={'alert alert-' + signupEndColor}>
+                        {this.props.game.lottery_run == '0' || this.state.allowEdit ? <button className="pull-right btn btn-sm btn-primary" id="signup-end" onClick={this.signupEndDate}>Edit</button> : null}
                         <big><strong>Signup deadline</strong></big><br />
-                        {this.state.game.signup_end_format}
+                        {this.props.game.signup_end_format}
                     </div>
                 </div>
                 <div className="col-sm-3">
-                    <div className="alert alert-success">
-                        {this.props.game.lottery_run == '0' ? <button className="pull-right btn btn-sm btn-primary" id="pickup-deadline" onClick={this.pickupDeadlineDate}>Edit</button> : null}
+                    <div className={'alert alert-' + pickupColor}>
+                        {this.props.game.lottery_run == '0' || this.state.allowEdit ? <button className="pull-right btn btn-sm btn-primary" id="pickup-deadline" onClick={this.pickupDeadlineDate}>Edit</button> : null}
                         <big><strong>Pickup Deadline</strong></big><br />
-                        {this.state.game.pickup_deadline_format}
+                        {this.props.game.pickup_deadline_format}
                     </div>
                 </div>
                 <div className="col-sm-3">
-                    <div className="alert alert-success">
-                        {this.props.game.lottery_run == '0' ? <button className="pull-right btn btn-sm btn-primary" id="kickoff" onClick={this.kickoffDate}>Edit</button> : null}
-                        <big><strong>Kickoff:</strong></big><br />{this.state.game.kickoff_format}
+                    <div className={'alert alert-' + kickoffColor}>
+                        {this.props.game.lottery_run == '0' || this.state.allowEdit ? <button className="pull-right btn btn-sm btn-primary" id="kickoff" onClick={this.kickoffDate}>Edit</button> : null}
+                        <big><strong>Kickoff:</strong></big><br />{this.props.game.kickoff_format}
                     </div>
                 </div>
             </div>
