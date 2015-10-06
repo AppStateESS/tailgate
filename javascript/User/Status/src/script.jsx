@@ -129,9 +129,19 @@ var GameStatus = React.createClass({
                         if (this.props.lottery.confirmed === '1') {
                             // current student has confirmed their spot via email
                             if (this.props.lottery.spot_id !== '0') {
-                                content = <div className="alert alert-info">You have chosen lot <strong>{this.props.spot.title}</strong>, spot number <strong>{this.props.spot.number}</strong>. Make sure to go pick up your tag.</div>;
+                                if (this.props.lottery.picked_up === '1') {
+                                    content = <div className="alert alert-info">Your tailgate tag has been picked up. Enjoy the game!</div>;
+                                } else if(this.props.game.pickup_deadline < timestamp) {
+                                    content = <div className="alert alert-info">Sorry, you failed to pick up your tailgating pass in time. It has been forfeited.</div>;
+                                } else {
+                                    content = <div className="alert alert-info">You have chosen lot <strong>{this.props.spot.title}</strong>, spot number <strong>{this.props.spot.number}</strong>. Make sure to go pick up your tag before the {this.props.game.pickup_deadline_format} deadline.</div>;
+                                }
                             } else {
-                                content = <div><ConfirmSpot lottery={this.props.lottery} updateLottery={this.props.updateLottery}/></div>;
+                                if (this.props.game.pickup_deadline < timestamp) {
+                                    content = <div className="alert alert-info">Sorry, you failed to confirm your tailgating win. Your spot has been forfeited.</div>;
+                                } else {
+                                    content = <div><ConfirmSpot lottery={this.props.lottery} updateLottery={this.props.updateLottery}/></div>;
+                                }
                             }
                         } else {
                             // current student has not confirmed their spot
