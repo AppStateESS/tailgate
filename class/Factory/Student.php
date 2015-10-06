@@ -156,4 +156,17 @@ class Student extends Base
         self::deleteResource($student);
     }
 
+    public static function incrementWins($student_id)
+    {
+        if (empty($student_id)) {
+            throw new \Exception('Bad student id:' . $student_id);
+        }
+        $db = \Database::getDB();
+        $tbl = $db->addTable('tg_student');
+        $tbl->addFieldConditional('id', $student_id);
+        $wins = $tbl->getField('wins');
+        $exp = new \Database\Expression($wins . '+1');
+        $tbl->addValue('wins', $exp);
+        $db->update();
+    }
 }
