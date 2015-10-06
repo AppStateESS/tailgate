@@ -30,7 +30,7 @@ class Game extends Base
     private function getCurrent()
     {
         $factory = new Factory;
-        $game = $factory->getCurrent();
+        $game = Factory::getCurrent();
         if ($game) {
             return $game->getStringVars();
         } else {
@@ -40,7 +40,13 @@ class Game extends Base
 
     public static function userStatusSidebar()
     {
-        $vars['current_game'] = Factory::getGameStatus();
+        $game = Factory::getCurrent();
+
+        if (empty($game)) {
+            $vars['current_game'] = 'No game scheduled. Check back later.';
+        } else {
+            $vars['current_game'] = Factory::getGameStatus($game);
+        }
         $vars['student_status'] = \tailgate\Factory\Lottery::getStudentStatus();
 
         $template = new \Template;
