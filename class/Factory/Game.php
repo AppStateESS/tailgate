@@ -128,8 +128,19 @@ class Game extends Base
         $tbl->addFieldConditional('id', (int) $game_id);
         $tbl->addValue('lottery_run', 1);
         $db->update();
+        
+        self::resetEligibility($game_id);
     }
 
+    public static function resetEligibility($game_id)
+    {
+        $db = \Database::getDB();
+        $tbl = $db2->addTable('tg_student');
+        $tbl->addValue('eligible', 1);
+        $tbl->addValue('ineligible_reason', '');
+        $db->update();
+    }
+    
     public static function completeGame($game_id)
     {
         $db = \Database::getDB();
