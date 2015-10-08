@@ -75,7 +75,7 @@ class Student extends Base
         if (!empty($search)) {
             $c1 = $db->createConditional($student->getField('first_name'), "%$search%", 'like');
             $c2 = $db->createConditional($student->getField('last_name'), "%$search%", 'like');
-            $c3 = $db->createConditional($student->getField('username'), "%$search%", 'like');
+            $c3 = $db->createConditional($users->getField('username'), "%$search%", 'like');
             $c4 = $db->createConditional($c1, $c2, 'or');
             $c5 = $db->createConditional($c3, $c4, 'or');
             $db->addConditional($c5);
