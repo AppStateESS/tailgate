@@ -57,7 +57,7 @@ class Lot extends Base
         $id = $spot->addField('id');
         $id->showCount();
         $id->setAlias('total_spots');
-        
+
         $db->setGroupBy($lot->getField('title'));
 
         $conditional = new \Database\Conditional($db, $lot->getField('id'), $spot->getField('lot_id'), '=');
