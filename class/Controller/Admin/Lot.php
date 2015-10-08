@@ -18,7 +18,7 @@ class Lot extends Base
 
         switch ($command) {
             case 'list':
-                $json = $factory->getList(TG_LIST_ACTIVE, 'title');
+                $json = $factory->getList(TG_LIST_ALL, 'title');
                 break;
         }
         $view = new \View\JsonView($json);
@@ -37,15 +37,52 @@ class Lot extends Base
         switch ($request->getVar('command')) {
             case 'add':
                 $factory->postNew();
-                return $response;
+                break;
 
             case 'deactivate':
-                $factory->deactivate($request->getVar('lot_id'));
-                return $response;
+                $this->deactivate($factory, filter_input(INPUT_POST, 'lotId', FILTER_SANITIZE_NUMBER_INT));
+                break;
+            
+            case 'activate':
+                $this->activate($factory, filter_input(INPUT_POST, 'lotId', FILTER_SANITIZE_NUMBER_INT));
+                break;
+            
+            case 'delete':
+                Factory::delete(filter_input(INPUT_POST, 'lotId', FILTER_SANITIZE_NUMBER_INT));
 
             default:
                 throw new \Exception('Bad command:' . $request->getVar('command'));
         }
+        return $response;
+    }
+
+    protected function deactivate($factory, $id)
+    {
+        $factory->deactivate($id);
+
+        $db = \Database::getDB();
+        $tbl = $db->addTable('tg_spot');
+        $tbl->addValue('active', 0);
+        $tbl->addFieldConditional('lot_id', $id);
+        $db->update();
+
+        $view = new \View\JsonView(array('success' => true));
+        $response = new \Response($view);
+        return $response;
+    }
+    protected function activate($factory, $id)
+    {
+        $factory->activate($id);
+
+        $db = \Database::getDB();
+        $tbl = $db->addTable('tg_spot');
+        $tbl->addValue('active', 1);
+        $tbl->addFieldConditional('lot_id', $id);
+        $db->update();
+
+        $view = new \View\JsonView(array('success' => true));
+        $response = new \Response($view);
+        return $response;
     }
 
 }
