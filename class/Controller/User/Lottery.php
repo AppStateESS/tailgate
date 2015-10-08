@@ -45,7 +45,7 @@ class Lottery extends Base
                 break;
 
             case 'spotChoice':
-                $json = $factory->getAvailableSpots();
+                $json = \tailgate\Factory\Lottery::getAvailableSpots();
                 break;
         }
 
