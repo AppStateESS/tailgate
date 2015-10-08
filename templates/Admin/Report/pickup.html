@@ -1,0 +1,28 @@
+<html>
+    <head>
+        <style>
+            body {font-family:sans}
+            table {width:100%;border-collapse: collapse;}
+            td {padding:.5em;}
+            th {padding:1em}
+        </style>
+    </head>
+    <body>
+        <table border='1'>
+            <tr>
+                <th>Lot</th>
+                <th>Spot</th>
+                <th>Student / Username</th>
+                <th>Picked up</th>
+            </tr>
+            <?php foreach ($rows as $row): ?>
+            <tr>
+                <td><?=$row['title'] ? $row['title'] : 'N/A';?></td>
+                <td><?=$row['number'] ? $row['number'] : 'N/A';?></td>
+                <td><?=$row['first_name']?> <?=$row['last_name']?> / <?=$row['username']?></td>
+                <td><?=$row['picked_up'] ? 'Yes' : 'No';?></td>
+            </tr>
+            <?php endforeach; ?>
+        </table>
+    </body>
+</html>
