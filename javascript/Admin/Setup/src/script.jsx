@@ -95,7 +95,7 @@ var Setup = React.createClass({
         }
         switch(this.state.currentTab) {
             case 'games':
-            pageContent = <Games startLottery={this.startLottery} lots={this.state.lots}/>;
+            pageContent = <Games startLottery={this.startLottery} lots={this.state.lots} loadLots={this.loadLots} loadGame={this.loadGame} game={this.state.currentGame}/>;
             break;
 
             case 'lottery':
@@ -107,7 +107,7 @@ var Setup = React.createClass({
             break;
 
             case 'lots':
-            pageContent = <Lots lots={this.state.lots} loadLots={this.loadLots}/>;
+            pageContent = <Lots lots={this.state.lots} loadLots={this.loadLots} game={this.state.currentGame}/>;
             break;
 
             case 'students':
@@ -125,7 +125,6 @@ var Setup = React.createClass({
                   <li role="presentation" className={this.state.currentTab === 'visitors' ? 'active' : ''} onClick={this.changeTab.bind(null, 'visitors')}><a style={{cursor:'pointer'}}>Visitors</a></li>
                   <li role="presentation" className={this.state.currentTab === 'lots' ? 'active' : ''} onClick={this.changeTab.bind(null, 'lots')}><a style={{cursor:'pointer'}}>Lots</a></li>
                   <li role="presentation" className={this.state.currentTab === 'students' ? 'active' : ''} onClick={this.changeTab.bind(null, 'students')}><a style={{cursor:'pointer'}}>Students</a></li>
-                  <li role="presentation" className={this.state.currentTab === 'reports' ? 'active' : ''} onClick={this.changeTab.bind(null, 'reports')}><a style={{cursor:'pointer'}}>Reports</a></li>
                   <li role="presentation" className={this.state.currentTab === 'settings' ? 'active' : ''} onClick={this.changeTab.bind(null, 'settings')}><a style={{cursor:'pointer'}}>Settings</a></li>
                 </ul>
                 <hr />
@@ -264,7 +263,6 @@ var Visitors = React.createClass({
             this.loadVisitors();
         }.bind(this))
         .fail(function(jse){
-            //console.log(jse);
         });
     },
 
@@ -371,7 +369,7 @@ var Lots = React.createClass({
             <div>
                 <p><button className="btn btn-success" onClick={this.showForm}><i className="fa fa-plus"></i> Add Tailgating Lot</button></p>
                 {lotForm}
-                <LotListing lots={this.props.lots} />
+                <LotListing lots={this.props.lots} loadLots={this.props.loadLots} game={this.props.game}/>
             </div>
         );
     }
@@ -406,19 +404,66 @@ var LotListing = React.createClass({
         });
     },
 
+    deactivate : function(key, e) {
+        $.post('tailgate/Admin/Lot', {
+            command : 'deactivate',
+            lotId : this.props.lots[key].id
+        }).done(function(data){
+            this.props.loadLots();
+        }.bind(this));
+    },
+
+    activate : function(key, e) {
+        $.post('tailgate/Admin/Lot', {
+            command : 'activate',
+            lotId : this.props.lots[key].id
+        }).done(function(data){
+            this.props.loadLots();
+        }.bind(this));
+    },
+
+    delete : function(key, e) {
+        if (prompt('Type Y-E-S if you are sure you want to permanently delete this lot') === 'YES') {
+            $.post('tailgate/Admin/Lot', {
+                command : 'delete',
+                lotId : this.props.lots[key].id
+            }).done(function(data){
+                this.props.loadLots();
+            }.bind(this));
+        }
+    },
+
     render : function() {
+        var button = null;
+        var allowExtraButtons = false;
+        if (this.props.game === null) {
+            allowExtraButtons = true;
+        } else {
+            allowExtraButtons = false;
+        }
         return (
             <div>
                 {this.props.lots.map(function(value, i){
+                    if (allowExtraButtons) {
+                        if (value.active === '1') {
+                            button = <button style={{marginLeft : '.5em'}} className="btn btn-danger btn-sm" onClick={this.deactivate.bind(this, i)}>Deactivate</button>;
+                        } else {
+                            button = <span>
+                                <button style={{marginLeft : '.5em'}} className="btn btn-default btn-sm" onClick={this.activate.bind(this, i)}>Activate</button>
+                                <button style={{marginLeft : '.5em'}} className="btn btn-danger btn-sm" onClick={this.delete.bind(this, i)}><i className="fa fa-trash-o"></i> Delete</button>
+                                </span>;
+                        }
+                    }
                     return (
                         <div className="panel panel-default" key={i}>
                             <div className="panel-body row">
-                                <div className="col-sm-6">{value.title}</div>
+                                <div className="col-sm-5">{value.title}</div>
                                 <div className="col-sm-3"><strong>Total spots:</strong> {value.total_spots}</div>
-                                <div className="col-sm-3">
+                                <div className="col-sm-4">
                                     <button className="btn btn-primary btn-sm" onClick={this.manageSpots.bind(this, i)}>
                                         Manage Spots <i className={this.state.spotKey === i ? 'fa fa-caret-up' : 'fa fa-caret-down'}></i>
                                     </button>
+                                    {button}
                                 </div>
                                 {this.state.spotKey === i ? <Spots lotId={value.id} close={this.resetSpots} /> : null}
                             </div>
@@ -511,7 +556,7 @@ var Spots = React.createClass({
 
     loadSpots : function() {
         if (this.props.lotId === 0) {
-            console.log('Lot id is zero');
+            return;
         }
 
         $.getJSON('tailgate/Admin/Spot', {
@@ -544,7 +589,6 @@ var Spots = React.createClass({
         }.bind(this))
         .fail(function(){
             var error_message = 'Error: Could not update the spot';
-            console.log(error_message);
         }.bind(this));
     },
 
@@ -568,7 +612,6 @@ var Spots = React.createClass({
         }.bind(this))
         .fail(function(){
             var error_message = 'Error: Could not update the spot';
-            console.log(error_message);
         }.bind(this));
     },
 
@@ -594,6 +637,7 @@ var Spots = React.createClass({
         var pickedUp;
         var lotteryInfo;
         var pickupClick;
+        var timestamp = Math.floor(Date.now() / 1000);
         return (
             <div>
                 <table className="table table-striped sans">
@@ -733,12 +777,25 @@ var Students = React.createClass({
         return {
             students: [],
             limit : limitDefault,
-            search : null
+            search : null,
+            availableSpots : null,
+            message : null
         };
     },
 
     componentDidMount: function() {
         this.loadStudents(this.state.limit);
+        this.loadAvailableSpots();
+    },
+
+    loadAvailableSpots : function() {
+        $.getJSON('tailgate/Admin/Student', {
+            command : 'getAvailableSpots'
+        }).done(function(data){
+            this.setState({
+                availableSpots : data
+            });
+        }.bind(this));
     },
 
     searchRows : function(e)
@@ -786,6 +843,13 @@ var Students = React.createClass({
         }
     },
 
+    setMessage : function(message)
+    {
+        this.setState({
+            message : message
+        });
+    },
+
     render: function() {
         var nextLimit = this.state.limit + limitDefault;
         var nextButton = null;
@@ -794,6 +858,7 @@ var Students = React.createClass({
         }
         return (
             <div>
+                {this.state.message ? <div className="alert alert-danger">{this.state.message}</div> : null}
                 <div className="row">
                     <div className="col-sm-4">
                         <TextInput placeholder={'Search'} handleChange={this.searchRows} handlePress={this.preventSpaces}/>
@@ -815,7 +880,7 @@ var Students = React.createClass({
                     <tbody id="studentList">
                         {this.state.students.map(function(value,i){
                             return (
-                                <StudentRow key={i} student={value} resetRows={this.loadStudents} canAdd={this.props.canAdd}/>
+                                <StudentRow key={i} student={value} resetRows={this.loadStudents} canAdd={this.props.canAdd} spots={this.state.availableSpots} setMessage={this.setMessage}/>
                             );
                         }.bind(this))}
                     </tbody>
@@ -827,6 +892,7 @@ var Students = React.createClass({
 });
 
 var StudentRow = React.createClass({
+
     eligible : function(e) {
         if (this.props.student.eligible === '1') {
             this.makeIneligible(this.props.resetRows);
@@ -887,6 +953,39 @@ var StudentRow = React.createClass({
         }
     },
 
+    options : function() {
+        var options = this.props.spots.map(function(spot){
+            return '<option value="'+spot.id+'">'+spot.lot_title+' #'+spot.number+'</option>';
+        });
+        return options;
+    },
+
+    addSpot : function() {
+        var content = '<select id="spotSelect" class="form-control">' + this.options() + '</select>' +
+        '<button id="saveSpot" class="btn btn-success" style="margin-right:.5em">Assign student</button>';
+        $('#admin-modal .modal-title').text('Assign spot to ' + this.props.student.first_name + ' ' + this.props.student.last_name);
+        $('#admin-modal .modal-body').html(content);
+
+        $('#saveSpot').click(function(){
+            var spotId = $('#spotSelect').val();
+            $.post('tailgate/Admin/Student', {
+                command : 'assign',
+                studentId : this.props.student.id,
+                spotId : spotId
+            }).done(function(data){
+                if (data.success === 'true') {
+                    this.props.setMessage('Spot assigned.');
+                } else {
+                    this.props.setMessage('Spot already taken.');
+                }
+                this.props.resetRows();
+            }.bind(this));
+            $('#admin-modal').modal('hide');
+        }.bind(this));
+
+        $('#admin-modal').modal('show');
+    },
+
     ban: function() {
         var content = '<textarea id="bannedReason" class="form-control" name="bannedReason" placeholder="Please enter the reason for the ban."></textarea>' +
         '<button style="margin-top:1em" id="banUser" class="btn btn-danger"><i class="fa fa-ban"></i> Ban user from accessing system</button>';
@@ -923,6 +1022,11 @@ var StudentRow = React.createClass({
     render : function() {
         var value = this.props.student;
 
+        var addButton = null;
+        if (value.eligible === '1' && value.banned === '0') {
+            addButton = <button className="btn btn-sm btn-primary" style={{marginRight : '1em'}} onClick={this.addSpot}><i className="fa fa-plus"></i> Add to spot</button>;
+        }
+
         return(
             <tr>
                 <td>{value.id}</td>
@@ -933,6 +1037,7 @@ var StudentRow = React.createClass({
                 <td className="text-center"><EligibleIcon value={value} handleClick={this.eligible}/></td>
                 <td className="text-center"><BannedIcon value={value} handleClick={this.bannedReason}/></td>
                 <td>
+                    {addButton}
                     <button className="btn btn-sm btn-danger" style={{marginRight : '1em'}} onClick={this.deleteStudent}><i className="fa fa-trash-o"></i> Delete</button>
                 </td>
             </tr>
@@ -949,17 +1054,16 @@ var Games = React.createClass({
             availableSpots : 0,
             submissions : 0,
             games : null,
-            currentGame : {},
             message : ''
         };
     },
 
     loadGames : function() {
+        this.props.loadGame();
         $.getJSON('tailgate/Admin/Game', {
             command : 'list'
         }).done(function(data){
             this.setState({
-                currentGame : data.currentGame,
                 availableSpots : data.available_spots,
                 games : data.listing
             });
@@ -1028,6 +1132,7 @@ var Games = React.createClass({
                         pickup_deadline : pickupDeadline
                     }).done(function(){
                         this.loadGames();
+                        this.props.loadLots();
                         this.setState({
                             message : ''
                         });
@@ -1065,7 +1170,7 @@ var Games = React.createClass({
             previousGames = <GameListing games={this.state.games} />;
         }
 
-        if (this.state.currentGame === null) {
+        if (this.props.game === null) {
             title = 'Add new game';
             if(this.state.visitors.length === 0) {
                 currentGame = <div><p>Create some visitors first.</p></div>;
@@ -1074,8 +1179,8 @@ var Games = React.createClass({
             } else {
                 currentGame = <GameForm visitors={this.state.visitors} save={this.saveGame} />;
             }
-        } else if (Object.keys(this.state.currentGame).length > 0) {
-            currentGame = <GameInfo updateGame={this.updateGame} game={this.state.currentGame} startLottery={this.props.startLottery} submissions={this.state.submissions} loadCurrentGame={this.loadGames} availableSpots={this.state.availableSpots}/>;
+        } else if (Object.keys(this.props.game).length > 0) {
+            currentGame = <GameInfo updateGame={this.updateGame} game={this.props.game} startLottery={this.props.startLottery} submissions={this.state.submissions} loadCurrentGame={this.loadGames} availableSpots={this.state.availableSpots}/>;
         } else {
             currentGame = null;
         }
@@ -1298,7 +1403,7 @@ var GameInfo = React.createClass({
                     <div className={'alert alert-' + pickupColor}>
                         {this.props.game.lottery_run == '0' || this.state.allowEdit ? <button className="pull-right btn btn-sm btn-primary" id="pickup-deadline" onClick={this.pickupDeadlineDate}>Edit</button> : null}
                         <big><strong>Pickup Deadline</strong></big><br />
-                        {this.props.game.pickup_deadline_format}
+                        {this.props.game.pickup_deadline_format}<br />
                     </div>
                 </div>
                 <div className="col-sm-3">
@@ -1308,6 +1413,7 @@ var GameInfo = React.createClass({
                     </div>
                 </div>
             </div>
+            <div><a href="./tailgate/Admin/Report/?command=pickup" className="btn btn-primary btn-sm"><i className='fa fa-file-text-o'></i> Pickup report</a></div>
             {button}
         </div>
         );
