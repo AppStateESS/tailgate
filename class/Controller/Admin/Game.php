@@ -20,10 +20,10 @@ class Game extends Base
 
         switch ($command) {
             case 'list':
-                $json['currentGame'] = $factory->getCurrentAsArray();
+                $game = Factory::getCurrent();
                 $json['listing'] = $factory->getList();
-                if ($json['currentGame']['lottery_run']) {
-                    $json['available_spots'] = count($lotteryFactory->getAvailableSpots());
+                if ($game->getLotteryRun()) {
+                    $json['available_spots'] = count(\tailgate\Factory\Lottery::getAvailableSpots());
                 } else {
                     $json['available_spots'] = $lotteryFactory->totalAvailableSpots();
                 }
