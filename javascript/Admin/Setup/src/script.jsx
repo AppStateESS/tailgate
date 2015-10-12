@@ -434,9 +434,10 @@ var LotListing = React.createClass({
     },
 
     render : function() {
+        var timestamp = Math.floor(Date.now() / 1000);
         var button = null;
         var allowExtraButtons = false;
-        if (this.props.game === null) {
+        if (this.props.game === null || this.props.game.signup_start > timestamp) {
             allowExtraButtons = true;
         } else {
             allowExtraButtons = false;
@@ -465,7 +466,7 @@ var LotListing = React.createClass({
                                     </button>
                                     {button}
                                 </div>
-                                {this.state.spotKey === i ? <Spots lotId={value.id} close={this.resetSpots} /> : null}
+                                {this.state.spotKey === i ? <Spots lotId={value.id} close={this.resetSpots} game={this.props.game}/> : null}
                             </div>
                         </div>
                     );
@@ -638,44 +639,48 @@ var Spots = React.createClass({
         var lotteryInfo;
         var pickupClick;
         var timestamp = Math.floor(Date.now() / 1000);
+        var showWinner = this.props.game !== null && this.props.game.signup_end < timestamp;
+        var showPickedup = this.props.game !== null && this.props.game.pickup_deadline < timestamp;
         return (
             <div>
                 <table className="table table-striped sans">
                     <tbody>
                         <tr>
-                            <th className="col-sm-1">
+                            <th>
                                 Number
                             </th>
-                            <th className="col-sm-2">Picked up</th>
-                            <th className="col-sm-3">
-                                Lottery winner
-                            </th>
-                            <th className="col-sm-3">
+                            {showWinner ? <th className="col-sm-3">Lottery winner</th> : null}
+                            {showPickedup ? <th className="col-sm-1">Picked up</th> : null}
+                            <th >
                                 Reserved
                             </th>
-                            <th className="col-sm-3">
+                            <th>
                                 Sobriety
                             </th>
                         </tr>
                         {this.state.spots.map(function(value, i){
                             pickedUp = null;
-                            if (value.spot_id === null) {
-                                lotteryInfo = <div className="text-muted"><em>Not selected</em></div>;
-                            } else {
-                                if (value.picked_up === '0') {
-                                    var pickupClick = this.pickup.bind(this,i);
-                                    pickedUp = <button title="Click when student arrives to pick up tag" className="btn btn-sm btn-danger" onClick={pickupClick}><i className="fa fa-thumbs-down"></i></button>;
+                            if (showWinner) {
+                                if (value.spot_id === null) {
+                                    lotteryInfo = <div className="text-muted"><em>Not selected</em></div>;
                                 } else {
-                                    pickedUp = <span className="text-success"><i className="fa fa-thumbs-o-up text-success"></i></span>;
+                                    if (showPickedup) {
+                                        if (value.picked_up === '0') {
+                                            var pickupClick = this.pickup.bind(this,i);
+                                            pickedUp = <button title="Click when student arrives to pick up tag" className="btn btn-sm btn-danger" onClick={pickupClick}><i className="fa fa-thumbs-down"></i></button>;
+                                        } else {
+                                            pickedUp = <span className="text-success"><i className="fa fa-thumbs-o-up text-success"></i></span>;
+                                        }
+                                    }
+                                    lotteryInfo = <div><strong>{value.first_name} {value.last_name}</strong></div>;
                                 }
-                                lotteryInfo = <div><strong>{value.first_name} {value.last_name}</strong></div>;
                             }
 
                             return (
                                 <tr key={i}>
                                     <td className="text-center">{value.number}</td>
-                                    <td>{pickedUp}</td>
-                                    <td className="text-left">{lotteryInfo}</td>
+                                    {showWinner ? <td className="text-left">{lotteryInfo}</td> : null}
+                                    {showPickedup ? <td>{pickedUp}</td> : null}
                                     <td>{value.reserved === '1' ?
                                             <YesButton handleClick={this.toggleReserve.bind(this, i)} label={'Reserved'}/> :
                                                 <NoButton handleClick={this.toggleReserve.bind(this, i)} label={'Not reserved'}/>}</td>
@@ -1107,12 +1112,6 @@ var Games = React.createClass({
         }
     },
 
-    updateGame : function(data) {
-        this.setState({
-            currentGame : data
-        });
-    },
-
     saveGame : function() {
         var visitor_id = $('#pick-team').val();
         var kickoff = this.getUnixTime($('#kickoff').val());
@@ -1180,7 +1179,7 @@ var Games = React.createClass({
                 currentGame = <GameForm visitors={this.state.visitors} save={this.saveGame} />;
             }
         } else if (Object.keys(this.props.game).length > 0) {
-            currentGame = <GameInfo updateGame={this.updateGame} game={this.props.game} startLottery={this.props.startLottery} submissions={this.state.submissions} loadCurrentGame={this.loadGames} availableSpots={this.state.availableSpots}/>;
+            currentGame = <GameInfo updateGame={this.props.loadGame} game={this.props.game} startLottery={this.props.startLottery} submissions={this.state.submissions} loadCurrentGame={this.loadGames} availableSpots={this.state.availableSpots}/>;
         } else {
             currentGame = null;
         }
@@ -1413,7 +1412,7 @@ var GameInfo = React.createClass({
                     </div>
                 </div>
             </div>
-            <div><a href="./tailgate/Admin/Report/?command=pickup" className="btn btn-primary btn-sm"><i className='fa fa-file-text-o'></i> Pickup report</a></div>
+            {this.props.game.pickup_deadline < timestamp ? <div><a href="./tailgate/Admin/Report/?command=pickup" className="btn btn-primary btn-sm"><i className='fa fa-file-text-o'></i> Pickup report</a></div> : null}
             {button}
         </div>
         );

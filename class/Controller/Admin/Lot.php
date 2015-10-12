@@ -49,6 +49,7 @@ class Lot extends Base
             
             case 'delete':
                 Factory::delete(filter_input(INPUT_POST, 'lotId', FILTER_SANITIZE_NUMBER_INT));
+                break;
 
             default:
                 throw new \Exception('Bad command:' . $request->getVar('command'));

@@ -68,4 +68,22 @@ class Lot extends Base
         return $result;
     }
 
+    public static function delete($lot_id)
+    {
+        $db = \Database::getDB();
+        $tbl = $db->addTable('tg_lot');
+        $tbl->addFieldConditional('id', $lot_id);
+        $db->delete();
+
+        self::deleteSpots($lot_id);
+    }
+
+    public static function deleteSpots($lot_id)
+    {
+        $db = \Database::getDB();
+        $tbl = $db->addTable('tg_spot');
+        $tbl->addFieldConditional('lot_id', $lot_id);
+        $db->delete();
+    }
+
 }
