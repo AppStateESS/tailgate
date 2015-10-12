@@ -72,9 +72,14 @@ class Lot extends Base
     {
         $db = \Database::getDB();
         $tbl = $db->addTable('tg_lot');
+        // failsafe to insure it was deactivated first
+        $tbl->addFieldConditional('active', 0);
         $tbl->addFieldConditional('id', $lot_id);
-        $db->delete();
-
+        $result = $db->delete();
+        // if no rows deleted, unknown id or not deactivated
+        if (!$result) {
+            throw new \Exception('Lot not deleted: ' . $lot_id);
+        }
         self::deleteSpots($lot_id);
     }
 
