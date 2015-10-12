@@ -59,6 +59,11 @@ class Lot extends Base
 
     protected function deactivate($factory, $id)
     {
+        $game = Game::getCurrent();
+        if (!empty($game) || $game->getSignupStart() < time()) {
+            throw \Exception('Lots cannot be deactivated after game signup has started.');
+        }
+        
         $factory->deactivate($id);
 
         $db = \Database::getDB();
