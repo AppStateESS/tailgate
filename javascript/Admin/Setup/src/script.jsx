@@ -40,7 +40,7 @@ var Setup = React.createClass({
 
     getInitialState: function() {
         return {
-            currentTab : 'games',
+            currentTab : 'visitors',
             currentGame : {},
             lots : []
         };
@@ -103,7 +103,7 @@ var Setup = React.createClass({
             break;
 
             case 'visitors':
-            pageContent = <Visitors/>;
+            pageContent = <Visitors game={this.state.currentGame}/>;
             break;
 
             case 'lots':
@@ -266,8 +266,13 @@ var Visitors = React.createClass({
         });
     },
 
+    editVisitor : function(index) {
+        var visitor = this.state.visitors[index];
+    },
+
     render : function() {
         var visitorForm;
+        var deleteButton;
         if (this.state.showForm) {
             visitorForm = <VisitorForm closeForm={this.hideForm} loadVisitors={this.loadVisitors}/>;
         } else {
@@ -282,17 +287,141 @@ var Visitors = React.createClass({
                     <tbody>
                         {this.state.visitors.map(function(value, i){
                             var removeClick = this.removeVisitor.bind(this,i);
+                            var editClick = this.editVisitor.bind(this,i);
                             return (
-                                <tr key={i}>
-                                    <td>
-                                    <button className="btn btn-sm btn-danger pull-right" onClick={removeClick}>
-                                        <i className="fa fa-times"></i> Remove</button> {value.university} - {value.mascot}
-                                    </td>
-                                </tr>
+                                <VisitorRow key={i} game={this.props.game} value={value} update={this.loadVisitors}/>
                             );
                         }, this)}
                     </tbody>
                 </table>
+            </div>
+        );
+    }
+});
+
+var VisitorRow = React.createClass({
+    getInitialState: function() {
+        return {
+            showForm : false
+        };
+    },
+
+    edit : function() {
+        this.setState({
+            showForm : true
+        });
+    },
+
+    view : function() {
+        this.setState({
+            showForm : false
+        });
+        this.props.update();
+    },
+
+    render : function() {
+        var rowContent = null;
+        var editButton = null;
+
+        if (this.state.showForm) {
+            rowContent = <VisitorRowForm value={this.props.value} update={this.view} />;
+            editButton = null;
+        } else {
+            rowContent = <div>{this.props.value.university} - {this.props.value.mascot}</div>;
+            editButton = <VisitorRowEditButton handleClick={this.edit}/>;
+        }
+
+        return (
+            <tr>
+                <td>
+                    {editButton}
+                    {this.props.game.visitor_id !== this.props.value.id ? <VisitorRowDeleteButton handleClick={this.props.remove} />  : null}
+                    {rowContent}
+                </td>
+            </tr>
+        );
+    }
+});
+
+
+var VisitorRowEditButton = React.createClass({
+    render: function() {
+        return (
+            <button style={{marginRight : '.5em'}} className="btn btn-sm btn-primary pull-right" onClick={this.props.handleClick}><i className="fa fa-edit"></i> Edit</button>
+        );
+    }
+});
+
+var VisitorRowDeleteButton = React.createClass({
+    render: function() {
+        return (
+            <button style={{marginRight : '.5em'}} className="btn btn-sm btn-danger pull-right" onClick={this.props.handleClick}><i className="fa fa-times"></i> Remove</button>
+        );
+    }
+});
+
+var VisitorRowForm = React.createClass({
+    getInitialState: function() {
+        return {
+            university : null,
+            mascot : null
+        };
+    },
+
+    componentDidMount : function() {
+        this.setState({
+            university : this.props.value.university,
+            mascot : this.props.value.mascot
+        });
+    },
+
+
+    updateUniversity : function(event)
+    {
+        this.setState({
+            university : event.target.value
+        });
+    },
+
+    updateMascot : function(event)
+    {
+        this.setState({
+            mascot : event.target.value
+        });
+    },
+
+    update : function() {
+        if (this.state.university.length === 0) {
+            this.setState({university : this.props.value.university});
+            return;
+        }
+        if (this.state.mascot.length === 0) {
+            this.setState({mascot : this.props.value.mascot});
+            return;
+        }
+        $.post('tailgate/Admin/Visitor', {
+            command : 'update',
+            university : this.state.university,
+            mascot : this.state.mascot,
+            visitorId : this.props.value.id
+        }).done(function(){
+            this.props.update();
+        }.bind(this));
+    },
+
+
+    render : function() {
+        return (
+            <div className="row">
+                <div className="col-sm-4">
+                    <input ref="university" type="text" className="form-control" defaultValue={this.props.value.university} value={this.state.university} onChange={this.updateUniversity}/>
+                </div>
+                <div className="col-sm-4">
+                    <input ref="mascot" type="text" className="form-control" defaultValue={this.props.value.mascot} value={this.state.mascot} onChange={this.updateMascot}/>
+                </div>
+                <div className="col-sm-2">
+                    <button className="btn btn-primary btn-sm" onClick={this.update}><i className="fa fa-save"></i> Update</button>
+                </div>
             </div>
         );
     }

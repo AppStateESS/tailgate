@@ -37,15 +37,32 @@ class Visitor extends Base
         switch ($request->getVar('command')) {
             case 'add':
                 $factory->postNew();
-                return $response;
+                break;
 
             case 'deactivate':
                 $factory->deactivate($request->getVar('visitor_id'));
-                return $response;
+                break;
+
+            case 'update':
+                $this->update();
+                break;
 
             default:
                 throw new \Exception('Bad command:' . $request->getVar('command'));
         }
+        return $response;
+    }
+    
+    private function update()
+    {
+        $visitor_id = filter_input(INPUT_POST, 'visitorId', FILTER_SANITIZE_NUMBER_INT);
+        $university = filter_input(INPUT_POST, 'university', FILTER_SANITIZE_STRING);
+        $mascot = filter_input(INPUT_POST, 'mascot', FILTER_SANITIZE_STRING);
+        
+        $visitor = Factory::getById($visitor_id);
+        $visitor->setUniversity($university);
+        $visitor->setMascot($mascot);
+        Factory::saveResource($visitor);
     }
 
 }
