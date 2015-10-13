@@ -128,14 +128,12 @@ class Game extends Base
         $tbl->addFieldConditional('id', (int) $game_id);
         $tbl->addValue('lottery_run', 1);
         $db->update();
-        
-        self::resetEligibility($game_id);
     }
 
     public static function resetEligibility($game_id)
     {
         $db = \Database::getDB();
-        $tbl = $db2->addTable('tg_student');
+        $tbl = $db->addTable('tg_student');
         $tbl->addValue('eligible', 1);
         $tbl->addValue('ineligible_reason', '');
         $db->update();
@@ -148,6 +146,7 @@ class Game extends Base
         $tbl->addFieldConditional('id', (int) $game_id);
         $tbl->addValue('completed', 1);
         $db->update();
+        self::resetEligibility($game_id);
     }
 
     public static function getById($id)
@@ -211,5 +210,10 @@ class Game extends Base
 
         return $gameinfo;
     }
-
+    
+    public static function isAfterPickup()
+    {
+        $game = self::getCurrent();
+        return $game->getPickupDeadline() < time();
+    }
 }
