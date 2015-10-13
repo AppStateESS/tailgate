@@ -1,0 +1,27 @@
+<html>
+    <head>
+        <style>
+            body {font-family:sans}
+            table {width:100%;border-collapse: collapse;}
+            td {padding:.5em;}
+            th {padding:1em}
+        </style>
+    </head>
+    <body>
+        <h1><?=$university,' ',$mascot,' - ',$kickoff?></h1>
+        <table border='1'>
+            <tr>
+                <th>Student</th>
+                <th>Username</th>
+                <th>Wins</th>
+            </tr>
+            <?php foreach ($rows as $row): ?>
+            <tr>
+                <td><?=$row['first_name']?> <?=$row['last_name']?></td>
+                <td><?=$row['username']?></td>
+                <td><?=$row['wins']?></td>
+            </tr>
+            <?php endforeach; ?>
+        </table>
+    </body>
+</html>
