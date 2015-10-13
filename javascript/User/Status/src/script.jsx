@@ -65,6 +65,9 @@ var Status = React.createClass({
 
     render : function() {
         var content;
+        if (this.state.student.banned == 1) {
+            return <Banned student={this.state.student}/>;
+        }
         if (this.state.currentGame === null) {
             content = <h4>No games scheduled. Try back later.</h4>;
         } else {
@@ -79,7 +82,27 @@ var Status = React.createClass({
     }
 });
 
+var Banned = React.createClass({
 
+    getDefaultProps : function() {
+        return {
+            student : {}
+        };
+    },
+
+    render: function() {
+        return (
+            <div>
+                <h2>Sorry</h2>
+                <p>You were banned from using this site on {this.props.student.banned_date}.</p>
+                <h3>Reason for ban</h3>
+                <p className="well">{this.props.student.banned_reason}</p>
+                <p>Contact the administrators of this site if you have questions.</p>
+            </div>
+        );
+    }
+
+});
 
 var Game = React.createClass({
     getDefaultProps: function() {
@@ -153,7 +176,7 @@ var GameStatus = React.createClass({
                     }
                 } else {
                     // student did not submit a ticket for current lottery
-                    content = <div className="alert alert-danger">The lottery is complete. Come back for the next game.</div>;
+                    content = <div className="alert alert-danger">The lottery is complete and the winners have been contacted. Please, try again next game.</div>;
                 }
             } else {
                 // lottery has not been run yet
@@ -191,7 +214,8 @@ var ConfirmSpot = React.createClass({
     getInitialState: function() {
         return {
             availableSpots: [],
-            message : null
+            message : null,
+            waiting : 0
         };
     },
 
@@ -218,8 +242,10 @@ var ConfirmSpot = React.createClass({
 
     confirmSpot : function() {
         var spotId = $(React.findDOMNode(this.refs.spotChoice)).val();
-        //var spotId = $('#spot-choice').val();
         var lotteryId = this.props.lottery.id;
+        this.setState({
+            waiting : 1
+        });
         $.post('tailgate/User/Lottery', {
             command : 'pickSpot',
             spotId : spotId,
@@ -233,12 +259,14 @@ var ConfirmSpot = React.createClass({
                 });
                 this.loadAvailableSpots();
             }
-            //this.props.updateLottery();
         }.bind(this));
     },
 
     render : function() {
         var sober;
+        if (this.state.waiting === 1) {
+            return <Waiting />;
+        }
         if (this.state.availableSpots.length > 0) {
             var options = this.state.availableSpots.map(function(val, i){
                 if (val.sober === '1') {
@@ -285,6 +313,14 @@ var LotterySubmit = React.createClass({
                 </p>
                 <p><small><em>Lottery winners will choose their spot on a first come, first serve basis.</em></small></p>
             </div>
+        );
+    }
+});
+
+var Waiting = React.createClass({
+    render : function() {
+        return (
+            <div className="alert alert-success"><i className="fa fa-cog fa-spin fa-lg"></i> Please wait...</div>
         );
     }
 });
