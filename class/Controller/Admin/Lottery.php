@@ -27,6 +27,10 @@ class Lottery extends Base
                 $json = array('submissions' => $this->getTotalSubmissions());
                 break;
 
+            case 'getUnclaimedSpots':
+                $json = Factory::getAvailableSpots(null, null, true, true);
+                break;
+
             default:
                 throw new \Exception('Bad command:' . $request->getVar('command'));
         }
