@@ -24,6 +24,9 @@ class Report extends Base
                 $content = Factory::pickup(GameFactory::getCurrentId());
                 break;
             
+            case 'winners':
+                $content = Factory::winners(GameFactory::getCurrentId());
+                break;
             
             default:
                 throw new \Exception('Unknown report command');
