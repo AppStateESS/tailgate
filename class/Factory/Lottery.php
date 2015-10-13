@@ -151,18 +151,23 @@ class Lottery extends Base
         $game = GameFactory::completeGame($game_id);
     }
 
-    public static function getAvailableSpots($game_id = 0, $lot_id = 0, $allow_reserved = false)
+    public static function getAvailableSpots($game_id = 0, $lot_id = 0, $allow_reserved = false, $include_unclaimed = false)
     {
         if (empty($game_id)) {
             $factory = new GameFactory;
             $game = GameFactory::getCurrent();
             $game_id = $game->getId();
+        } else {
+            $game = GameFactory::getById($game_id);
         }
 
         $db2 = \Database::getDB();
         $lotteryTable = $db2->addTable('tg_lottery');
         $lotteryTable->addFieldConditional('game_id', $game_id);
         $lotteryTable->addFieldConditional('spot_id', 0, '!=');
+        if ($include_unclaimed) {
+            $lotteryTable->addFieldConditional('picked_up', 0, '!=');
+        }
         $lotteryTable->addField('spot_id');
 
         $db = \Database::getDB();
@@ -180,11 +185,13 @@ class Lottery extends Base
         $spotTable->addField('id');
         $spotTable->addField('lot_id');
         $spotTable->addField('sober');
+        $spotTable->addField('reserved');
 
         $spotTable->addFieldConditional('active', 1);
         if (!$allow_reserved) {
             $spotTable->addFieldConditional('reserved', 0);
         }
+
         $cond = $db->createConditional($spotTable->getField('lot_id'), $lotTable->getField('id'), '=');
         $db->joinResources($spotTable, $lotTable, $cond);
         $expression = new \Database\Expression('(' . $db2->selectQuery() . ')');
@@ -260,6 +267,18 @@ class Lottery extends Base
         $tbl = $db->addTable('tg_lottery');
         $tbl->addFieldConditional('game_id', $game_id);
         $tbl->addFieldConditional('spot_id', $spot_id);
+        $result = $db->selectOneRow();
+        return (bool) $result;
+    }
+
+    public static function spotPickedUp($spot_id)
+    {
+        $game_id = \tailgate\Factory\Game::getCurrentId();
+        $db = \Database::getDB();
+        $tbl = $db->addTable('tg_lottery');
+        $tbl->addFieldConditional('game_id', $game_id);
+        $tbl->addFieldConditional('spot_id', $spot_id);
+        $tbl->addFieldConditional('picked_up', 1);
         $result = $db->selectOneRow();
         return (bool) $result;
     }
@@ -450,20 +469,39 @@ class Lottery extends Base
         $game_id = Game::getCurrentId();
         $lot_id = Spot::getLotIdFromId($spot_id);
 
+        self::removeUnclaimedSpot($spot_id);
+
         $lottery = self::getLotteryByStudentId($student_id);
-        if ($lottery) {
-            $lottery->setLotId($lot_id);
-            $lottery->setSpotId($spot_id);
-        } else {
+        if (!$lottery) {
             $lottery = new Resource;
             $lottery->setGameId($game_id);
             $lottery->setStudentId($student_id);
-            $lottery->setLotId($lot_id);
-            $lottery->setSpotId($spot_id);
-            $lottery->setWinner(true);
         }
+        $lottery->setLotId($lot_id);
+        $lottery->setSpotId($spot_id);
+        $lottery->setPickedUp(true);
+        $lottery->setWinner(true);
         self::saveResource($lottery);
+
         return true;
+    }
+
+    private static function removeUnclaimedSpot($spot_id)
+    {
+        $db = \Database::getDB();
+        $tbl = $db->addTable('tg_lottery');
+        $tbl->addFieldConditional('spot_id', $spot_id);
+        $tbl->addFieldConditional('picked_up', 0);
+        $db->delete();
+    }
+
+    public static function removeStudentWin($student_id, $game_id)
+    {
+        $db = \Database::getDB();
+        $tbl = $db->addTable('tg_lottery');
+        $tbl->addFieldConditional('student_id', $student_id);
+        $tbl->addFieldConditional('game_id', $game_id);
+        $db->delete();
     }
 
 }
