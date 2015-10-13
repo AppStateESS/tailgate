@@ -54,6 +54,8 @@ class Student extends Base
 
     public function getList($mode = TG_LIST_ALL, $order_by = null, $order_dir = 'asc')
     {
+        $game = Game::getCurrent();
+
         if (empty($order_by)) {
             $order_by = 'last_name';
         }
@@ -64,6 +66,15 @@ class Student extends Base
         $users->addField('username');
         $conditional = $db->createConditional($student->getField('user_id'), $users->getField('id'));
         $db->joinResources($student, $users, $conditional);
+
+        // if game show if they won lottery
+        if ($game) {
+            $lottery = $db->addTable('tg_lottery');
+            $lottery->addField('winner');
+            $lottery->addField('picked_up');
+            $s_l_cond = $db->createConditional($student->getField('id'), $lottery->getField('student_id'));
+            $db->joinResources($student, $lottery, $s_l_cond, 'left');
+        }
 
         $limit = filter_input(INPUT_GET, 'limit', FILTER_SANITIZE_NUMBER_INT);
         if (empty($limit)) {
@@ -118,6 +129,8 @@ class Student extends Base
         $student->stampBanned();
         $student->setEligible(false);
         self::saveResource($student);
+
+        Lottery::removeStudentWin($student_id, Game::getCurrentId());
     }
 
     public function unban($student_id)
@@ -169,4 +182,5 @@ class Student extends Base
         $tbl->addValue('wins', $exp);
         $db->update();
     }
+
 }
