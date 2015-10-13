@@ -20,10 +20,6 @@ class Student extends Base
             case 'list':
                 $json = $factory->getList();
                 break;
-
-            case 'getAvailableSpots':
-                $json = \tailgate\Factory\Lottery::getAvailableSpots(null, null, true);
-                break;
         }
 
         $view = new \View\JsonView($json);
@@ -60,7 +56,9 @@ class Student extends Base
                 break;
 
             case 'assign':
-                $view = $this->assign();
+                if (!$this->assign()) {
+                    $view = new \View\JsonView(array('success' => false));
+                }
                 break;
 
             default:
@@ -74,13 +72,19 @@ class Student extends Base
     {
         $spot_id = filter_input(INPUT_POST, 'spotId', FILTER_SANITIZE_NUMBER_INT);
         $student_id = filter_input(INPUT_POST, 'studentId', FILTER_SANITIZE_NUMBER_INT);
-        if (\tailgate\Factory\Lottery::spotTaken($spot_id)) {
-            $view = new \View\JsonView(array('success' => false));
+
+        $game = \tailgate\Factory\Game::getCurrent();
+
+        if (!\tailgate\Factory\Game::isAfterPickup()) {
+            throw new \Exception('Cannot assign spots until after pickup.');
+        }
+        
+        if (\tailgate\Factory\Lottery::spotPickedUp($spot_id)) {
+            return false;
         } else {
             \tailgate\Factory\Lottery::assignStudent($student_id, $spot_id);
-            $view = new \View\JsonView(array('success' => true));
+            return true;
         }
-        return $view;
     }
 
 }
