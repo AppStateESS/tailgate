@@ -78,7 +78,7 @@ class Student extends Base
         if (!\tailgate\Factory\Game::isAfterPickup()) {
             throw new \Exception('Cannot assign spots until after pickup.');
         }
-        
+
         if (\tailgate\Factory\Lottery::spotPickedUp($spot_id)) {
             return false;
         } else {

@@ -1482,6 +1482,12 @@ var Students = React.createClass({
         }.bind(this));
     },
 
+    reset : function()
+    {
+        this.loadStudents(this.state.limit);
+        this.loadAvailableSpots();
+    },
+
     preventSpaces : function(e)
     {
         if (e.charCode == '32') {
@@ -1547,7 +1553,7 @@ var Students = React.createClass({
                     <tbody id="studentList">
                         {this.state.students.map(function(value,i){
                             return (
-                                <StudentRow key={i} student={value} resetRows={this.loadStudents} canAdd={this.props.canAdd} spots={this.state.availableSpots} setMessage={this.setMessage} game={this.props.game}/>
+                                <StudentRow key={i} student={value} resetRows={this.reset} canAdd={this.props.canAdd} spots={this.state.availableSpots} setMessage={this.setMessage} game={this.props.game}/>
                             );
                         }.bind(this))}
                     </tbody>
@@ -1639,8 +1645,7 @@ var StudentRow = React.createClass({
                 command : 'assign',
                 studentId : this.props.student.id,
                 spotId : spotId
-            }).done(function(data){
-                console.log(data);
+            }, null, 'json').done(function(data){
                 if (data.success === true) {
                     this.props.setMessage('Spot assigned.');
                 } else {
