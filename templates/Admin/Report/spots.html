@@ -1,0 +1,28 @@
+<html>
+    <head>
+        <style>
+            body {font-family:sans}
+            table {width:100%;border-collapse: collapse;}
+            td {padding:.3em;}
+            th {padding:.3em}
+        </style>
+    </head>
+    <body>
+        <h1>Spot Listing</h1>
+        <h2><?=$university,' ',$mascot,' - ',$kickoff?></h2>
+        <table border='1'>
+            <tr>
+                <th style="width : 25%">Lot</th>
+                <th style="width : 10%">Spot</th>
+                <th style="width : 65%">Student</th>
+            </tr>
+            <?php foreach ($rows as $row): ?>
+            <tr>
+                <td><?=$row['lot_title'];?></td>
+                <td><?=$row['spot_number'];?></td>
+                <td><?=$row['first_name'] ? $row['first_name'] . ' ' . $row['last_name'] : '<em>Empty</em>'?></td>
+            </tr>
+            <?php endforeach; ?>
+        </table>
+    </body>
+</html>
