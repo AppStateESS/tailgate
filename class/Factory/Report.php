@@ -77,10 +77,58 @@ class Report
         $c4 = $db->createConditional($student->getField('user_id'), $users->getField('id'), '=');
         $db->joinResources($student, $users, $c4);
 
+        $spot = $db->addTable('tg_spot');
+        $spot->addField('number', 'spot_number');
+        $c5 = $db->createConditional($lottery->getField('spot_id'), $spot->getField('id'), '=');
+        $db->joinResources($lottery, $spot, $c5, 'left');
+
+        $lot = $db->addTable('tg_lot');
+        $lot->addField('title', 'lot_title');
+        $c6 = $db->createConditional($spot->getField('lot_id'), $lot->getField('id'), '=');
+        $db->joinResources($spot, $lot, $c6, 'left');
+
+
         $result = $db->select();
+
         $template = new \Template(array('rows' => $result));
         self::fillTitle($template, $game_id);
         $template->setModuleTemplate('tailgate', 'Admin/Report/winners.html');
+        echo $template->get();
+        exit;
+    }
+
+    public static function spotReport($game_id)
+    {
+        $db = \Database::getDB();
+        $spot = $db->addTable('tg_spot');
+        $spot->addField('number', 'spot_number');
+        $spot->addOrderBy('number');
+        
+        $lot = $db->addTable('tg_lot');
+        $lot->addField('title', 'lot_title');
+        $lot->addOrderBy('title');
+        $c1 = $db->createConditional($spot->getField('lot_id'), $lot->getField('id'), '=');
+        $db->joinResources($spot, $lot, $c1);
+        
+        $lottery = $db->addTable('tg_lottery');
+        $lottery->addField('id', 'lottery_id');
+        $c2a = $db->createConditional($spot->getField('id'), $lottery->getField('spot_id'), '=');
+        $c2b = $db->createConditional($lottery->getField('game_id'), $game_id);
+        $c2 = $db->createConditional($c2a, $c2b, 'and');
+        $db->joinResources($spot, $lottery, $c2, 'left');
+        
+        $student = $db->addTable('tg_student');
+        $student->addField('first_name');
+        $student->addField('last_name');
+        $c3a = $db->createConditional($lottery->getField('student_id'), $student->getField('id'), '=');
+        $c3b = $db->createConditional($lottery->getField('picked_up'), 1);
+        $c3 = $db->createConditional($c3a, $c3b, 'and');
+        $db->joinResources($lottery, $student, $c3, 'left');
+        
+        $result = $db->select();
+        $template = new \Template(array('rows' => $result));
+        self::fillTitle($template, $game_id);
+        $template->setModuleTemplate('tailgate', 'Admin/Report/spots.html');
         echo $template->get();
         exit;
     }
