@@ -35,13 +35,43 @@ var tgMixin = {
 
 };
 
+var datepickerMixin =  {
+    dateInit : function(domId, useTime) {
+        var dateFormat = useTime ? 'Y/m/d H:i' : 'Y/m/d';
+        $(domId).datetimepicker({
+            timepicker:useTime,
+            format: dateFormat,
+            onChangeDateTime : function(ct, i) {
+                this.update(ct);
+            }.bind(this),
+        });
+    },
+
+    popupCalendar : function(domId) {
+        $(domId).datetimepicker('show');
+    },
+
+    updateDate: function(command, date) {
+        $.post('tailgate/Admin/Game', {
+            command: command,
+            date: date
+        }, null, 'json')
+            .done(function(data) {
+                if (data.success) {
+                    this.props.update();
+                } else {
+                    this.props.error(data.error);
+                }
+            }.bind(this));
+    },
+}
 
 var Setup = React.createClass({
     mixins: [React.addons.PureRenderMixin],
 
     getInitialState: function() {
         return {
-            currentTab : 'students',
+            currentTab : 'games',
             currentGame : {},
             lots : []
         };
@@ -397,162 +427,104 @@ var Games = React.createClass({
     }
 });
 
+
 var GameInfo = React.createClass({
 
     getInitialState: function() {
-        // allowEdit = true allows you to force a date change
         return {
             message : null,
-            allowEdit : true
+            allowEdit: true
+        };
+    },
+
+    getDefaultProps : function() {
+        return {
+            game : null,
+            startLottery : null, // function to start the lottery
+            submissions : 0,
+            loadGame : null, // function to reload the game Object
+            availableSpots : 0
         };
     },
 
     componentDidMount : function() {
-        if (this.props.game.lottery_run === '0' || this.state.allowEdit) {
-            this.initializeDateTime(this.props.game);
-        }
-        this.updateGame();
+        this.initializeDateTime();
     },
 
-    updateGame : function() {
-        if (this.props.game.signup_start >= this.props.game.signup_end) {
-            this.setState({
-                message : 'Signup start must precede signup deadline'
-            });
-            return;
-        } else if (this.props.game.signup_end >= this.props.game.pickup_deadline) {
-            this.setState({
-                message : 'Signup deadline must precede pickup deadline'
-            });
-            return;
-        } else if (this.props.game.pickup_deadline >= this.props.game.kickoff) {
-            this.setState({
-                message : 'Pickup deadline must precede kickoff'
-            });
-            return;
-        } else if (this.state.message !== null) {
-            this.setState({
-                message : null
-            });
-            return;
-        }
-
-        if (this.props.game.lottery_run == '0' || this.state.allowEdit) {
+    initializeDateTime : function() {
+        game = this.props.game;
+        if (game.lottery_run == '0' || this.state.allowEdit) {
             $('#signup-start').datetimepicker({
-                value : this.props.game.signup_start_ts,
-                maxDate : this.props.game.signup_end_ts.substr(0, 10)
+                value : game.signup_start_ts,
+                maxDate : game.signup_end_ts.substr(0, 10)
             });
 
             $('#signup-end').datetimepicker({
-                value : this.props.game.signup_end_ts,
-                minDate : this.props.game.signup_start_ts.substr(0, 10),
-                maxDate : this.props.game.pickup_deadline_ts.substr(0, 10)
+                value : game.signup_end_ts,
+                minDate : game.signup_start_ts.substr(0, 10),
+                maxDate : game.pickup_deadline_ts.substr(0, 10)
             });
 
             $('#pickup-deadline').datetimepicker({
-                value : this.props.game.pickup_deadline_ts,
-                minDate : this.props.game.signup_end_ts.substr(0, 10),
-                maxDate : this.props.game.kickoff_ts
+                value : game.pickup_deadline_ts,
+                minDate : game.signup_end_ts.substr(0, 10),
+                maxDate : game.kickoff_ts
             });
 
             $('#kickoff').datetimepicker({
-                value : this.props.game.kickoff_ts,
-                minDate : this.props.game.pickup_deadline_ts.substr(0, 10)
+                value : game.kickoff_ts,
+                minDate : game.pickup_deadline_ts.substr(0, 10)
             });
         }
     },
 
-    initializeDateTime : function()
-    {
-        $('#signup-start').datetimepicker({
-            timepicker:true,
-            format: 'Y/m/d H:i',
-            onChangeDateTime : function(ct, i) {
-                $.post('tailgate/Admin/Game', {
-                    command : 'changeDate',
-                    game_id : this.props.game.id,
-                    signup_start : ct
-                }, function(){}, 'json').done(function(data){
-                    this.props.loadGame();
-                    //this.updateGame(data);
-                }.bind(this));
-            }.bind(this),
-        });
-
-        $('#signup-end').datetimepicker({
-            timepicker:true,
-            format: 'Y/m/d H:i',
-            onChangeDateTime : function(ct, i) {
-                $.post('tailgate/Admin/Game', {
-                    command : 'changeDate',
-                    game_id : this.props.game.id,
-                    signup_end : ct
-                }, function(){}, 'json').done(function(data){
-                    this.props.loadGame();
-                    //this.updateGame(data);
-                }.bind(this));
-            }.bind(this),
-        });
-
-        $('#pickup-deadline').datetimepicker({
-            timepicker:true,
-            format: 'Y/m/d H:i',
-            onChangeDateTime : function(ct, i) {
-                $.post('tailgate/Admin/Game', {
-                    command : 'changeDate',
-                    game_id : this.props.game.id,
-                    pickup_deadline : ct
-                }, function(){}, 'json').done(function(data){
-                    this.props.loadGame();
-                    //this.updateGame(data);
-                }.bind(this));
-            }.bind(this),
-        });
-
-        $('#kickoff').datetimepicker({
-            timepicker:false,
-            format: 'Y/m/d',
-            onChangeDateTime : function(ct, i) {
-                $.post('tailgate/Admin/Game', {
-                    command : 'changeDate',
-                    game_id : this.props.game.id,
-                    kickoff : ct
-                }, function(){}, 'json').done(function(data){
-                    this.props.loadGame();
-                    //this.updateGame(data);
-                }.bind(this));
-            }.bind(this),
+    setError: function(error) {
+        this.setState({
+            message : <div className="alert alert-danger">{error}</div>
         });
     },
 
-    completeGame : function() {
-        $.post('tailgate/Admin/Lottery', {
-            command : 'completeGame',
-            game_id : this.props.game.id
+    update : function(){
+        this.setState({
+            message : null
         });
-        this.props.loadCurrentGame();
+        this.props.loadGame();
     },
 
-    signupStartDate : function() {
-        $('#signup-start').datetimepicker('show');
-    },
-
-    signupEndDate : function() {
-        $('#signup-end').datetimepicker('show');
-    },
-
-    pickupDeadlineDate : function() {
-        $('#pickup-deadline').datetimepicker('show');
-    },
-
-    kickoffDate : function() {
-        $('#kickoff').datetimepicker('show');
-    },
-
-    render : function() {
+    render: function() {
         var button = null;
         var message = null;
         var timestamp = Math.floor(Date.now() / 1000);
+        var pickupReport = null;
+        var winnerReport = null;
+
+        if (this.props.game.pickup_deadline < timestamp) {
+            pickupReport = (
+                <div className="pull-left" style={{marginRight : '.5em'}}>
+                    <a href="./tailgate/Admin/Report/?command=pickup" target="_blank" className="btn btn-primary btn-sm">
+                        <i className='fa fa-file-text-o'></i> Pickup report
+                    </a>
+                </div>
+            );
+
+            spotReport = (
+                <div className="pull-left" style={{marginRight : '.5em'}}>
+                    <a href="./tailgate/Admin/Report/?command=spotReport" target="_blank" className="btn btn-primary btn-sm">
+                        <i className='fa fa-file-text-o'></i> Spot report
+                    </a>
+                </div>
+            );
+        }
+
+        if (this.props.game.lottery_run === '1') {
+            winnerReport = (
+                <div className="pull-left" style={{marginRight : '.5em'}}>
+                    <a href="./tailgate/Admin/Report/?command=winners" target="_blank" className="btn btn-primary btn-sm">
+                        <i className='fa fa-file-text-o'></i> Winner list
+                    </a>
+                </div>
+            );
+        }
 
         if (this.props.game.lottery_run == '0') {
             button = <LotteryRun game={this.props.game} startLottery={this.props.startLottery}/>;
@@ -560,54 +532,191 @@ var GameInfo = React.createClass({
             button = <button className="btn btn-primary" onClick={this.completeGame}>Complete lottery</button>;
         }
 
+        return (
+            <div>
+                <h4>{this.props.game.university} {this.props.game.mascot} - Total submissions: {this.props.submissions}, Available spots: {this.props.availableSpots}</h4>
+                {this.state.message}
+                <div className="row">
+                    <SignupStart allowEdit={this.state.allowEdit} timestamp={timestamp} error={this.setError} update={this.update} game={this.props.game}/>
+                    <SignupEnd allowEdit={this.state.allowEdit} timestamp={timestamp} error={this.setError} update={this.update} game={this.props.game}/>
+                    <PickupDeadline allowEdit={this.state.allowEdit} timestamp={timestamp} error={this.setError} update={this.update} game={this.props.game}/>
+                    <Kickoff allowEdit={this.state.allowEdit} timestamp={timestamp} error={this.setError} update={this.update} game={this.props.game}/>
+                </div>
+                {winnerReport}
+                {pickupReport}
+                {spotReport}
+                {button}
+            </div>
+        );
+    }
 
-        if (this.state.message) {
-            message = <div className="alert alert-danger"><i className="fa fa-exclamation-circle"></i> {this.state.message}</div>;
+});
+
+var SignupStart = React.createClass({
+    mixins: [datepickerMixin],
+
+    getDefaultProps: function() {
+        return {
+            game : null,
+            loadGame : null,
+            allowEdit : true
+        };
+    },
+
+    componentDidMount: function() {
+        this.dateInit('#signup-start', true);
+    },
+
+    update: function(date) {
+        this.updateDate('updateSignupStart', date);
+    },
+
+    render: function() {
+        var button = null;
+        var game = this.props.game;
+        var timestamp = this.props.timestamp;
+        var bgColor = game.signup_start > timestamp ? 'success' : 'info';
+        if (this.props.game.lottery_run == '0' || this.props.allowEdit) {
+            button = <EditDateButton buttonId={'signup-start'}
+                handleClick={this.popupCalendar.bind(this, '#signup-start')}/>;
         } else {
-            message = null;
+            button = null;
         }
 
-        var signupStartColor = this.props.game.signup_start > timestamp ? 'success' : 'info';
-        var signupEndColor = this.props.game.signup_end > timestamp ? 'success' : 'info';
-        var pickupColor = this.props.game.pickup_deadline > timestamp ? 'success' : 'info';
-        var kickoffColor = this.props.game.kickoff > timestamp ? 'success' : 'info';
-        return (
-        <div>
-            <h4>{this.props.game.university} {this.props.game.mascot} - Total submissions: {this.props.submissions}, Available spots: {this.props.availableSpots}</h4>
-            {message}
-            <div className="row">
-                <div className="col-sm-3">
-                    <div className={'alert alert-' + signupStartColor}>
-                        {this.props.game.lottery_run == '0' || this.state.allowEdit ? <button className="pull-right btn btn-sm btn-primary" id="signup-start" onClick={this.signupStartDate}>Edit</button> : null}
-                        <big><strong>Signup start</strong></big><br />
-                        {this.props.game.signup_start_format}
-                    </div>
-                </div>
-                <div className="col-sm-3">
-                    <div className={'alert alert-' + signupEndColor}>
-                        {this.props.game.lottery_run == '0' || this.state.allowEdit ? <button className="pull-right btn btn-sm btn-primary" id="signup-end" onClick={this.signupEndDate}>Edit</button> : null}
-                        <big><strong>Signup deadline</strong></big><br />
-                        {this.props.game.signup_end_format}
-                    </div>
-                </div>
-                <div className="col-sm-3">
-                    <div className={'alert alert-' + pickupColor}>
-                        {this.props.game.lottery_run == '0' || this.state.allowEdit ? <button className="pull-right btn btn-sm btn-primary" id="pickup-deadline" onClick={this.pickupDeadlineDate}>Edit</button> : null}
-                        <big><strong>Pickup Deadline</strong></big><br />
-                        {this.props.game.pickup_deadline_format}<br />
-                    </div>
-                </div>
-                <div className="col-sm-3">
-                    <div className={'alert alert-' + kickoffColor}>
-                        {this.props.game.lottery_run == '0' || this.state.allowEdit ? <button className="pull-right btn btn-sm btn-primary" id="kickoff" onClick={this.kickoffDate}>Edit</button> : null}
-                        <big><strong>Kickoff:</strong></big><br />{this.props.game.kickoff_format}
-                    </div>
-                </div>
-            </div>
-            {this.props.game.pickup_deadline < timestamp ? <div className="pull-left" style={{marginRight : '.5em'}}><a href="./tailgate/Admin/Report/?command=pickup" target="_blank" className="btn btn-primary btn-sm"><i className='fa fa-file-text-o'></i> Pickup report</a></div> : null}
-            {this.props.game.lottery_run === '1' ? <div className="pull-left"><a href="./tailgate/Admin/Report/?command=winners" target="_blank" className="btn btn-primary btn-sm"><i className='fa fa-file-text-o'></i> Winner list</a></div> : null}
-            {button}
+        return <DatetimeBox bgColor={bgColor} button={button} title={'Signup start'} date={this.props.game.signup_start_format} />
+    }
+});
+
+var SignupEnd = React.createClass({
+    mixins: [datepickerMixin],
+
+    getDefaultProps: function() {
+        return {
+            game : null,
+            loadGame : null,
+            allowEdit : true
+        };
+    },
+
+    componentDidMount: function() {
+        this.dateInit('#signup-end', true);
+    },
+
+    update: function(date) {
+        this.updateDate('updateSignupEnd', date);
+    },
+
+    render: function() {
+        var button = null;
+        var game = this.props.game;
+        var timestamp = this.props.timestamp;
+        var bgColor = timestamp < game.signup_end && timestamp > game.signup_start ? 'success' : 'info';
+        if (this.props.game.lottery_run == '0' || this.props.allowEdit) {
+            button = <EditDateButton buttonId={'signup-end'}
+                handleClick={this.popupCalendar.bind(this, '#signup-end')}/>;
+        } else {
+            button = null;
+        }
+
+        return <DatetimeBox bgColor={bgColor} button={button} title={'Signup end'}
+             date={this.props.game.signup_end_format} />
+    }
+});
+
+var PickupDeadline = React.createClass({
+    mixins: [datepickerMixin],
+
+    getDefaultProps: function() {
+        return {
+            game : null,
+            loadGame : null,
+            allowEdit : true
+        };
+    },
+
+    componentDidMount: function() {
+        this.dateInit('#pickup-deadline', true);
+    },
+
+    update: function(date) {
+        this.updateDate('updatePickupDeadline', date);
+    },
+
+    render: function() {
+        var button = null;
+        var game = this.props.game;
+        var timestamp = this.props.timestamp;
+        var bgColor = timestamp < game.pickup_deadline && timestamp > game.signup_end ? 'success' : 'info';
+        if (this.props.game.lottery_run == '0' || this.props.allowEdit) {
+            button = <EditDateButton buttonId={'pickup-deadline'}
+                handleClick={this.popupCalendar.bind(this, '#pickup-deadline')}/>;
+        } else {
+            button = null;
+        }
+
+        return <DatetimeBox bgColor={bgColor} button={button} title={'Pickup Deadline'}
+             date={this.props.game.pickup_deadline_format} />
+    }
+});
+
+var Kickoff = React.createClass({
+    mixins: [datepickerMixin],
+
+    getDefaultProps: function() {
+        return {
+            game : null,
+            loadGame : null,
+            allowEdit : true
+        };
+    },
+
+    componentDidMount: function() {
+        this.dateInit('#kickoff', false);
+    },
+
+    update: function(date) {
+        this.updateDate('updateKickoff', date);
+    },
+
+    render: function() {
+        var button = null;
+        var game = this.props.game;
+        var timestamp = this.props.timestamp;
+        var bgColor = timestamp < game.kickoff && timestamp > game.pickup_deadline ? 'success' : 'info';
+        if (this.props.game.lottery_run == '0' || this.props.allowEdit) {
+            button = <EditDateButton buttonId={'kickoff'}
+                handleClick={this.popupCalendar.bind(this, '#kickoff')}/>;
+        } else {
+            button = null;
+        }
+
+        return <DatetimeBox bgColor={bgColor} button={button} title={'Kickoff'}
+             date={this.props.game.kickoff_format} />
+    }
+});
+
+DatetimeBox = (props) => (
+    <div className="col-sm-3">
+        <div className={'alert alert-' + props.bgColor}>
+            {props.button}
+            <big><strong>{props.title}</strong></big><br />
+            {props.date}
         </div>
+    </div>
+);
+
+var EditDateButton = React.createClass({
+
+    getDefaultProps : function() {
+        return {
+            buttonId : null,
+            handleClick : null
+        };
+    },
+
+    render: function() {
+        return (
+            <button className="pull-right btn btn-sm btn-primary" id={this.props.buttonId} onClick={this.props.handleClick}>Edit</button>
         );
     }
 });
@@ -640,12 +749,14 @@ var LotteryRun = React.createClass({
                 button = (
                     <div>
                         <p>Are you sure you want to start the lottery?</p>
-                        <button style={{marginRight : '1em'}} className="btn btn-success btn-lg" onClick={this.props.startLottery}><i className="fa fa-check"></i> Confirm: Start lottery</button>
-                        <button className="btn btn-danger btn-lg" onClick={this.stopLottery}><i className="fa fa-times"></i> Cancel running lottery</button>
+                        <button style={{marginRight : '1em'}} className="btn btn-success btn-lg" onClick={this.props.startLottery}>
+                            <i className="fa fa-check"></i> Confirm: Start lottery</button>
+                        <button className="btn btn-danger btn-lg" onClick={this.stopLottery}>
+                            <i className="fa fa-times"></i> Cancel running lottery</button>
                     </div>
                 );
             } else {
-                button = <button className="btn btn-primary btn-lg" onClick={this.confirmLottery}>Start lottery</button>;
+                button = <button className="btn btn-success btn-lg" onClick={this.confirmLottery}>Start lottery</button>;
             }
         }
         return (
@@ -1081,7 +1192,8 @@ var LotListing = React.createClass({
                 {this.props.lots.map(function(value, i){
                     if (allowExtraButtons) {
                         if (value.active === '1') {
-                            button = <button style={{marginLeft : '.5em'}} className="btn btn-danger btn-sm" onClick={this.deactivate.bind(this, i)}>Deactivate</button>;
+                            button = <button style={{marginLeft : '.5em'}} className="btn btn-danger btn-sm"
+                                onClick={this.deactivate.bind(this, i)}>Deactivate</button>;
                         } else {
                             button = <span>
                                 <button style={{marginLeft : '.5em'}} className="btn btn-default btn-sm" onClick={this.activate.bind(this, i)}>Activate</button>
@@ -1546,7 +1658,7 @@ var Students = React.createClass({
                             <th>Wins</th>
                             <th className="text-center">Eligible</th>
                             <th className="text-center">Allowed</th>
-                            {this.props.game ? <th>Current winner</th> : null}
+                            {this.props.game && this.props.pickup_deadline > timestamp ? <th>Current winner</th> : null}
                             <th>&nbsp;</th>
                         </tr>
                     </thead>
@@ -1693,6 +1805,7 @@ var StudentRow = React.createClass({
     },
 
     render : function() {
+        var timestamp = Math.floor(Date.now() / 1000);
         var value = this.props.student;
         var winner = null;
         if (value.winner === '1' && value.picked_up === '1') {
@@ -1715,7 +1828,7 @@ var StudentRow = React.createClass({
                 <td className="text-right col-sm-1">{value.wins}</td>
                 <td className="text-center"><EligibleIcon value={value} handleClick={this.eligible}/></td>
                 <td className="text-center"><BannedIcon value={value} handleClick={this.bannedReason}/></td>
-                {this.props.game ? <td>{winner}</td> : null}
+                {this.props.game && this.props.pickup_deadline > timestamp ? <td>{winner}</td> : null}
                 <td>
                     <button className="btn btn-sm btn-danger" style={{marginRight : '1em'}} onClick={this.deleteStudent}><i className="fa fa-trash-o"></i> Delete</button>
                 </td>
@@ -1911,6 +2024,9 @@ var NoButton = React.createClass({
         }
 });
 
+var Example = (props) => (
+    <div>{props.foo}</div>
+);
 
 // This script will not run after compiled UNLESS the below is wrapped in $(window).load(function(){...});
-React.render(<Setup/>, document.getElementById('tailgate-setup'));
+ReactDOM.render(<Setup/>, document.getElementById('tailgate-setup'));
