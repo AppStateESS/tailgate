@@ -24,7 +24,7 @@ abstract class Base extends \Http\Controller
         javascript('ckeditor');
         $http = PHPWS_SOURCE_HTTP;
         
-        $development = true;
+        $development = false;
         $script = 'Admin/Setup/';
 
         \tailgate\Factory\React::load($script, 'script', $development);
