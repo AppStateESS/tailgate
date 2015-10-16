@@ -28,20 +28,24 @@ class Game extends Base
                     $json['available_spots'] = $lotteryFactory->totalAvailableSpots();
                 }
                 break;
-            
+
             case 'getCurrent':
                 $json = $factory->getCurrentAsArray();
                 break;
-            
+
             case 'getAvailableSpots':
-                $json = array('available_spots'=>$factory->totalAvailableSpots());
+                $json = array('available_spots' => $factory->totalAvailableSpots());
+                break;
+
+            case 'unixtime':
+                $json['unixtime'] = strtotime(filter_input(INPUT_GET, 'date', FILTER_SANITIZE_STRING));
                 break;
         }
 
         $view = new \View\JsonView($json);
         return $view;
     }
-    
+
     public function post(\Request $request)
     {
         $factory = new Factory;
@@ -55,15 +59,103 @@ class Game extends Base
                 $factory->postNew();
                 break;
 
-            case 'changeDate':
-                $view = $this->changeDate();
+            case 'updateSignupStart':
+                $view = new \View\JsonView($this->updateSignupStart());
                 break;
             
+            case 'updateSignupEnd':
+                $view = new \View\JsonView($this->updateSignupEnd());
+                break;
+            
+            case 'updatePickupDeadline':
+                $view = new \View\JsonView($this->updatePickupDeadline());
+                break;
+            
+            case 'updateKickoff':
+                $view = new \View\JsonView($this->updateKickoff());
+                break;
+
             default:
                 throw new \Exception('Bad command:' . $request->getVar('command'));
         }
         $response = new \Response($view);
         return $response;
+    }
+
+    private function updateSignupStart()
+    {
+        $game = Factory::getCurrent();
+
+        $signup_start_unix = $this->getUnix('date');
+        if ($game->getSignupEnd() < $signup_start_unix) {
+            $json['error'] = 'Signup start must precede the signup end.';
+            $json['success'] = false;
+        } else {
+            $game->setSignupStart($signup_start_unix);
+            Factory::saveResource($game);
+            $json['success'] = true;
+        }
+        return $json;
+    }
+
+    private function updateSignupEnd()
+    {
+        $game = Factory::getCurrent();
+
+        $signup_end_unix = $this->getUnix('date');
+        if ($game->getSignupStart() > $signup_end_unix) {
+            $json['error'] = 'Signup end must proceed the signup start.';
+            $json['success'] = false;
+        } elseif ($game->getPickupDeadline() < $signup_end_unix) {
+            $json['error'] = 'Signup end must preceed the pickup deadline.';
+            $json['success'] = false;
+        } else {
+            $game->setSignupEnd($signup_end_unix);
+            Factory::saveResource($game);
+            $json['success'] = true;
+        }
+        return $json;
+    }
+
+    private function updatePickupDeadline()
+    {
+        $game = Factory::getCurrent();
+
+        $pickup_deadline_unix = $this->getUnix('date');
+        if ($game->getSignupEnd() > $pickup_deadline_unix) {
+            $json['error'] = 'Pickup deadline must proceed the signup end.';
+            $json['success'] = false;
+        } elseif ($game->getKickoff() < $pickup_deadline_unix) {
+            $json['error'] = 'Pickup deadline must preceed the kickoff.';
+            $json['success'] = false;
+        } else {
+            $game->setPickupDeadline($pickup_deadline_unix);
+            Factory::saveResource($game);
+            $json['success'] = true;
+        }
+        return $json;
+    }
+
+    private function updateKickoff()
+    {
+        $game = Factory::getCurrent();
+
+        $kickoff_unix = $this->getUnix('date');
+        if ($game->getPickupDeadline() > $kickoff_unix) {
+            $json['error'] = 'Kickoff deadline must proceed the pickup deadline.';
+            $json['success'] = false;
+        } else {
+            $game->setKickoff($kickoff_unix);
+            Factory::saveResource($game);
+            $json['success'] = true;
+        }
+        return $json;
+    }
+
+    private function getUnix($post_var)
+    {
+        $datetime = filter_input(INPUT_POST, $post_var, FILTER_SANITIZE_STRING);
+        return strtotime($datetime);
     }
 
     private function changeDate()
@@ -75,7 +167,7 @@ class Game extends Base
         $signup_start = filter_input(INPUT_POST, 'signup_start', FILTER_SANITIZE_STRING);
         $signup_end = filter_input(INPUT_POST, 'signup_end', FILTER_SANITIZE_STRING);
         $pickup_deadline = filter_input(INPUT_POST, 'pickup_deadline', FILTER_SANITIZE_STRING);
-        
+
         $game = new Resource;
         $game->setId($game_id);
         $factory->load($game);
@@ -91,7 +183,7 @@ class Game extends Base
         } else {
             throw new \Exception('Date not sent');
         }
-        
+
         $factory->save($game);
         $garray = $game->getStringVars();
         $garray = $factory->addVisitorInformation($garray);
