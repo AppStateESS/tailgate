@@ -173,12 +173,15 @@ class Game extends Base
 
     public static function getGameStatus(\tailgate\Resource\Game $game)
     {
+        $color = null;
+        $status = null;
         $gamevars = $game->getStringVars();
         $gameinfo = '<p>' . $gamevars['university'] . '<br />' . $gamevars['mascot'] .
                 '<br />' . $gamevars['kickoff_format'] . '</p>';
 
         $now = time();
 
+        
         $start = $game->getSignupStart();
         $end = $game->getSignupEnd();
         $pickup = $game->getPickupDeadline();
@@ -204,6 +207,10 @@ class Game extends Base
         } elseif ($kickoff > $now) {
             $status = 'Lottery process complete. Pickup deadline has passed. Unclaimed spaces offered on first come, first serve basis.';
             $color = 'info';
+        } else {
+            $gameinfo = null;
+            $status = 'No game currently scheduled';
+            $color = 'success';
         }
 
         $gameinfo .= "<div style='white-space:normal' class='alert alert-$color'>$status</div>";
