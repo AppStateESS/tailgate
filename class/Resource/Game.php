@@ -69,6 +69,10 @@ class Game extends \Resource
         $this->pickup_deadline->setFormat('%s');
         $this->lottery_run = new \Variable\Bool(null, 'lottery_run');
         $this->completed = new \Variable\Bool(null, 'completed');
+        $this->university = new \Variable\String(null, 'university');
+        $this->university->setIsTableColumn(false);
+        $this->mascot = new \Variable\String(null, 'mascot');
+        $this->mascot->setIsTableColumn(false);
     }
 
     public function getCompleted()
