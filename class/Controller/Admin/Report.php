@@ -28,6 +28,10 @@ class Report extends Base
                 $content = Factory::winners(GameFactory::getCurrentId());
                 break;
             
+            case 'spotReport':
+                $content = Factory::spotReport(GameFactory::getCurrentId());
+                break;
+            
             default:
                 throw new \Exception('Unknown report command');
         }
