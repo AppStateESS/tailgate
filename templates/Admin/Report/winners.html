@@ -8,18 +8,21 @@
         </style>
     </head>
     <body>
-        <h1><?=$university,' ',$mascot,' - ',$kickoff?></h1>
+        <h1>Current winners</h1>
+        <h2><?=$university,' ',$mascot,' - ',$kickoff?></h2>
         <table border='1'>
             <tr>
                 <th>Student</th>
                 <th>Username</th>
-                <th>Wins</th>
+                <th>Total Wins</th>
+                <th>Spot chosen</th>
             </tr>
             <?php foreach ($rows as $row): ?>
             <tr>
                 <td><?=$row['first_name']?> <?=$row['last_name']?></td>
                 <td><?=$row['username']?></td>
                 <td><?=$row['wins']?></td>
+                <td><?=$row['spot_number'] ? $row['lot_title'] . ' #' . $row['spot_number']:'<em>Unconfirmed</em>'?></td>
             </tr>
             <?php endforeach; ?>
         </table>
