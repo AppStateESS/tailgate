@@ -71,7 +71,8 @@ var Status = React.createClass({
         if (this.state.currentGame === null) {
             content = <h4>No games scheduled. Try back later.</h4>;
         } else {
-            content = <Game game={this.state.currentGame} lottery={this.state.lottery} spot={this.state.spot} updateLottery={this.loadData}/>;
+            content = (<Game game={this.state.currentGame} lottery={this.state.lottery}
+                 spot={this.state.spot} loadData={this.loadData}/>);
         }
         return (
             <div>
@@ -117,8 +118,12 @@ var Game = React.createClass({
     render : function() {
         return (
             <div>
-                {this.props.game.length > 0 ? <h3>{this.props.game.university} {this.props.game.mascot} - {this.props.game.kickoff_format}</h3> : null}
-                <GameStatus game={this.props.game} lottery={this.props.lottery} spot={this.props.spot} updateLottery={this.props.updateLottery}/>
+                {this.props.game.length > 0 ? (
+                    <h3>
+                        {this.props.game.university} {this.props.game.mascot} - {this.props.game.kickoff_format}
+                    </h3>) : null}
+                <GameStatus game={this.props.game} lottery={this.props.lottery}
+                    spot={this.props.spot} loadData={this.props.loadData}/>
             </div>
         );
     }
@@ -131,7 +136,7 @@ var GameStatus = React.createClass({
             command : 'apply',
             game_id : this.props.game.id
         }).done(function(data){
-            this.props.updateLottery();
+            this.props.loadData();
         }.bind(this));
     },
 
@@ -163,7 +168,7 @@ var GameStatus = React.createClass({
                                 if (this.props.game.pickup_deadline < timestamp) {
                                     content = <div className="alert alert-info">Sorry, you failed to confirm your tailgating win. Your spot has been forfeited.</div>;
                                 } else {
-                                    content = <div><ConfirmSpot lottery={this.props.lottery} updateLottery={this.props.updateLottery}/></div>;
+                                    content = <div><ConfirmSpot lottery={this.props.lottery} loadData={this.props.loadData}/></div>;
                                 }
                             }
                         } else {
@@ -229,7 +234,6 @@ var ConfirmSpot = React.createClass({
         this.loadAvailableSpots();
     },
 
-
     loadAvailableSpots : function() {
         $.getJSON('tailgate/User/Lottery', {
             command : 'spotChoice'
@@ -241,7 +245,7 @@ var ConfirmSpot = React.createClass({
     },
 
     confirmSpot : function() {
-        var spotId = $(React.findDOMNode(this.refs.spotChoice)).val();
+        var spotId = this.refs.spotChoice.value;
         var lotteryId = this.props.lottery.id;
         this.setState({
             waiting : 1
@@ -252,8 +256,11 @@ var ConfirmSpot = React.createClass({
             lotteryId : lotteryId
         },null, 'json').done(function(data){
             if (data.success) {
-                this.props.updateLottery();
+                this.props.loadData();
             } else {
+                this.setState({
+                    waiting : 0
+                });
                 this.setState({
                     message : <div className="alert alert-danger">Your requested spot was chosen by someone else. Pick again.</div>
                 });
@@ -326,4 +333,4 @@ var Waiting = React.createClass({
 });
 
 // This script will not run after compiled UNLESS the below is wrapped in $(window).load(function(){...});
-React.render(<Status/>, document.getElementById('studentStatus'));
+ReactDOM.render(<Status/>, document.getElementById('studentStatus'));
