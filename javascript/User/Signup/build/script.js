@@ -19,19 +19,19 @@ Signup = React.createClass({displayName: "Signup",
 
     render : function() {
         return (
-            React.createElement("div", null,
-                React.createElement("p", null, "Before getting started, please enter your first and last name."),
-                React.createElement("form", {method: "post", action: "tailgate/User/Student"},
-                    React.createElement("input", {type: "hidden", name: "command", value: "createNewAccount"}),
-                    React.createElement("div", {className: "row"},
-                        React.createElement("div", {className: "col-sm-6"},
+            React.createElement("div", null, 
+                React.createElement("p", null, "Before getting started, please enter your first and last name."), 
+                React.createElement("form", {method: "post", action: "tailgate/User/Student"}, 
+                    React.createElement("input", {type: "hidden", name: "command", value: "createNewAccount"}), 
+                    React.createElement("div", {className: "row"}, 
+                        React.createElement("div", {className: "col-sm-6"}, 
                             React.createElement(TextInput, {inputId: "firstName", label: 'First name', required: true})
-                        ),
-                        React.createElement("div", {className: "col-sm-6"},
+                        ), 
+                        React.createElement("div", {className: "col-sm-6"}, 
                             React.createElement(TextInput, {inputId: "lastName", label: 'Last name', required: true})
                         )
-                    ),
-                    React.createElement("div", {className: "text-center", style: {marginTop : '1em'}},
+                    ), 
+                    React.createElement("div", {className: "text-center", style: {marginTop : '1em'}}, 
                         React.createElement("button", {className: "btn btn-primary", onClick: this.checkNames}, React.createElement("i", {className: "fa fa-check"}), " Create new account")
                     )
                 )
@@ -78,10 +78,10 @@ var TextInput = React.createClass({displayName: "TextInput",
             label = null;
         }
         return (
-            React.createElement("div", {className: "form-group"},
-                label, " ", required,
-                React.createElement("input", {type: "text", className: "form-control", id: this.props.inputId,
-                    name: this.props.inputId, placeholder: this.props.placeholder, onFocus: this.handleFocus,
+            React.createElement("div", {className: "form-group"}, 
+                label, " ", required, 
+                React.createElement("input", {type: "text", className: "form-control", id: this.props.inputId, 
+                    name: this.props.inputId, placeholder: this.props.placeholder, onFocus: this.handleFocus, 
                     onChange: this.handleChange, onBlur: this.handleBlur, onKeyPress: this.props.handlePress})
             )
         );
@@ -90,6 +90,4 @@ var TextInput = React.createClass({displayName: "TextInput",
 
 
 // This script will not run after compiled UNLESS the below is wrapped in $(window).load(function(){...});
-$(window).load(function(){
-    React.render(React.createElement(Signup, null), document.getElementById('studentSignup'));
-});
+$(window).load(function(){React.render(React.createElement(Signup, null), document.getElementById('studentSignup'));});
