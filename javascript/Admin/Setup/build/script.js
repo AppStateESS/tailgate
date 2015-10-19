@@ -91,6 +91,7 @@ var Setup = React.createClass({displayName: "Setup",
                 currentGame : data
             });
         }.bind(this));
+        return xhr;
     },
 
     loadLots: function() {
@@ -296,6 +297,17 @@ var Games = React.createClass({displayName: "Games",
         }.bind(this));
     },
 
+
+    completeGame : function()
+    {
+        $.post('tailgate/Admin/Game', {
+            command : 'complete',
+            id : this.props.game.id
+        }, null, 'json').done(function(data){
+            this.loadGames();
+        }.bind(this));
+    },
+
     loadSubmissions : function() {
         $.getJSON('tailgate/Admin/Lottery', {
             command : 'submissionCount'
@@ -359,7 +371,7 @@ var Games = React.createClass({displayName: "Games",
                     }.bind(this));
                 } else {
                     this.setState({
-                        message : 'Pickup date must be less than gate date'
+                        message : 'Pickup date must be less than game date'
                     });
                 }
             } else {
@@ -400,7 +412,7 @@ var Games = React.createClass({displayName: "Games",
                 currentGame = React.createElement(GameForm, {visitors: this.state.visitors, save: this.saveGame});
             }
         } else if (Object.keys(this.props.game).length > 0) {
-            currentGame = React.createElement(GameInfo, {game: this.props.game, startLottery: this.props.startLottery, submissions: this.state.submissions, loadGame: this.props.loadGame, availableSpots: this.state.availableSpots});
+            currentGame = React.createElement(GameInfo, {game: this.props.game, startLottery: this.props.startLottery, submissions: this.state.submissions, loadGame: this.props.loadGame, completeGame: this.completeGame, availableSpots: this.state.availableSpots});
         } else {
             currentGame = null;
         }
@@ -488,7 +500,10 @@ var GameInfo = React.createClass({displayName: "GameInfo",
         this.setState({
             message : null
         });
-        this.props.loadGame();
+        var xhr = this.props.loadGame();
+        xhr.always(function() {
+            this.initializeDateTime()
+        }.bind(this));
     },
 
     render: function() {
@@ -497,8 +512,9 @@ var GameInfo = React.createClass({displayName: "GameInfo",
         var timestamp = Math.floor(Date.now() / 1000);
         var pickupReport = null;
         var winnerReport = null;
+        var spotReport =null;
 
-        if (this.props.game.pickup_deadline < timestamp) {
+        if (this.props.game.lottery_run === '1' && this.props.game.pickup_deadline < timestamp) {
             pickupReport = (
                 React.createElement("div", {className: "pull-left", style: {marginRight : '.5em'}}, 
                     React.createElement("a", {href: "./tailgate/Admin/Report/?command=pickup", target: "_blank", className: "btn btn-primary btn-sm"}, 
@@ -508,7 +524,7 @@ var GameInfo = React.createClass({displayName: "GameInfo",
             );
 
             spotReport = (
-                React.createElement("div", {className: "pull-left", style: {marginRight : '.5em'}}, 
+                React.createElement("div", null, 
                     React.createElement("a", {href: "./tailgate/Admin/Report/?command=spotReport", target: "_blank", className: "btn btn-primary btn-sm"}, 
                         React.createElement("i", {className: "fa fa-file-text-o"}), " Spot report"
                     )
@@ -529,12 +545,12 @@ var GameInfo = React.createClass({displayName: "GameInfo",
         if (this.props.game.lottery_run == '0') {
             button = React.createElement(LotteryRun, {game: this.props.game, startLottery: this.props.startLottery});
         } else if (this.props.game.kickoff < Math.floor(Date.now() / 1000)) {
-            button = React.createElement("button", {className: "btn btn-primary", onClick: this.completeGame}, "Complete lottery");
+            button = React.createElement("button", {className: "btn btn-primary", onClick: this.props.completeGame}, "Complete lottery");
         }
 
         return (
             React.createElement("div", null, 
-                React.createElement("h4", null, this.props.game.university, " ", this.props.game.mascot, " - Total submissions: ", this.props.submissions, ", Available spots: ", this.props.availableSpots), 
+                React.createElement("h4", null, this.props.game.university, " ", this.props.game.mascot, " - Total submissions: ", this.props.submissions, ", Unreserved, available spots: ", this.props.availableSpots), 
                 this.state.message, 
                 React.createElement("div", {className: "row"}, 
                     React.createElement(SignupStart, {allowEdit: this.state.allowEdit, timestamp: timestamp, error: this.setError, update: this.update, game: this.props.game}), 
@@ -545,7 +561,9 @@ var GameInfo = React.createClass({displayName: "GameInfo",
                 winnerReport, 
                 pickupReport, 
                 spotReport, 
-                button
+                React.createElement("div", {style: {marginTop: '.5em',clear:'both'}}, 
+                    button
+                )
             )
         );
     }
@@ -1637,6 +1655,7 @@ var Students = React.createClass({displayName: "Students",
         if (this.state.limit <= this.state.students.length) {
             nextButton = React.createElement("button", {className: "btn btn-default", onClick: this.loadStudents.bind(null, nextLimit, this.state.search)}, React.createElement("i", {className: "fa fa-plus"}), " Show more rows");
         }
+
         return (
             React.createElement("div", null, 
                 this.state.message ? React.createElement("div", {className: "alert alert-danger"}, this.state.message) : null, 
@@ -1658,7 +1677,7 @@ var Students = React.createClass({displayName: "Students",
                             React.createElement("th", null, "Wins"), 
                             React.createElement("th", {className: "text-center"}, "Eligible"), 
                             React.createElement("th", {className: "text-center"}, "Allowed"), 
-                            this.props.game && this.props.pickup_deadline > timestamp ? React.createElement("th", null, "Current winner") : null, 
+                            this.props.game && this.props.game.pickup_deadline < timestamp ? React.createElement("th", null, "Current winner") : null, 
                             React.createElement("th", null, " ")
                         )
                     ), 
@@ -1819,16 +1838,18 @@ var StudentRow = React.createClass({displayName: "StudentRow",
         } else {
             winner = React.createElement("span", {className: "text-info"}, "No");
         }
+        var email = 'mailto:' + value.email;
+
         return(
             React.createElement("tr", null, 
                 React.createElement("td", null, value.id), 
                 React.createElement("td", null, value.last_name), 
                 React.createElement("td", null, value.first_name), 
-                React.createElement("td", null, React.createElement("a", {href: "mailto:{value.email}"}, value.username, " ", React.createElement("i", {className: "fa fa-envelope-o"}))), 
+                React.createElement("td", null, React.createElement("a", {href: email}, value.username, " ", React.createElement("i", {className: "fa fa-envelope-o"}))), 
                 React.createElement("td", {className: "text-right col-sm-1"}, value.wins), 
                 React.createElement("td", {className: "text-center"}, React.createElement(EligibleIcon, {value: value, handleClick: this.eligible})), 
                 React.createElement("td", {className: "text-center"}, React.createElement(BannedIcon, {value: value, handleClick: this.bannedReason})), 
-                this.props.game && this.props.pickup_deadline > timestamp ? React.createElement("td", null, winner) : null, 
+                this.props.game && this.props.game.pickup_deadline < timestamp ? React.createElement("td", null, winner) : null, 
                 React.createElement("td", null, 
                     React.createElement("button", {className: "btn btn-sm btn-danger", style: {marginRight : '1em'}, onClick: this.deleteStudent}, React.createElement("i", {className: "fa fa-trash-o"}), " Delete")
                 )
@@ -2029,6 +2050,4 @@ var Example = (props) => (
 );
 
 // This script will not run after compiled UNLESS the below is wrapped in $(window).load(function(){...});
-$(window).load(function(){
-    ReactDOM.render(React.createElement(Setup, null), document.getElementById('tailgate-setup'));
-});
+$(window).load(function(){ReactDOM.render(React.createElement(Setup, null), document.getElementById('tailgate-setup'));});

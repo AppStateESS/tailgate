@@ -91,6 +91,7 @@ var Setup = React.createClass({
                 currentGame : data
             });
         }.bind(this));
+        return xhr;
     },
 
     loadLots: function() {
@@ -296,6 +297,17 @@ var Games = React.createClass({
         }.bind(this));
     },
 
+
+    completeGame : function()
+    {
+        $.post('tailgate/Admin/Game', {
+            command : 'complete',
+            id : this.props.game.id
+        }, null, 'json').done(function(data){
+            this.loadGames();
+        }.bind(this));
+    },
+
     loadSubmissions : function() {
         $.getJSON('tailgate/Admin/Lottery', {
             command : 'submissionCount'
@@ -359,7 +371,7 @@ var Games = React.createClass({
                     }.bind(this));
                 } else {
                     this.setState({
-                        message : 'Pickup date must be less than gate date'
+                        message : 'Pickup date must be less than game date'
                     });
                 }
             } else {
@@ -400,7 +412,7 @@ var Games = React.createClass({
                 currentGame = <GameForm visitors={this.state.visitors} save={this.saveGame} />;
             }
         } else if (Object.keys(this.props.game).length > 0) {
-            currentGame = <GameInfo game={this.props.game} startLottery={this.props.startLottery} submissions={this.state.submissions} loadGame={this.props.loadGame} availableSpots={this.state.availableSpots}/>;
+            currentGame = <GameInfo game={this.props.game} startLottery={this.props.startLottery} submissions={this.state.submissions} loadGame={this.props.loadGame} completeGame={this.completeGame} availableSpots={this.state.availableSpots}/>;
         } else {
             currentGame = null;
         }
@@ -488,7 +500,10 @@ var GameInfo = React.createClass({
         this.setState({
             message : null
         });
-        this.props.loadGame();
+        var xhr = this.props.loadGame();
+        xhr.always(function() {
+            this.initializeDateTime()
+        }.bind(this));
     },
 
     render: function() {
@@ -497,8 +512,9 @@ var GameInfo = React.createClass({
         var timestamp = Math.floor(Date.now() / 1000);
         var pickupReport = null;
         var winnerReport = null;
+        var spotReport =null;
 
-        if (this.props.game.pickup_deadline < timestamp) {
+        if (this.props.game.lottery_run === '1' && this.props.game.pickup_deadline < timestamp) {
             pickupReport = (
                 <div className="pull-left" style={{marginRight : '.5em'}}>
                     <a href="./tailgate/Admin/Report/?command=pickup" target="_blank" className="btn btn-primary btn-sm">
@@ -508,7 +524,7 @@ var GameInfo = React.createClass({
             );
 
             spotReport = (
-                <div className="pull-left" style={{marginRight : '.5em'}}>
+                <div>
                     <a href="./tailgate/Admin/Report/?command=spotReport" target="_blank" className="btn btn-primary btn-sm">
                         <i className='fa fa-file-text-o'></i> Spot report
                     </a>
@@ -529,12 +545,12 @@ var GameInfo = React.createClass({
         if (this.props.game.lottery_run == '0') {
             button = <LotteryRun game={this.props.game} startLottery={this.props.startLottery}/>;
         } else if (this.props.game.kickoff < Math.floor(Date.now() / 1000)) {
-            button = <button className="btn btn-primary" onClick={this.completeGame}>Complete lottery</button>;
+            button = <button className="btn btn-primary" onClick={this.props.completeGame}>Complete lottery</button>;
         }
 
         return (
             <div>
-                <h4>{this.props.game.university} {this.props.game.mascot} - Total submissions: {this.props.submissions}, Available spots: {this.props.availableSpots}</h4>
+                <h4>{this.props.game.university} {this.props.game.mascot} - Total submissions: {this.props.submissions}, Unreserved, available spots: {this.props.availableSpots}</h4>
                 {this.state.message}
                 <div className="row">
                     <SignupStart allowEdit={this.state.allowEdit} timestamp={timestamp} error={this.setError} update={this.update} game={this.props.game}/>
@@ -545,7 +561,9 @@ var GameInfo = React.createClass({
                 {winnerReport}
                 {pickupReport}
                 {spotReport}
-                {button}
+                <div style={{marginTop: '.5em',clear:'both'}}>
+                    {button}
+                </div>
             </div>
         );
     }
@@ -1637,6 +1655,7 @@ var Students = React.createClass({
         if (this.state.limit <= this.state.students.length) {
             nextButton = <button className="btn btn-default" onClick={this.loadStudents.bind(null, nextLimit, this.state.search)}><i className="fa fa-plus"></i> Show more rows</button>;
         }
+
         return (
             <div>
                 {this.state.message ? <div className="alert alert-danger">{this.state.message}</div> : null}
@@ -1658,7 +1677,7 @@ var Students = React.createClass({
                             <th>Wins</th>
                             <th className="text-center">Eligible</th>
                             <th className="text-center">Allowed</th>
-                            {this.props.game && this.props.pickup_deadline > timestamp ? <th>Current winner</th> : null}
+                            {this.props.game && this.props.game.pickup_deadline < timestamp ? <th>Current winner</th> : null}
                             <th>&nbsp;</th>
                         </tr>
                     </thead>
@@ -1819,16 +1838,18 @@ var StudentRow = React.createClass({
         } else {
             winner = <span className="text-info">No</span>;
         }
+        var email = 'mailto:' + value.email;
+
         return(
             <tr>
                 <td>{value.id}</td>
                 <td>{value.last_name}</td>
                 <td>{value.first_name}</td>
-                <td><a href="mailto:{value.email}">{value.username} <i className="fa fa-envelope-o"></i></a></td>
+                <td><a href={email}>{value.username} <i className="fa fa-envelope-o"></i></a></td>
                 <td className="text-right col-sm-1">{value.wins}</td>
                 <td className="text-center"><EligibleIcon value={value} handleClick={this.eligible}/></td>
                 <td className="text-center"><BannedIcon value={value} handleClick={this.bannedReason}/></td>
-                {this.props.game && this.props.pickup_deadline > timestamp ? <td>{winner}</td> : null}
+                {this.props.game && this.props.game.pickup_deadline < timestamp ? <td>{winner}</td> : null}
                 <td>
                     <button className="btn btn-sm btn-danger" style={{marginRight : '1em'}} onClick={this.deleteStudent}><i className="fa fa-trash-o"></i> Delete</button>
                 </td>
