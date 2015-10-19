@@ -52,7 +52,8 @@ var Status = React.createClass({
                     }.bind(this));
                 } else {
                     this.setState({
-                        student: student,
+                        currentGame : null,
+                        student: student
                     });
                 }
             }.bind(this));
@@ -173,7 +174,7 @@ var GameStatus = React.createClass({
                             }
                         } else {
                             // current student has not confirmed their spot
-                            content = <div className="alert alert-success">Congratulations, you won a lottery spot! Check your email for your confirmation email.</div>;
+                            content = <div className="alert alert-success"><strong>Congratulations,</strong> you won a lottery spot! Check your email to confirm your win.</div>;
                         }
                     } else {
                         // student submitted but did not win

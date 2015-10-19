@@ -52,7 +52,8 @@ var Status = React.createClass({displayName: "Status",
                     }.bind(this));
                 } else {
                     this.setState({
-                        student: student,
+                        currentGame : null,
+                        student: student
                     });
                 }
             }.bind(this));
@@ -71,12 +72,12 @@ var Status = React.createClass({displayName: "Status",
         if (this.state.currentGame === null) {
             content = React.createElement("h4", null, "No games scheduled. Try back later.");
         } else {
-            content = (React.createElement(Game, {game: this.state.currentGame, lottery: this.state.lottery,
+            content = (React.createElement(Game, {game: this.state.currentGame, lottery: this.state.lottery, 
                  spot: this.state.spot, loadData: this.loadData}));
         }
         return (
-            React.createElement("div", null,
-                React.createElement("h2", null, "Welcome ", this.state.student.first_name, " ", this.state.student.last_name),
+            React.createElement("div", null, 
+                React.createElement("h2", null, "Welcome ", this.state.student.first_name, " ", this.state.student.last_name), 
                 content
             )
         );
@@ -93,11 +94,11 @@ var Banned = React.createClass({displayName: "Banned",
 
     render: function() {
         return (
-            React.createElement("div", null,
-                React.createElement("h2", null, "Sorry"),
-                React.createElement("p", null, "You were banned from using this site on ", this.props.student.banned_date, "."),
-                React.createElement("h3", null, "Reason for ban"),
-                React.createElement("p", {className: "well"}, this.props.student.banned_reason),
+            React.createElement("div", null, 
+                React.createElement("h2", null, "Sorry"), 
+                React.createElement("p", null, "You were banned from using this site on ", this.props.student.banned_date, "."), 
+                React.createElement("h3", null, "Reason for ban"), 
+                React.createElement("p", {className: "well"}, this.props.student.banned_reason), 
                 React.createElement("p", null, "Contact the administrators of this site if you have questions.")
             )
         );
@@ -117,12 +118,12 @@ var Game = React.createClass({displayName: "Game",
 
     render : function() {
         return (
-            React.createElement("div", null,
+            React.createElement("div", null, 
                 this.props.game.length > 0 ? (
-                    React.createElement("h3", null,
+                    React.createElement("h3", null, 
                         this.props.game.university, " ", this.props.game.mascot, " - ", this.props.game.kickoff_format
-                    )) : null,
-                React.createElement(GameStatus, {game: this.props.game, lottery: this.props.lottery,
+                    )) : null, 
+                React.createElement(GameStatus, {game: this.props.game, lottery: this.props.lottery, 
                     spot: this.props.spot, loadData: this.props.loadData})
             )
         );
@@ -173,7 +174,7 @@ var GameStatus = React.createClass({displayName: "GameStatus",
                             }
                         } else {
                             // current student has not confirmed their spot
-                            content = React.createElement("div", {className: "alert alert-success"}, "Congratulations, you won a lottery spot! Check your email for your confirmation email.");
+                            content = React.createElement("div", {className: "alert alert-success"}, React.createElement("strong", null, "Congratulations,"), " you won a lottery spot! Check your email to confirm your win.");
                         }
                     } else {
                         // student submitted but did not win
@@ -255,7 +256,6 @@ var ConfirmSpot = React.createClass({displayName: "ConfirmSpot",
             spotId : spotId,
             lotteryId : lotteryId
         },null, 'json').done(function(data){
-            console.log(data);
             if (data.success) {
                 this.props.loadData();
             } else {
@@ -285,24 +285,24 @@ var ConfirmSpot = React.createClass({displayName: "ConfirmSpot",
                 return (React.createElement("option", {key: i, value: val.id}, val.lot_title + ', #' + val.number + ' ' + sober));
             });
             return (
-                React.createElement("div", {className: "row"},
-                    React.createElement("div", {className: "col-sm-12"},
-                        React.createElement("p", null, "You have confirmed your winning ticket. Pick the spot you wish to tailgate in below. Choose quickly, other winners may be picking spots while you decide."),
+                React.createElement("div", {className: "row"}, 
+                    React.createElement("div", {className: "col-sm-12"}, 
+                        React.createElement("p", null, "You have confirmed your winning ticket. Pick the spot you wish to tailgate in below. Choose quickly, other winners may be picking spots while you decide."), 
                         this.state.message
-                    ),
-                    React.createElement("div", {className: "col-sm-4"},
-                        React.createElement("select", {ref: "spotChoice", className: "form-control"},
+                    ), 
+                    React.createElement("div", {className: "col-sm-4"}, 
+                        React.createElement("select", {ref: "spotChoice", className: "form-control"}, 
                             options
                         )
-                    ),
-                    React.createElement("div", {className: "col-sm-4"},
+                    ), 
+                    React.createElement("div", {className: "col-sm-4"}, 
                         React.createElement("button", {className: "btn btn-primary", onClick: this.confirmSpot}, "Choose tailgating spot")
                     )
                 )
             );
         } else {
             return (
-                React.createElement("div", null,
+                React.createElement("div", null, 
                     React.createElement("p", null, "We have run out of spots. Contact the site administrator.")
                 )
             );
@@ -314,11 +314,11 @@ var LotterySubmit = React.createClass({displayName: "LotterySubmit",
     render : function() {
         var game = this.props.game;
         return (
-            React.createElement("div", null,
-                React.createElement("p", null, "Lottery submission deadline: ", game.signup_end_format),
-                React.createElement("p", {style: {marginTop : '1em'}},
+            React.createElement("div", null, 
+                React.createElement("p", null, "Lottery submission deadline: ", game.signup_end_format), 
+                React.createElement("p", {style: {marginTop : '1em'}}, 
                     React.createElement("button", {className: "btn btn-primary btn-lg", onClick: this.props.handleClick}, React.createElement("i", {className: "fa fa-check-square"}), " Submit my name to the tailgate lottery")
-                ),
+                ), 
                 React.createElement("p", null, React.createElement("small", null, React.createElement("em", null, "Lottery winners will choose their spot on a first come, first serve basis.")))
             )
         );
@@ -334,6 +334,4 @@ var Waiting = React.createClass({displayName: "Waiting",
 });
 
 // This script will not run after compiled UNLESS the below is wrapped in $(window).load(function(){...});
-$(window).load(function(){
-    ReactDOM.render(React.createElement(Status, null), document.getElementById('studentStatus'));
-});
+$(window).load(function(){ReactDOM.render(React.createElement(Status, null), document.getElementById('studentStatus'));});
