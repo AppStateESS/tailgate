@@ -102,20 +102,47 @@ class Lottery extends Base
         $spot_id = filter_input(INPUT_POST, 'spotId', FILTER_SANITIZE_NUMBER_INT);
         $lottery_id = filter_input(INPUT_POST, 'lotteryId', FILTER_SANITIZE_NUMBER_INT);
         $result = $lotteryFactory->pickSpot($lottery_id, $spot_id);
-        
+
         $view = new \View\JsonView(array('success' => $result));
         return $view;
     }
 
     private function confirmWinner()
     {
+        $game = \tailgate\Factory\Game::getCurrent();
+
         $hash = filter_input(INPUT_GET, 'hash', FILTER_SANITIZE_STRING);
         $template = new \Template;
-
         $factory = new Factory;
-        $factory->confirm($hash);
         $template->setModuleTemplate('tailgate', 'User/confirmation.html');
-        $template->add('login', \Server::getSiteUrl() . 'admin/');
+        $template->add('button_color', 'primary');
+
+        if ($game->getPickupDeadline() < time()) {
+            $template->add('message_color', 'danger');
+            $template->add('message', 'Sorry, the confirmation deadline for this lottery has passed.');
+            $template->add('url', \Server::getSiteUrl());
+            $template->add('label', 'Go back to home page');
+            $content = $template->get();
+            return $content;
+        }
+
+        $confirm = $factory->confirm($hash);
+        if ($confirm) {
+            $template->add('message_color', 'success');
+            $template->add('message', 'Lottery win confirmed!');
+            if (!\Current_User::isLogged()) {
+                $template->add('url', \Server::getSiteUrl() . 'admin/');
+                $template->add('label', 'Log in to pick your lot');
+            } else {
+                $template->add('url', \Server::getSiteUrl() . 'tailgate/');
+                $template->add('label', 'Go to your status page and pick a spot');
+            }
+        } else {
+            $template->add('message_color', 'danger');
+            $template->add('message', 'Sorry, could not confirm your lottery win. Contact us if you are having trouble.');
+            $template->add('url', \Server::getSiteUrl());
+            $template->add('label', 'Go back to home page');
+        }
         $content = $template->get();
         return $content;
     }
