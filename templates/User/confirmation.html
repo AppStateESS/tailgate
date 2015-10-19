@@ -1,4 +1,2 @@
-<div class="alert alert-success text-center"><big>Lottery win confirmed!</big></div>
-<? if (isset($login)):?>
-<a href="<?=$login?>" class="btn btn-lg btn-primary">Log in to pick your lot</a>
-<? endif ?>
+<div class="alert alert-<?=$message_color?> text-center"><big><?=$message?></big></div>
+<a href="<?=$url?>" class="btn btn-lg btn-<?=$button_color?>"><?=$label?></a>
