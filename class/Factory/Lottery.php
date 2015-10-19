@@ -392,14 +392,23 @@ class Lottery extends Base
 
     public function confirm($hash)
     {
-        $gfactory = new GameFactory;
-        $game = $gfactory->getCurrent();
+        $game = GameFactory::getCurrent();
+        
         $db = \Database::getDB();
         $t = $db->addTable('tg_lottery');
         $t->addFieldConditional('game_id', $game->getId());
         $t->addFieldConditional('confirmation', $hash);
+        
         $t->addValue('confirmed', 1);
-        $db->update();
+        $result = (bool)$db->update();
+        if ($result) {
+            return true;
+        }
+        
+        // if already confirmed, return true
+        $t->addFieldConditional('confirmed', 1);
+        $result = $db->select();
+        return (bool)$result;
     }
 
     public function isWinner($game_id, $student_id)
