@@ -22,10 +22,12 @@ class Game extends Base
             case 'list':
                 $game = Factory::getCurrent();
                 $json['listing'] = $factory->getList();
-                if ($game->getLotteryRun()) {
-                    $json['available_spots'] = count(\tailgate\Factory\Lottery::getAvailableSpots());
-                } else {
-                    $json['available_spots'] = $lotteryFactory->totalAvailableSpots();
+                if ($game) {
+                    if ($game->getLotteryRun()) {
+                        $json['available_spots'] = count(\tailgate\Factory\Lottery::getAvailableSpots());
+                    } else {
+                        $json['available_spots'] = $lotteryFactory->totalAvailableSpots();
+                    }
                 }
                 break;
 
@@ -74,6 +76,10 @@ class Game extends Base
             case 'updateKickoff':
                 $view = new \View\JsonView($this->updateKickoff());
                 break;
+            
+            case 'complete':
+                $this->completeGame();
+                break;
 
             default:
                 throw new \Exception('Bad command:' . $request->getVar('command'));
@@ -82,6 +88,13 @@ class Game extends Base
         return $response;
     }
 
+    private function completeGame()
+    {
+        $game = Factory::getCurrent();
+        $game->setCompleted(true);
+        Factory::saveResource($game);
+    }
+    
     private function updateSignupStart()
     {
         $game = Factory::getCurrent();
