@@ -81,6 +81,12 @@ class Game extends Base
      */
     public static function getCurrent()
     {
+        static $current_game;
+        
+        if (!empty($current_game)) {
+            return  $current_game;
+        }
+        
         $game = new Resource;
 
         $db = \Database::getDB();
@@ -98,6 +104,7 @@ class Game extends Base
             return null;
         }
         $game->setVars($row);
+        $current_game = $game;
         return $game;
     }
 
