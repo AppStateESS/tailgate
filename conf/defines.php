@@ -21,3 +21,5 @@ define('TAILGATE_TIME_FORMAT', '%l:%M%p');
 if (!defined('SWIFT_MAIL_TRANSPORT_TYPE')) {
     define('SWIFT_MAIL_TRANSPORT_TYPE', 3);
 }
+
+define('REACT_DEVMODE', false);

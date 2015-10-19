@@ -106,7 +106,7 @@ class Student extends Base
 
     private function showStatus($student_id)
     {
-        \tailgate\Factory\React::load('User/Status/', 'script', false);
+        \tailgate\Factory\React::load('User/Status/', 'script', REACT_DEVMODE);
         javascript('jquery');
         $content = <<<EOF
 <script type="text/javascript">var student_id='$student_id';</script>
@@ -118,7 +118,7 @@ EOF;
 
     private function createAccount()
     {
-        \tailgate\Factory\React::load('User/Signup/', 'script', false);
+        \tailgate\Factory\React::load('User/Signup/', 'script', REACT_DEVMODE);
 
         javascript('jquery');
 
