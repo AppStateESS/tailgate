@@ -163,7 +163,7 @@ var GameStatus = React.createClass({
                                 } else if(this.props.game.pickup_deadline < timestamp) {
                                     content = <div className="alert alert-info">Sorry, you failed to pick up your tailgating pass in time. It has been forfeited.</div>;
                                 } else {
-                                    content = <div className="alert alert-info">You have chosen lot <strong>{this.props.spot.title}</strong>, spot number <strong>{this.props.spot.number}</strong>. Make sure to go pick up your tag before the {this.props.game.pickup_deadline_format} deadline.</div>;
+                                    content = <div className="alert alert-info">You have chosen lot <strong>{this.props.spot.title}</strong>, spot number <strong>{this.props.spot.number}</strong>. Make sure to go pick up your tag before the {this.props.game.pickup_deadline_format} deadline.<br />See the <a href="./">home page</a> for more details.</div>;
                                 }
                             } else {
                                 if (this.props.game.pickup_deadline < timestamp) {

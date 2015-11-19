@@ -163,7 +163,7 @@ var GameStatus = React.createClass({displayName: "GameStatus",
                                 } else if(this.props.game.pickup_deadline < timestamp) {
                                     content = React.createElement("div", {className: "alert alert-info"}, "Sorry, you failed to pick up your tailgating pass in time. It has been forfeited.");
                                 } else {
-                                    content = React.createElement("div", {className: "alert alert-info"}, "You have chosen lot ", React.createElement("strong", null, this.props.spot.title), ", spot number ", React.createElement("strong", null, this.props.spot.number), ". Make sure to go pick up your tag before the ", this.props.game.pickup_deadline_format, " deadline.");
+                                    content = React.createElement("div", {className: "alert alert-info"}, "You have chosen lot ", React.createElement("strong", null, this.props.spot.title), ", spot number ", React.createElement("strong", null, this.props.spot.number), ". Make sure to go pick up your tag before the ", this.props.game.pickup_deadline_format, " deadline.", React.createElement("br", null), "See the ", React.createElement("a", {href: "./"}, "home page"), " for more details.");
                                 }
                             } else {
                                 if (this.props.game.pickup_deadline < timestamp) {
