@@ -146,13 +146,20 @@ class Game extends Base
         $db->update();
     }
     
+    /**
+     * Removes game from system, clears all lottery entries, and resets 
+     * all student eligibility.
+     * @param integer $game_id
+     */
     public static function completeGame($game_id)
     {
         $db = \Database::getDB();
         $tbl = $db->addTable('tg_game');
         $tbl->addFieldConditional('id', (int) $game_id);
-        $tbl->addValue('completed', 1);
-        $db->update();
+        $db->delete();
+        
+        self::clearLottery();
+        
         self::resetEligibility($game_id);
     }
 
@@ -178,6 +185,13 @@ class Game extends Base
         return $game;
     }
 
+    public static function clearLottery()
+    {
+        $db = \Database::getDB();
+        $tbl = $db->addTable('tg_lottery');
+        $tbl->truncate();
+    }
+    
     public static function getGameStatus(\tailgate\Resource\Game $game)
     {
         $color = null;
