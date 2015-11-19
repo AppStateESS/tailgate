@@ -14,6 +14,7 @@ class Game extends Base
 
     protected function getJsonView($data, \Request $request)
     {
+        $json = array();
         $command = $request->getVar('command');
         $factory = new Factory;
         $lotteryFactory = new \tailgate\Factory\Lottery;
@@ -21,7 +22,6 @@ class Game extends Base
         switch ($command) {
             case 'list':
                 $game = Factory::getCurrent();
-                $json['listing'] = $factory->getList();
                 if ($game) {
                     if ($game->getLotteryRun()) {
                         $json['available_spots'] = count(\tailgate\Factory\Lottery::getAvailableSpots());
@@ -42,6 +42,9 @@ class Game extends Base
             case 'unixtime':
                 $json['unixtime'] = strtotime(filter_input(INPUT_GET, 'date', FILTER_SANITIZE_STRING));
                 break;
+            
+            default:
+                throw new \Exception('Unknown command');
         }
 
         $view = new \View\JsonView($json);
@@ -91,8 +94,7 @@ class Game extends Base
     private function completeGame()
     {
         $game = Factory::getCurrent();
-        $game->setCompleted(true);
-        Factory::saveResource($game);
+        Factory::completeGame($game->getId());
     }
     
     private function updateSignupStart()
