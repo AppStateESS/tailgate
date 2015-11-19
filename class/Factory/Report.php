@@ -2,6 +2,8 @@
 
 namespace tailgate\Factory;
 
+require_once PHPWS_SOURCE_DIR . 'mod/tailgate/class/WKPDF.php';
+
 /**
  * @license http://opensource.org/licenses/lgpl-3.0.html
  * @author Matthew McNaney <mcnaney at gmail dot com>
@@ -53,8 +55,8 @@ class Report
         $template = new \Template(array('rows' => $result));
         self::fillTitle($template, $game_id);
         $template->setModuleTemplate('tailgate', 'Admin/Report/pickup.html');
-        echo $template->get();
-        exit;
+        $content = $template->get();
+        self::downloadPDF($content, 'Pickups.pdf');
     }
 
     public static function winners($game_id)
@@ -93,30 +95,30 @@ class Report
         $template = new \Template(array('rows' => $result));
         self::fillTitle($template, $game_id);
         $template->setModuleTemplate('tailgate', 'Admin/Report/winners.html');
-        echo $template->get();
-        exit;
+        $content = $template->get();
+        self::downloadPDF($content, 'Winners.pdf');
     }
 
     public static function spotReport($game_id)
     {
         $db = \Database::getDB();
-        $spot = $db->addTable('tg_spot');
-        $spot->addField('number', 'spot_number');
-        $spot->addOrderBy('number');
-        
         $lot = $db->addTable('tg_lot');
         $lot->addField('title', 'lot_title');
         $lot->addOrderBy('title');
+        $spot = $db->addTable('tg_spot');
+        $spot->addField('number', 'spot_number');
+        $spot->addOrderBy('number');
+
         $c1 = $db->createConditional($spot->getField('lot_id'), $lot->getField('id'), '=');
         $db->joinResources($spot, $lot, $c1);
-        
+
         $lottery = $db->addTable('tg_lottery');
         $lottery->addField('id', 'lottery_id');
         $c2a = $db->createConditional($spot->getField('id'), $lottery->getField('spot_id'), '=');
         $c2b = $db->createConditional($lottery->getField('game_id'), $game_id);
         $c2 = $db->createConditional($c2a, $c2b, 'and');
         $db->joinResources($spot, $lottery, $c2, 'left');
-        
+
         $student = $db->addTable('tg_student');
         $student->addField('first_name');
         $student->addField('last_name');
@@ -124,15 +126,31 @@ class Report
         $c3b = $db->createConditional($lottery->getField('picked_up'), 1);
         $c3 = $db->createConditional($c3a, $c3b, 'and');
         $db->joinResources($lottery, $student, $c3, 'left');
-        
         $result = $db->select();
         $template = new \Template(array('rows' => $result));
         self::fillTitle($template, $game_id);
         $template->setModuleTemplate('tailgate', 'Admin/Report/spots.html');
-        echo $template->get();
-        exit;
+
+        $content = $template->get();
+        
+        self::downloadPDF($content, 'Spot_Report.pdf');
     }
 
+    private static function downloadPDF($content, $filename)
+    {
+        if (!is_executable(WKPDF_PATH)) {
+            throw new \Exception('WKPDF is not installed or executable', 666);
+        }
+        $pdf = new \WKPDF(WKPDF_PATH);
+        if (USE_XVFB) {
+            $pdf->setXVFB(XVFB_PATH);
+        }
+        $pdf->set_html($content);
+        $pdf->render();
+        $pdf->output(\WKPDF::$PDF_DOWNLOAD, '/tmp/' . $filename);
+        exit();
+    }
+    
     private static function fillTitle($template, $game_id)
     {
         $game = Game::getById($game_id);
