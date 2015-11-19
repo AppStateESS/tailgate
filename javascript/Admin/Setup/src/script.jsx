@@ -280,7 +280,6 @@ var Games = React.createClass({
             visitors : [],
             availableSpots : 0,
             submissions : 0,
-            games : null,
             message : ''
         };
     },
@@ -291,8 +290,7 @@ var Games = React.createClass({
             command : 'list'
         }).done(function(data){
             this.setState({
-                availableSpots : data.available_spots,
-                games : data.listing
+                availableSpots : data.available_spots
             });
         }.bind(this));
     },
@@ -396,12 +394,6 @@ var Games = React.createClass({
             message = <div className="alert alert-danger">{this.state.message}</div>;
         }
 
-        if (this.state.games === null) {
-            previousGames = <p>No games found</p>;
-        } else {
-            previousGames = <GameListing games={this.state.games} />;
-        }
-
         if (this.props.game === null) {
             title = 'Add new game';
             if(this.state.visitors.length === 0) {
@@ -427,12 +419,6 @@ var Games = React.createClass({
                         </div>
                     </div>
                     {currentGame}
-                </div>
-                <div className="row">
-                    <div className="col-sm-12">
-                        <h3>Previous games</h3>
-                        {previousGames}
-                    </div>
                 </div>
             </div>
         );
@@ -852,26 +838,6 @@ var GameForm = React.createClass({
         );
     }
 });
-
-var GameListing = React.createClass({
-    render : function() {
-        return (
-            <table className="table table-striped sans">
-                <tbody>
-                {this.props.games.map(function(value, i){
-                    return (
-                        <tr key={i}>
-                            <td>{value.university} {value.mascot} - {value.kickoff_format}</td>
-                        </tr>
-                    );
-                }.bind(this))}
-                </tbody>
-            </table>
-        );
-    }
-});
-
-
 
 var Visitors = React.createClass({
     mixins: [tgMixin],

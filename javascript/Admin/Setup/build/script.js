@@ -280,7 +280,6 @@ var Games = React.createClass({displayName: "Games",
             visitors : [],
             availableSpots : 0,
             submissions : 0,
-            games : null,
             message : ''
         };
     },
@@ -291,8 +290,7 @@ var Games = React.createClass({displayName: "Games",
             command : 'list'
         }).done(function(data){
             this.setState({
-                availableSpots : data.available_spots,
-                games : data.listing
+                availableSpots : data.available_spots
             });
         }.bind(this));
     },
@@ -396,12 +394,6 @@ var Games = React.createClass({displayName: "Games",
             message = React.createElement("div", {className: "alert alert-danger"}, this.state.message);
         }
 
-        if (this.state.games === null) {
-            previousGames = React.createElement("p", null, "No games found");
-        } else {
-            previousGames = React.createElement(GameListing, {games: this.state.games});
-        }
-
         if (this.props.game === null) {
             title = 'Add new game';
             if(this.state.visitors.length === 0) {
@@ -427,12 +419,6 @@ var Games = React.createClass({displayName: "Games",
                         )
                     ), 
                     currentGame
-                ), 
-                React.createElement("div", {className: "row"}, 
-                    React.createElement("div", {className: "col-sm-12"}, 
-                        React.createElement("h3", null, "Previous games"), 
-                        previousGames
-                    )
                 )
             )
         );
@@ -852,26 +838,6 @@ var GameForm = React.createClass({displayName: "GameForm",
         );
     }
 });
-
-var GameListing = React.createClass({displayName: "GameListing",
-    render : function() {
-        return (
-            React.createElement("table", {className: "table table-striped sans"}, 
-                React.createElement("tbody", null, 
-                this.props.games.map(function(value, i){
-                    return (
-                        React.createElement("tr", {key: i}, 
-                            React.createElement("td", null, value.university, " ", value.mascot, " - ", value.kickoff_format)
-                        )
-                    );
-                }.bind(this))
-                )
-            )
-        );
-    }
-});
-
-
 
 var Visitors = React.createClass({displayName: "Visitors",
     mixins: [tgMixin],
