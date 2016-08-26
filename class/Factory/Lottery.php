@@ -323,6 +323,8 @@ class Lottery extends Base
                 $this->sendLoserEmail($row, $game);
             }
         }
+        $game->setLotteryRun(true);
+        GameFactory::saveResource($game);
     }
 
     private function getSwiftTransport()
@@ -333,7 +335,6 @@ class Lottery extends Base
             return $transport;
         }
 
-        require_once PHPWS_SOURCE_DIR . 'lib/vendor/autoload.php';
         switch (SWIFT_MAIL_TRANSPORT_TYPE) {
             case 1:
                 $transport = \Swift_SmtpTransport::newInstance(SWIFT_MAIL_TRANSPORT_PARAMETER);
