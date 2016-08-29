@@ -90,6 +90,9 @@ class Student extends Base
         $factory = new Factory;
 
         if (\Current_User::isLogged()) {
+            if (!\Current_User::allow('tailgate') && !$factory->isStudent(\Current_User::getUsername())) {
+                return $this->notStudentMessage();
+            }
             $student = $factory->getCurrentStudent();
             if ($student) {
                 // student is logged in and has account
@@ -102,6 +105,16 @@ class Student extends Base
             // student is not logged in
             return $this->newAccountInformation();
         }
+    }
+    
+    private function notStudentMessage()
+    {
+        $email = \Settings::get('tailgate', 'reply_to');
+        return <<<EOF
+<h2>Sorry</h2>
+<p>You are not listed as a student. Only students in good standing may participate in the tailgate lottery.</p>
+<p>If you believe this is a mistake, please email <a href="$email">$email</a>.</p>
+EOF;
     }
 
     private function showStatus($student_id)

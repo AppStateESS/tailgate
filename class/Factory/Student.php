@@ -40,6 +40,25 @@ class Student extends Base
         return $stdObj;
     }
 
+    public function isStudent($username)
+    {
+        $url = TAILGATE_BANNER_URL . $username;
+        $ch = curl_init($url);
+        ob_start();
+        $result = curl_exec($ch);
+        $error = curl_error($ch);
+        if (!empty($error)) {
+            throw new \Exception('Could not contact Banner server.');
+        }
+        $jsonString = ob_get_clean();
+        if (!$result) {
+            return false;
+        }
+        $json = json_decode($jsonString);
+        curl_close($ch);
+        return $json->creditHoursEnrolled > 0;
+    }
+    
     public function postNewStudent($user_id)
     {
         $student = new Resource;

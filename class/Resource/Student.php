@@ -152,7 +152,7 @@ class Student extends \Resource
     {
         return $this->last_name->get();
     }
-
+    
     public function getSignupDate($format = null)
     {
         if ($format) {
