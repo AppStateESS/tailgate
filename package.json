@@ -1,0 +1,34 @@
+{
+  "name": "tailgate",
+  "version": "1.0.0",
+  "description": "React components",
+  "main": "index.js",
+  "scripts": {
+    "dev": "webpack --config webpack.config.js -d --watch",
+    "prod": "webpack --config webpack.production.config.js -p"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/AppStateESS/tailgate.git"
+  },
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/AppStateESS/tailgate/issues"
+  },
+  "homepage": "https://github.com/AppStateESS/tailgate#readme",
+  "dependencies": {
+    "react": "~15.3.0",
+    "react-dom": "~15.3.0"
+  },
+  "devDependencies": {
+    "babel-core": "~6.13.2",
+    "babel-loader": "~6.2.4",
+    "babel-preset-es2015": "~6.13.2",
+    "babel-preset-react": "~6.11.1",
+    "eslint": "^3.4.0",
+    "eslint-plugin-react": "^6.2.0",
+    "strip-loader": "~0.1.2",
+    "webpack": "~1.13.1"
+  }
+}

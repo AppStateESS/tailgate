@@ -9,22 +9,16 @@ namespace tailgate\Factory;
 class React
 {
 
-    public static function load($directory, $filename, $development = true, $addons = true)
+    public static function load($filename, $development = true, $addons = true)
     {
+        $root_directory = PHPWS_SOURCE_HTTP . 'mod/tailgate/javascript/dist';
         if ($development) {
-            $script_file = 'src/' . $filename . '.jsx';
-            $type = 'text/jsx';
+            $script_file = $filename . '.dev.js';
         } else {
-            $script_file = 'build/' . $filename . '.js';
-            $type = 'text/javascript';
+            $script_file = $filename . '.prod.js';
         }
-
-        $data['development'] = $development;
-        $data['addons'] = $addons;
-        javascript('react', $data);
-        $root_directory = PHPWS_SOURCE_HTTP . 'mod/tailgate/javascript/';
-        $script_header = "<script type='$type' src='$root_directory$directory$script_file'></script>";
-        \Layout::addJSHeader($script_header, 'tailgateReact');
+        $script_header = "<script type='text/javascript' src='$root_directory/$script_file'></script>";
+        return $script_header;
     }
 
 }

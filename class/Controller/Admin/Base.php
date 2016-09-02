@@ -25,13 +25,12 @@ abstract class Base extends \Http\Controller
         $http = PHPWS_SOURCE_HTTP;
         
         $development = REACT_DEVMODE;
-        $script = 'Admin/Setup/';
 
-        \tailgate\Factory\React::load($script, 'script', $development);
-
+        $script = \tailgate\Factory\React::load('setup', $development);
         $content = <<<EOF
 <h2>Tailgate</h2>
 <div id="tailgate-setup"></div>
+$script
 EOF;
         $view = new \View\HtmlView($content);
         return $view;
