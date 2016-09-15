@@ -1,0 +1,33 @@
+{
+  "name": "tailgate",
+  "version": "1.0.0",
+  "description": "Module for phpWebSite.",
+  "main": "index.js",
+  "dependencies": {
+    "babel": "^6.5.2",
+    "babel-cli": "^6.14.0",
+    "babel-jsx": "^0.14.3",
+    "babel-plugin-transform-react-jsx": "^6.8.0",
+    "babel-preset-react": "^6.11.1",
+    "babel-watch": "^2.0.2",
+    "eslint": "^3.4.0",
+    "eslint-plugin-react": "^6.2.0"
+  },
+  "devDependencies": {
+    "babel-cli": "^6.14.0",
+    "babel-jsx": "^0.14.3",
+    "babel-plugin-transform-react-jsx": "^6.8.0",
+    "babel-preset-react": "^6.11.1",
+    "babel-watch": "^2.0.2"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/AppStateESS/tailgate.git"
+  },
+  "author": "Matthew McNaney <mcnaneym@appstate.edu>",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/AppStateESS/tailgate/issues"
+  },
+  "homepage": "https://github.com/AppStateESS/tailgate#readme"
+}
