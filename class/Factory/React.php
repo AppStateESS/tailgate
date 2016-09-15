@@ -24,7 +24,7 @@ class React
         javascript('react', $data);
         $root_directory = PHPWS_SOURCE_HTTP . 'mod/tailgate/javascript/';
         $script_header = "<script type='$type' src='$root_directory$directory$script_file'></script>";
-        \Layout::addJSHeader($script_header, 'tailgateReact');
+        return $script_header;
     }
 
 }
