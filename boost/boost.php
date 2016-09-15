@@ -6,6 +6,6 @@
  */
 
 $proper_name = 'Tailgating';
-$version = '1.0.0';
+$version = '1.1.0';
 $import_sql = false;
 $image_dir = true;
