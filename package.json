@@ -1,7 +1,7 @@
 {
   "name": "tailgate",
   "version": "1.0.0",
-  "description": "React components",
+  "description": "Tailgating module for Canopy",
   "main": "index.js",
   "scripts": {
     "dev": "webpack --config webpack.config.js -d --watch",

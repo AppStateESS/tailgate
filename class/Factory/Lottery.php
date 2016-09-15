@@ -361,7 +361,6 @@ class Lottery extends Base
         $tpl->setModuleTemplate('tailgate', 'Admin/Lottery/Winner.html');
         $tpl->addVariables($variables);
         $content = $tpl->get();
-
         $this->sendEmail('Tailgate successful', $lottery['student_id'], $content);
     }
 
@@ -380,6 +379,10 @@ class Lottery extends Base
     {
         $transport = $this->getSwiftTransport();
         $student = StudentFactory::getById($student_id);
+        if (!is_object($student)) {
+            \PHPWS_Core::log("Student #$student_id does not exist.", 'tailgate_error.txt');
+            return;
+        }
 
         $message = \Swift_Message::newInstance();
         $message->setSubject($subject);
@@ -388,6 +391,8 @@ class Lottery extends Base
         $message->setBody($content, 'text/html');
 
         $mailer = \Swift_Mailer::newInstance($transport);
+        $log = "Subject: $subject, To: " . $student->getEmail();
+        \PHPWS_Core::log($log, 'tailgate_email.log');
         $mailer->send($message);
     }
 
