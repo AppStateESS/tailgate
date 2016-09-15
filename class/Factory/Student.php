@@ -61,6 +61,14 @@ class Student extends Base
     
     public function postNewStudent($user_id)
     {
+        $db = \phpws2\Database::getDB();
+        $tbl = $db->addTable('tg_student');
+        $tbl->addFieldConditional('user_id', $user_id);
+        $result = $db->select();
+        if ($result) {
+            return;
+        }
+                
         $student = new Resource;
 
         $student->setFirstName(filter_input(INPUT_POST, 'firstName', FILTER_SANITIZE_STRING));
@@ -186,6 +194,10 @@ class Student extends Base
         $student = new Resource;
         $student->setId($student_id);
         self::deleteResource($student);
+        $db = \phpws2\Database::getDB();
+        $lottery = $db->addTable('tg_lottery');
+        $lottery->addFieldConditional('student_id', $student_id);
+        $db->delete();
     }
 
     public static function incrementWins($student_id)
