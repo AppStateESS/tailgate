@@ -247,6 +247,9 @@ var ConfirmSpot = React.createClass({
 
     confirmSpot : function() {
         var spotId = this.refs.spotChoice.value;
+        if (spotId === '0') {
+            return;
+        }
         var lotteryId = this.props.lottery.id;
         this.setState({
             waiting : 1
@@ -292,11 +295,12 @@ var ConfirmSpot = React.createClass({
                     </div>
                     <div className="col-sm-4">
                         <select ref="spotChoice" className="form-control">
+                            <option disabled={true} selected={true} value="0">- Choose below -</option>
                             {options}
                         </select>
                     </div>
                     <div className="col-sm-4">
-                        <button className="btn btn-primary" onClick={this.confirmSpot}>Choose tailgating spot</button>
+                        <button className="btn btn-primary" onClick={this.confirmSpot}>Confirm my tailgating spot</button>
                     </div>
                 </div>
             );
