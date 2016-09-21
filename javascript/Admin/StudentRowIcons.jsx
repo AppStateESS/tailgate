@@ -43,6 +43,8 @@ EligibleIcon.propTypes = {
 class BannedIcon extends React.Component {
   constructor(props) {
     super(props)
+
+    this.hover = this.hover.bind(this)
   }
 
   hover(e) {
