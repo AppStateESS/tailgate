@@ -48,12 +48,16 @@ class Lot extends Base
         }
     }
 
-    public function getList($mode = TG_LIST_ALL, $order_by = null)
+    public function getList($mode = TG_LIST_ALL, $order_by = null, $active_only=true)
     {
         $db = $this->getListDB($mode, 'title');
         $lot = $db->getTable('tg_lot');
         $spot = $db->addTable('tg_spot');
 
+        if ($active_only) {
+            $lot->addFieldConditional('active', 1);
+        }
+        
         $id = $spot->addField('id');
         $id->showCount();
         $id->setAlias('total_spots');
@@ -63,8 +67,14 @@ class Lot extends Base
         $conditional = new \Database\Conditional($db, $lot->getField('id'), $spot->getField('lot_id'), '=');
 
         $db->joinResources($lot, $spot, $conditional);
-
         $result = $db->select();
+        
+        // could be rewritten with subselect
+        $spot->addFieldConditional('reserved', 1);
+        $subresult = $db->select();
+        foreach ($subresult as $key=>$sub) {
+            $result[$key]['reserved'] = $sub['total_spots'];
+        }
         return $result;
     }
 
