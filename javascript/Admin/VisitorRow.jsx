@@ -1,6 +1,5 @@
 import React from 'react'
-
-/* global $ */
+import VisitorRowForm from './VisitorRowForm.jsx'
 
 class VisitorRow extends React.Component {
   constructor(props) {
@@ -8,15 +7,24 @@ class VisitorRow extends React.Component {
     this.state = {
       showForm: false
     }
-    this.edit = this.edit.bind(this)
-    this.view = this.view.bind(this)
+    this.showForm = this.showForm.bind(this)
+    this.hideForm = this.hideForm.bind(this)
+    this.update = this.update.bind(this)
   }
 
-  edit() {
-    this.setState({showForm: true})
+  showForm() {
+    this.setState({
+      showForm: true
+    })
   }
 
-  view() {
+  hideForm() {
+    this.setState({
+      showForm: false
+    })
+  }
+
+  update() {
     this.setState({showForm: false})
     this.props.update()
   }
@@ -26,7 +34,7 @@ class VisitorRow extends React.Component {
     let editButton = null
 
     if (this.state.showForm) {
-      rowContent = <VisitorRowForm value={this.props.value} update={this.view}/>
+      rowContent = <VisitorRowForm value={this.props.value} update={this.update} hide={this.hideForm}/>
       editButton = null
     } else {
       rowContent = (
@@ -34,14 +42,13 @@ class VisitorRow extends React.Component {
           {this.props.value.university}&nbsp;-&nbsp;{this.props.value.mascot}
         </div>
       )
-      editButton = <VisitorRowEditButton handleClick={this.edit}/>
+      editButton = <VisitorRowEditButton handleClick={this.showForm}/>
     }
-
     return (
       <tr>
         <td>
           {editButton}
-          {this.props.game && this.props.game.visitor_id !== this.props.value.id
+          {this.props.game === null || (this.props.game && this.props.game.visitor_id !== this.props.value.id)
             ? <VisitorRowDeleteButton handleClick={this.props.remove}/>
             : null}
           {rowContent}
@@ -55,7 +62,8 @@ VisitorRow.propTypes = {
   update: React.PropTypes.func,
   remove: React.PropTypes.func,
   value: React.PropTypes.object,
-  game: React.PropTypes.object
+  game: React.PropTypes.object,
+  hideForm: React.PropTypes.func
 }
 
 export default VisitorRow
@@ -71,12 +79,12 @@ class VisitorRowEditButton extends React.Component {
         style={bstyle}
         className="btn btn-sm btn-primary pull-right"
         onClick={this.props.handleClick}>
-        <i className="fa fa-edit"></i>
-        Edit
+        <i className="fa fa-edit"></i>&nbsp; Edit
       </button>
     )
   }
 }
+
 VisitorRowEditButton.propTypes = {
   handleClick: React.PropTypes.func
 }
@@ -91,7 +99,7 @@ class VisitorRowDeleteButton extends React.Component {
         style={bstyle}
         className="btn btn-sm btn-danger pull-right"
         onClick={this.props.handleClick}>
-        <i className="fa fa-times"></i>&nbsp; Remove
+        <i className="fa fa-times"></i>&nbsp;Remove
       </button>
     )
   }
@@ -99,83 +107,4 @@ class VisitorRowDeleteButton extends React.Component {
 
 VisitorRowDeleteButton.propTypes = {
   handleClick: React.PropTypes.func
-}
-
-class VisitorRowForm extends React.Component {
-  constructor(props) {
-    super(props)
-    this.state = {
-      university: '',
-      mascot: ''
-    }
-    this.update = this.update.bind(this)
-    this.updateUniversity = this.updateUniversity.bind(this)
-    this.updateMascot = this.updateMascot.bind(this)
-  }
-
-  componentDidMount() {
-    this.setState({university: this.props.value.university, mascot: this.props.value.mascot})
-  }
-
-  updateUniversity(event) {
-    this.setState({university: event.target.value})
-  }
-
-  updateMascot(event) {
-    this.setState({mascot: event.target.value})
-  }
-
-  update() {
-    if (this.state.university.length === 0) {
-      this.setState({university: this.props.value.university})
-      return
-    }
-    if (this.state.mascot.length === 0) {
-      this.setState({mascot: this.props.value.mascot})
-      return
-    }
-    $.post('tailgate/Admin/Visitor', {
-      command: 'update',
-      university: this.state.university,
-      mascot: this.state.mascot,
-      visitorId: this.props.value.id
-    }).done(function () {
-      this.props.update()
-    }.bind(this))
-  }
-
-  render() {
-    return (
-      <div className="row">
-        <div className="col-sm-4">
-          <input
-            ref="university"
-            type="text"
-            className="form-control"
-            value={this.state.university}
-            onChange={this.updateUniversity}/>
-        </div>
-        <div className="col-sm-4">
-          <input
-            ref="mascot"
-            type="text"
-            className="form-control"
-            value={this.state.mascot}
-            onChange={this.updateMascot}/>
-        </div>
-        <div className="col-sm-2">
-          <button className="btn btn-primary btn-sm" onClick={this.update}>
-            <i className="fa fa-save"></i>
-            Update
-          </button>
-        </div>
-      </div>
-    )
-  }
-}
-
-VisitorRowForm.propTypes = {
-  handleClick: React.PropTypes.func,
-  update: React.PropTypes.func,
-  value: React.PropTypes.object
 }
