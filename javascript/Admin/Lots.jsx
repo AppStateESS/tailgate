@@ -5,7 +5,19 @@ import LotListing from './LotListing.jsx'
 class Lots extends React.Component {
   constructor(props) {
     super(props)
-    this.state = {showForm: false}
+    this.state = {
+      showForm: false
+    }
+    this.showForm = this.showForm.bind(this)
+    this.hideForm = this.hideForm.bind(this)
+  }
+
+  showForm() {
+    this.setState({showForm: true})
+  }
+
+  hideForm() {
+    this.setState({showForm: false})
   }
 
   render() {
@@ -19,8 +31,7 @@ class Lots extends React.Component {
       <div>
         <p>
           <button className="btn btn-success" onClick={this.showForm}>
-            <i className="fa fa-plus"></i>
-          Add Tailgating Lot</button>
+            <i className="fa fa-plus"></i>&nbsp; Add Tailgating Lot</button>
         </p>
         {lotForm}
         <LotListing
@@ -33,8 +44,8 @@ class Lots extends React.Component {
 }
 
 Lots.propTypes = {
-  loadLots : React.PropTypes.func,
-  lots : React.PropTypes.array,
+  loadLots: React.PropTypes.func,
+  lots: React.PropTypes.array,
   game: React.PropTypes.object
 
 }
