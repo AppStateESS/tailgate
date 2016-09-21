@@ -1,18 +1,22 @@
 import React from 'react'
 import GameInfo from './GameInfo.jsx'
 import GameForm from './GameForm.jsx'
-
+import Waiting from './Waiting.jsx'
 /* global $ */
 
 class Games extends React.Component {
   constructor (props) {
     super(props)
     this.state = {
-      visitors: [],
+      visitors: null,
       availableSpots: 0,
       submissions: 0,
+      winners : 0,
+      claimed: 0,
       message: ''
     }
+    this.completeGame = this.completeGame.bind(this)
+    this.saveGame = this.saveGame.bind(this)
   }
 
   showForm () {
@@ -40,7 +44,7 @@ class Games extends React.Component {
   loadGames () {
     this.props.loadGame()
     $.getJSON('tailgate/Admin/Game', {command: 'list'}).done(function (data) {
-      this.setState({availableSpots: data.available_spots})
+      this.setState({availableSpots: data.available_spots, winners: data.winners, claimed: data.claimed})
     }.bind(this))
   }
 
@@ -48,7 +52,7 @@ class Games extends React.Component {
     $.post('tailgate/Admin/Game', {
       command: 'complete',
       id: this.props.game.id
-    }, null, 'json').done(function (data) {
+    }, null, 'json').done(function () {
       this.loadGames()
     }.bind(this))
   }
@@ -112,7 +116,7 @@ class Games extends React.Component {
 
     if (this.state.message.length > 0) {
       message = (
-        <div className='alert alert-danger'>
+        <div className="alert alert-danger">
           {this.state.message}
         </div>
       )
@@ -120,7 +124,9 @@ class Games extends React.Component {
 
     if (this.props.game === null) {
       title = 'Add new game'
-      if (this.state.visitors.length === 0) {
+      if (this.state.visitors === null || this.props.lots === null) {
+        currentGame = <Waiting/>
+      } else if (this.state.visitors.length === 0) {
         currentGame = (
           <div>
             <p>
@@ -129,13 +135,7 @@ class Games extends React.Component {
           </div>
         )
       } else if (this.props.lots.length === 0) {
-        currentGame = (
-          <div>
-            <p>
-              Create some tailgate lots first.
-            </p>
-          </div>
-        )
+        currentGame = (<div><p>Create some lots first</p></div>)
       } else {
         currentGame = <GameForm visitors={this.state.visitors} save={this.saveGame} />
       }
@@ -147,7 +147,9 @@ class Games extends React.Component {
           submissions={this.state.submissions}
           loadGame={this.props.loadGame}
           completeGame={this.completeGame}
-          availableSpots={this.state.availableSpots} />
+          availableSpots={this.state.availableSpots}
+          winners={this.state.winners}
+          claimed={this.state.claimed} />
       )
     } else {
       currentGame = null
@@ -155,9 +157,9 @@ class Games extends React.Component {
 
     return (
       <div>
-        <div className='well'>
-          <div className='row'>
-            <div className='col-sm-12'>
+        <div className="well">
+          <div className="row">
+            <div className="col-sm-12">
               <h3>{title}</h3>
               {message}
             </div>
