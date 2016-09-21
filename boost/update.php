@@ -15,6 +15,33 @@ function tailgate_update(&$content, $currentVersion)
     +safety checks added
 </pre>
 EOF;
+        case (version_compare($currentVersion, '1.2.0', '<')):
+            $db = \phpws2\Database::getDB();
+            $tbl = $db->addTable('tg_game');
+            $dt = new \Database\Datatype\Smallint($tbl, 'lottery_started');
+            $dt->setDefault(0);
+            $dt->add();
+
+            $db = \phpws2\Database::getDB();
+            $tbl = $db->addTable('tg_lottery');
+            $dt = new \Database\Datatype\Smallint($tbl, 'emailed');
+            $dt->setDefault(0);
+            $dt->add();
+            
+            $db = \phpws2\Database::getDB();
+            $tbl = $db->addTable('tg_lottery');
+            $columns[] = $tbl->getDataType('student_id');
+            $columns[] = $tbl->getDataType('game_id');
+            $unique = new \phpws2\Database\Unique($columns);
+            $unique->add();
+            
+            $content[] = <<<EOF
+<pre>
+    + Flagging beginning of lottery
+    + Logging winner emails
+    + Unique keys added to tg_lottery to prevent repeats
+</pre>
+EOF;
     }
     return true;
 }
