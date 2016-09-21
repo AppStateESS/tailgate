@@ -1,93 +1,97 @@
-Signup = React.createClass({
+import React from 'react'
+import ReactDOM from 'react-dom'
+import TextInput from '../Mixin/TextInput.jsx'
 
-    checkNames : function(e) {
-        var firstName = $('#firstName');
-        var lastName = $('#lastName');
-
-        if (firstName.val().length === 0) {
-            e.preventDefault();
-            firstName.css('border-color', 'red');
-            firstName.attr('placeholder', 'Fill in your first name');
-        }
-
-        if(lastName.val().length === 0) {
-            e.preventDefault();
-            lastName.css('border-color', 'red');
-            lastName.attr('placeholder', 'Fill in your last name');
-        }
-    },
-
-    render : function() {
-        return (
-            <div>
-                <p>Before getting started, please enter your first and last name.</p>
-                <form method="post" action="tailgate/User/Student">
-                    <input type="hidden" name="command" value="createNewAccount" />
-                    <div className="row">
-                        <div className="col-sm-6">
-                            <TextInput inputId="firstName" label={'First name'} required={true}/>
-                        </div>
-                        <div className="col-sm-6">
-                            <TextInput inputId="lastName" label={'Last name'} required={true}/>
-                        </div>
-                    </div>
-                    <div className="text-center" style={{marginTop : '1em'}}>
-                        <button className="btn btn-primary" onClick={this.checkNames}><i className="fa fa-check"></i> Create new account</button>
-                    </div>
-                </form>
-            </div>
-        );
+class Signup extends React.Component {
+  constructor() {
+    super()
+    this.state = {
+      firstName: '',
+      lastName: '',
+      fnError: false,
+      lnError: false,
+      disableButton: false
     }
-});
+    this.updateFirstName = this.updateFirstName.bind(this)
+    this.updateLastName = this.updateLastName.bind(this)
+    this.checkNames = this.checkNames.bind(this)
+  }
 
-var TextInput = React.createClass({
-    getDefaultProps: function() {
-        return {
-            label: '',
-            placeholder: '',
-            handleBlur:null,
-            required: false,
-            handlePress : null,
-            inputId : null
-        };
-    },
-
-
-    handleBlur : function(e) {
-        if (this.props.required && e.target.value.length < 1) {
-            $(e.target).css('border-color', 'red');
-        }
-        if (this.props.handleBlur) {
-            this.props.handleBlur(e);
-        }
-    },
-
-    handleFocus : function(e) {
-        $(e.target).css('border-color', '');
-    },
-
-    render : function() {
-        var label = '';
-        var required = '';
-        if (this.props.label.length > 0) {
-            if (this.props.required) {
-                required = <i className="fa fa-asterisk text-danger"></i>;
-            }
-            label = <label htmlFor={this.props.inputId}>{this.props.label}</label>;
-        } else {
-            label = null;
-        }
-        return (
-            <div className="form-group">
-                {label} {required}
-                <input type="text" className="form-control" id={this.props.inputId}
-                    name={this.props.inputId} placeholder={this.props.placeholder} onFocus={this.handleFocus}
-                    onChange={this.handleChange} onBlur={this.handleBlur} onKeyPress={this.props.handlePress}/>
-            </div>
-        );
+  checkNames(e) {
+    this.setState({disableButton: true})
+    if (this.state.firstName.length === 0) {
+      this.setState({fnError: true})
+      e.preventDefault()
     }
-});
 
+    if (this.state.lastName.length === 0) {
+      this.setState({lnError: true})
+      e.preventDefault()
+    }
+    this.setState({disableButton: false})
+  }
 
-// This script will not run after compiled UNLESS the below is wrapped in $(window).load(function(){...});
-React.render(<Signup/>, document.getElementById('studentSignup'));
+  updateFirstName(e) {
+    this.setState({firstName: e.target.value})
+  }
+
+  updateLastName(e) {
+    this.setState({lastName: e.target.value})
+  }
+
+  render() {
+    const redBorder = {
+      borderColor: 'red'
+    }
+    return (
+      <div>
+        <p>Before getting started, please enter your first and last name.</p>
+        <form method="post" action="tailgate/User/Student">
+          <input type="hidden" name="command" value="createNewAccount"/>
+          <div className="row">
+            <div className="col-sm-6">
+              <TextInput
+                label={'First name'}
+                name="firstName"
+                required={true}
+                handleChange={this.updateFirstName}
+                style={this.state.fnError
+                ? redBorder
+                : null}
+                placeholder={this.state.fnError
+                ? 'First name may not be empty'
+                : null}
+                value={this.state.firstName}/>
+            </div>
+            <div className="col-sm-6">
+              <TextInput
+                label={'Last name'}
+                name="lastName"
+                required={true}
+                handleChange={this.updateLastName}
+                style={this.state.lnError
+                ? redBorder
+                : null}
+                placeholder={this.state.lnError
+                ? 'Last name may not be empty'
+                : null}
+                value={this.state.lastName}/>
+            </div>
+          </div>
+          <div className="text-center" style={{
+            marginTop: '1em'
+          }}>
+            <button
+              className="btn btn-primary"
+              onClick={this.checkNames}
+              disabled={this.state.disableButton}>
+              <i className="fa fa-check"></i>&nbsp; Create new account</button>
+          </div>
+        </form>
+      </div>
+    )
+  }
+}
+
+ReactDOM.render(
+  <Signup/>, document.getElementById('student-signup'))
