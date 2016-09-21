@@ -9,11 +9,13 @@ class StudentRow extends React.Component {
     this.state = {}
     this.addSpot = this.addSpot.bind(this)
     this.deleteStudent = this.deleteStudent.bind(this)
+    this.eligible = this.eligible.bind(this)
+    this.bannedReason = this.bannedReason.bind(this)
   }
 
   eligible() {
     if (this.props.student.eligible === '1') {
-      this.makeIneligible(this.sprops.resetRows)
+      this.makeIneligible(this.props.resetRows)
     } else {
       this.makeEligible(this.props.resetRows)
     }
@@ -82,7 +84,7 @@ class StudentRow extends React.Component {
   }
 
   addSpot() {
-    let content = '<select id="spotSelect" class="form-control">' + this.options() +
+    let content = '<select id="spotSelect" class="form-control"><option disable="true" value="0">- Choose spot below -</option>' + this.options() +
     '</select><button id="saveSpot" class="btn btn-success" style="margin-right:.5em">' +
         'Assign student</button>'
     $('#admin-modal .modal-title').text('Assign spot to ' + this.props.student.first_name + ' ' + this.props.student.last_name)
@@ -90,6 +92,9 @@ class StudentRow extends React.Component {
 
     $('#saveSpot').click(function () {
       let spotId = $('#spotSelect').val()
+      if (spotId === '0') {
+        return
+      }
       $.post('tailgate/Admin/Student', {
         command: 'assign',
         studentId: this.props.student.id,
