@@ -56,6 +56,13 @@ class Lottery extends \Resource
      * @var \Variable\Bool
      */
     protected $confirmed;
+    
+    /**
+     * Indicates the winner was contacted
+     * @var \Variable\Bool
+     */
+    protected $emailed;
+    
     protected $table = 'tg_lottery';
 
     public function __construct()
@@ -71,6 +78,7 @@ class Lottery extends \Resource
         $this->confirmation->allowNull(true);
         $this->confirmation->setLimit(40);
         $this->confirmed = new \Variable\Bool(false, 'confirmed');
+        $this->emailed = new \Variable\Bool(false, 'emailed');
     }
 
     public function createConfirmation()
@@ -117,6 +125,11 @@ class Lottery extends \Resource
     {
         return $this->winner->get();
     }
+    
+    public function getEmailed()
+    {
+        return $this->emailed->get();
+    }
 
     public function setConfirmed($confirmed)
     {
@@ -151,6 +164,11 @@ class Lottery extends \Resource
     public function setWinner($winner)
     {
         $this->winner->set($winner);
+    }
+    
+    public function setEmailed($emailed)
+    {
+        $this->emailed->set($emailed);
     }
 
 }
