@@ -16,11 +16,12 @@ class Setup extends React.Component {
     this.state = {
       currentTab: 'games',
       currentGame: null,
-      lots: []
+      lots: null
     }
     this.loadGame = this.loadGame.bind(this)
     this.loadLots = this.loadLots.bind(this)
     this.changeTab = this.changeTab.bind(this)
+    this.startLottery = this.startLottery.bind(this)
   }
 
   componentDidMount() {
@@ -43,7 +44,6 @@ class Setup extends React.Component {
       }
 
       this.setState({lots: data})
-
     }.bind(this))
   }
 
