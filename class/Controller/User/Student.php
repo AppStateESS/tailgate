@@ -119,11 +119,12 @@ EOF;
 
     private function showStatus($student_id)
     {
-        \tailgate\Factory\React::load('User/Status/', 'script', REACT_DEVMODE);
+        $react = \tailgate\Factory\React::load('status', REACT_DEVMODE);
         javascript('jquery');
         $content = <<<EOF
 <script type="text/javascript">var student_id='$student_id';</script>
-<div id="studentStatus"></div>
+<div id="student-status"></div>
+$react
 EOF;
 
         return $content;
@@ -131,13 +132,14 @@ EOF;
 
     private function createAccount()
     {
-        \tailgate\Factory\React::load('User/Signup/', 'script', REACT_DEVMODE);
+        $react = \tailgate\Factory\React::load('signup', REACT_DEVMODE);
 
         javascript('jquery');
 
         $content = <<<EOF
 <h2>New account signup</h2>
-<div id="studentSignup"></div>
+<div id="student-signup"></div>
+$react
 EOF;
 
         return $content;
