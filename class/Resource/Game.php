@@ -51,6 +51,12 @@ class Game extends \Resource
      */
     protected $lottery_run;
     
+    /**
+     * If true, the lottery has started
+     * @var \Variable\Bool
+     */
+    protected $lottery_started;
+    
     protected $table = 'tg_game';
     protected $university;
     protected $mascot;
@@ -67,8 +73,9 @@ class Game extends \Resource
         $this->signup_end->setFormat('%s');
         $this->pickup_deadline = new \Variable\DateTime(null, 'pickup_deadline');
         $this->pickup_deadline->setFormat('%s');
-        $this->lottery_run = new \Variable\Bool(null, 'lottery_run');
-        $this->completed = new \Variable\Bool(null, 'completed');
+        $this->lottery_run = new \Variable\Bool(false, 'lottery_run');
+        $this->lottery_started = new \Variable\Bool(false, 'lottery_started');
+        $this->completed = new \Variable\Bool(false, 'completed');
         $this->university = new \Variable\String(null, 'university');
         $this->university->setIsTableColumn(false);
         $this->mascot = new \Variable\String(null, 'mascot');
@@ -88,6 +95,11 @@ class Game extends \Resource
     public function getLotteryRun()
     {
         return $this->lottery_run->get();
+    }
+    
+    public function getLotteryStarted()
+    {
+        return $this->lottery_started->get();
     }
     
     public function getMascot()
@@ -133,6 +145,11 @@ class Game extends \Resource
     public function setLotteryRun($run)
     {
         $this->lottery_run->set($run);
+    }
+    
+    public function setLotteryStarted($started)
+    {
+        $this->lottery_started->set($started);
     }
     
     public function setMascot($mascot)
