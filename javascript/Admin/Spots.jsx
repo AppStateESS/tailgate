@@ -50,6 +50,7 @@ class Spots extends React.Component {
       spot.reserved = reserved
       allSpots[key] = spot
       this.setState({spots: allSpots})
+      this.props.reload()
     }.bind(this)).fail(function () {
       //let error_message = 'Error: Could not update the spot'
     }.bind(this))
@@ -195,6 +196,7 @@ Spots.defaultProps = {
 Spots.propTypes = {
   game: React.PropTypes.object,
   close: React.PropTypes.func,
+  reload: React.PropTypes.func,
   lotId: React.PropTypes.string
 }
 
