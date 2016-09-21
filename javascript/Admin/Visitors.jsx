@@ -1,6 +1,6 @@
 import React from 'react'
-import VisitorForm from './VisitorForm.jsx'
 import VisitorRow from './VisitorRow.jsx'
+import VisitorForm from './VisitorForm.jsx'
 
 /* global $ */
 
@@ -12,6 +12,16 @@ class Visitors extends React.Component {
       showForm: false
     }
     this.loadVisitors = this.loadVisitors.bind(this)
+    this.showForm = this.showForm.bind(this)
+    this.hideForm = this.hideForm.bind(this)
+  }
+
+  showForm() {
+    this.setState({showForm: true})
+  }
+
+  hideForm() {
+    this.setState({showForm: false})
   }
 
   componentDidMount() {
@@ -43,32 +53,31 @@ class Visitors extends React.Component {
         key={key}
         game={this.props.game}
         value={value}
-        update={this.loadVisitors}/>)
+        update={this.loadVisitors}
+        remove={this.removeVisitor.bind(this, key)}
+        hideForm={this.hideForm}/>)
     }.bind(this))
     return visitorRow
   }
 
   render() {
     let visitorForm = null
-    /*
     if (this.state.showForm) {
       visitorForm = <VisitorForm closeForm={this.hideForm} loadVisitors={this.loadVisitors}/>
     }
-    */
     let visitors = this.getVisitors()
 
     return (
       <div>
         <p>
           <button className="btn btn-success" onClick={this.showForm}>
-            <i className="fa fa-plus"></i>
-            Add Team
+            <i className="fa fa-plus"></i>&nbsp; Add Team
           </button>
         </p>
         {visitorForm}
         <table className="table table-striped">
           <tbody>
-          {visitors}
+            {visitors}
           </tbody>
         </table>
       </div>
