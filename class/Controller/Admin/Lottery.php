@@ -28,7 +28,7 @@ class Lottery extends Base
                 break;
 
             case 'getUnclaimedSpots':
-                $json = Factory::getAvailableSpots(null, null, true, true);
+                $json = Factory::getAvailableSpots(null, null, false, true);
                 break;
 
             default:
@@ -57,7 +57,7 @@ class Lottery extends Base
                 break;
 
             case 'notify':
-                $factory->notify();
+                $view = $view = new \View\JsonView(array('sent' => $factory->notify()));
                 break;
 
             case 'completeLottery':
@@ -77,21 +77,30 @@ class Lottery extends Base
 
     private function postPickUp()
     {
-        $lottery_id = filter_input(INPUT_POST, 'lotteryId', FILTER_SANITIZE_NUMBER_INT);
+        $lottery_id = filter_input(INPUT_POST, 'lotteryId',
+                FILTER_SANITIZE_NUMBER_INT);
         $factory = new Factory;
         $factory->pickedUp($lottery_id);
     }
 
     private function chooseWinners()
     {
-        $factory = new Factory;
-        $winners = $factory->chooseWinners();
-        $spots_left = $factory->totalAvailableSpots() - $winners;
-        $data = array('spots_filled' => $winners, 'spots_left' => $spots_left);
+        try {
+            $factory = new Factory;
+            $winners = $factory->chooseWinners();
+            $spots_left = $factory->totalAvailableSpots() - $winners;
+            $data = array('spots_filled' => $winners, 'spots_left' => $spots_left);
+        } catch (\Exception $e) {
+            $data['error'] = $e->getMessage();
+        }
         $view = new \View\JsonView($data);
         return $view;
     }
 
+    /**
+     * Number of student submissions to this lottery
+     * @return integer
+     */
     private function getTotalSubmissions()
     {
         $factory = new Factory;
@@ -101,7 +110,7 @@ class Lottery extends Base
         } else {
             $submissions = $factory->getTotalSubmissions($current_game);
         }
-        return $submissions;
+        return (int) $submissions;
     }
 
 }

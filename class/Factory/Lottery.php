@@ -81,6 +81,19 @@ class Lottery extends Base
         $lottery->setVars($result);
         return $lottery;
     }
+    
+    public function totalSpotsClaimed($game_id)
+    {
+        $db = \phpws2\Database::getDB();
+        $tbl = $db->addTable('tg_lottery');
+        $tbl->addFieldConditional('game_id', $game_id);
+        $tbl->addFieldConditional('winner', 1);
+        $tbl->addFieldConditional('spot_id', 0, '!=');
+        $field = $tbl->addField('id', 'count');
+        $field->showCount();
+        $result = $db->selectColumn();
+        return (int) $result;
+    }
 
     public function totalAvailableSpots()
     {
@@ -101,7 +114,19 @@ class Lottery extends Base
     public function chooseWinners()
     {
         $currentGame = GameFactory::getCurrent();
+        if ($currentGame->getLotteryStarted()) {
+            throw new \Exception('Lottery previously run');
+        }
+        $currentGame->setLotteryStarted(true);
+        \phpws2\ResourceFactory::saveResource($currentGame);
+
         $total_spots = $this->totalAvailableSpots();
+        $won_spots = $this->getTotalWinners($currentGame->getId());
+        $spots_left = $total_spots - $won_spots;
+
+        if ($spots_left === 0) {
+            return $total_spots;
+        }
 
         $db = \Database::getDB();
         $tbl = $db->addTable('tg_lottery');
@@ -111,7 +136,7 @@ class Lottery extends Base
         $tbl->addFieldConditional('game_id', $currentGame->getId());
         $tbl->randomOrder();
 
-        for ($i = 0; $i < $total_spots; $i++) {
+        for ($i = 0; $i < $spots_left; $i++) {
             $row = $db->selectOneRow();
             if ($row['id']) {
                 $this->flagWinner($row['id']);
@@ -121,6 +146,17 @@ class Lottery extends Base
             }
         }
         return $i;
+    }
+
+    public function getTotalWinners($game_id)
+    {
+        $db = \phpws2\Database::getDB();
+        $tbl = $db->addTable('tg_lottery');
+        $tbl->addFieldConditional('game_id', $game_id);
+        $tbl->addFieldConditional('winner', 1);
+        $col = $tbl->addField('id');
+        $col->showCount(true);
+        return (int)$db->selectColumn();
     }
 
     public function flagWinner($lottery_id)
@@ -152,11 +188,15 @@ class Lottery extends Base
     }
 
     public static function getAvailableSpots($game_id = 0, $lot_id = 0,
-            $allow_reserved = false, $include_unclaimed = false)
+            $allow_reserved = false, $include_unclaimed = false,
+            $active_only = true)
     {
         if (empty($game_id)) {
             $factory = new GameFactory;
             $game = GameFactory::getCurrent();
+            if (empty($game)) {
+                return null;
+            }
             $game_id = $game->getId();
         } else {
             $game = GameFactory::getById($game_id);
@@ -174,6 +214,9 @@ class Lottery extends Base
         $db = \Database::getDB();
         $spotTable = $db->addTable('tg_spot');
         $lotTable = $db->addTable('tg_lot');
+        if ($active_only) {
+            $lotTable->addFieldConditional('active', 1);
+        }
 
         $lot_id = (int) $lot_id;
         if ($lot_id) {
@@ -313,22 +356,37 @@ class Lottery extends Base
         $db = \Database::getDB();
         $tbl = $db->addTable('tg_lottery');
         $tbl->addFieldConditional('game_id', $game_id);
-        $result = $db->select();
+        $tbl->addFieldConditional('emailed', 0);
+        $lottery_submissions = $db->select();
 
-        if (empty($result)) {
-            return null;
+        if (empty($lottery_submissions)) {
+            return 0;
         }
 
         $game = Game::getById($game_id);
-        foreach ($result as $row) {
-            if ($row['winner'] == '1') {
-                $this->sendWinnerEmail($row, $game);
-            } else {
-                $this->sendLoserEmail($row, $game);
+        $count = 0;
+        foreach ($lottery_submissions as $row) {
+            $count++;
+            $db->clearConditional();
+            $tbl->resetValues();
+            try {
+                if ($row['winner'] == '1') {
+                    $this->sendWinnerEmail($row, $game);
+                } else {
+                    $this->sendLoserEmail($row, $game);
+                }
+            } catch (\Exception $e) {
+                $log = 'Email to student #' . $row['student_id'] . ' failed: ' . $e->getMessage();
+                \PHPWS_Core::log($log, 'tailgate_email.log');
+                throw $e;
             }
+            $tbl->addFieldConditional('id', $row['id']);
+            $tbl->addValue('emailed', 1);
+            $db->update();
         }
         $game->setLotteryRun(true);
         GameFactory::saveResource($game);
+        return $count;
     }
 
     private function getSwiftTransport()
@@ -365,7 +423,6 @@ class Lottery extends Base
         $tpl->setModuleTemplate('tailgate', 'Admin/Lottery/Winner.html');
         $tpl->addVariables($variables);
         $content = $tpl->get();
-
         $this->sendEmail('Tailgate successful', $lottery['student_id'], $content);
     }
 
@@ -386,7 +443,8 @@ class Lottery extends Base
         $transport = $this->getSwiftTransport();
         $student = StudentFactory::getById($student_id);
         if (!is_object($student)) {
-            \PHPWS_Core::log("Student #$student_id does not exist.", 'tailgate_error.txt');
+            \PHPWS_Core::log("Student #$student_id does not exist.",
+                    'tailgate_error.txt');
             return;
         }
 

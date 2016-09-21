@@ -25,6 +25,9 @@ class Game extends Base
                 if ($game) {
                     if ($game->getLotteryRun()) {
                         $json['available_spots'] = count(\tailgate\Factory\Lottery::getAvailableSpots());
+                        $lottery = new \tailgate\Factory\Lottery;
+                        $json['winners'] = $lottery->getTotalWinners($game->getId());
+                        $json['claimed'] = $lottery->totalSpotsClaimed($game->getId());
                     } else {
                         $json['available_spots'] = $lotteryFactory->totalAvailableSpots();
                     }

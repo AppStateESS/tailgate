@@ -22,17 +22,13 @@ abstract class Base extends \Http\Controller
         \Layout::addStyle('tailgate', 'Admin/Setup/style.css');
         javascript('datetimepicker');
         javascript('ckeditor');
-        $http = PHPWS_SOURCE_HTTP;
-        
-        $development = REACT_DEVMODE;
-        $script = 'Admin/Setup/';
+        javascript('jquery');
 
-        $react = \tailgate\Factory\React::load($script, 'script', $development);
-
+        $script = \tailgate\Factory\React::load('setup', REACT_DEVMODE);
         $content = <<<EOF
 <h2>Tailgate</h2>
 <div id="tailgate-setup"></div>
-$react
+$script
 EOF;
         $view = new \View\HtmlView($content);
         return $view;
