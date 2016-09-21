@@ -2,11 +2,11 @@ import React from 'react'
 
 class DatetimeBox extends React.Component {
   constructor(props) {
-    super(props);
+    super(props)
   }
   render() {
     return (
-      <div className="col-sm-3">
+      <div className="col-sm-12">
         <div className={'alert alert-' + this.props.bgColor}>
           {this.props.button}
           <big>
@@ -14,8 +14,15 @@ class DatetimeBox extends React.Component {
           </big><br/> {this.props.date}
         </div>
       </div>
-    );
+    )
   }
 }
 
-export default DatetimeBox;
+DatetimeBox.propTypes = {
+  button: React.PropTypes.element,
+  title: React.PropTypes.string,
+  date: React.PropTypes.string,
+  bgColor: React.PropTypes.string
+}
+
+export default DatetimeBox
