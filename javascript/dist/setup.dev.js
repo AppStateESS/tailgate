@@ -67,23 +67,23 @@
 	
 	var _Games2 = _interopRequireDefault(_Games);
 	
-	var _Modal = __webpack_require__(/*! ../Mixin/Modal.jsx */ 181);
+	var _Modal = __webpack_require__(/*! ../Mixin/Modal.jsx */ 183);
 	
 	var _Modal2 = _interopRequireDefault(_Modal);
 	
-	var _Visitors = __webpack_require__(/*! ./Visitors.jsx */ 182);
+	var _Visitors = __webpack_require__(/*! ./Visitors.jsx */ 184);
 	
 	var _Visitors2 = _interopRequireDefault(_Visitors);
 	
-	var _Lots = __webpack_require__(/*! ./Lots.jsx */ 187);
+	var _Lots = __webpack_require__(/*! ./Lots.jsx */ 189);
 	
 	var _Lots2 = _interopRequireDefault(_Lots);
 	
-	var _Students = __webpack_require__(/*! ./Students.jsx */ 188);
+	var _Students = __webpack_require__(/*! ./Students.jsx */ 195);
 	
 	var _Students2 = _interopRequireDefault(_Students);
 	
-	var _Settings = __webpack_require__(/*! ./Settings.jsx */ 189);
+	var _Settings = __webpack_require__(/*! ./Settings.jsx */ 199);
 	
 	var _Settings2 = _interopRequireDefault(_Settings);
 	
@@ -106,13 +106,14 @@
 	    var _this = _possibleConstructorReturn(this, (Setup.__proto__ || Object.getPrototypeOf(Setup)).call(this));
 	
 	    _this.state = {
-	      currentTab: 'games',
+	      currentTab: 'students',
 	      currentGame: null,
-	      lots: []
+	      lots: null
 	    };
 	    _this.loadGame = _this.loadGame.bind(_this);
 	    _this.loadLots = _this.loadLots.bind(_this);
 	    _this.changeTab = _this.changeTab.bind(_this);
+	    _this.startLottery = _this.startLottery.bind(_this);
 	    return _this;
 	  }
 	
@@ -22167,6 +22168,8 @@
 	
 	function _inherits(subClass, superClass) { if (typeof superClass !== "function" && superClass !== null) { throw new TypeError("Super expression must either be null or a function, not " + typeof superClass); } subClass.prototype = Object.create(superClass && superClass.prototype, { constructor: { value: subClass, enumerable: false, writable: true, configurable: true } }); if (superClass) Object.setPrototypeOf ? Object.setPrototypeOf(subClass, superClass) : subClass.__proto__ = superClass; }
 	
+	/* global $ */
+	
 	var RunLottery = function (_React$Component) {
 	  _inherits(RunLottery, _React$Component);
 	
@@ -22201,7 +22204,7 @@
 	    value: function chooseWinners() {
 	      var xhr = $.post('tailgate/Admin/Lottery', {
 	        command: 'chooseWinners'
-	      }, function () {}, 'json');
+	      }, null, 'json');
 	      return xhr;
 	    }
 	  }, {
@@ -22237,6 +22240,10 @@
 	        this.concatMessage('Assigning winners.');
 	        var winnersXHR = this.chooseWinners();
 	        winnersXHR.done(function (data) {
+	          if (data.error !== undefined) {
+	            this.concatMessage('An error occurred while running the lottery: ' + data.error);
+	            return;
+	          }
 	          this.concatMessage(data.spots_filled + ' spots filled.');
 	          this.concatMessage(data.spots_left + ' spots left.');
 	          this.setState({ spotsLeft: data.spots_left });
@@ -22244,18 +22251,21 @@
 	          if (data.spots_filled === '0') {
 	            this.concatMessage('Finished. Closing lottery.');
 	            var closeXHR = this.closeLottery();
-	            closeXHR.done(function (data) {
+	            closeXHR.done(function () {
 	              this.props.loadGame();
 	            }.bind(this));
 	          } else {
 	            this.concatMessage('Notifying winners and losers.');
 	            var notifyXHR = this.notifyWinners();
 	            notifyXHR.done(function (data) {
+	              this.concatMessage(data.sent + ' email(s) sent.');
 	              this.concatMessage('Finished. Closing lottery.');
 	              var closeXHR = this.closeLottery();
-	              closeXHR.done(function (data) {
+	              closeXHR.done(function () {
 	                this.props.loadGame();
 	              }.bind(this));
+	            }.bind(this)).fail(function () {
+	              this.concatMessage('The email process failed while sending.');
 	            }.bind(this));
 	          }
 	        }.bind(this));
@@ -22272,8 +22282,9 @@
 	          null,
 	          'Running lottery for ',
 	          this.props.currentGame.university,
+	          ' ',
 	          this.props.currentGame.mascot,
-	          '- ',
+	          '  - ',
 	          this.props.currentGame.kickoff_format
 	        ),
 	        _react2.default.createElement(
@@ -22291,6 +22302,11 @@
 	
 	  return RunLottery;
 	}(_react2.default.Component);
+	
+	RunLottery.propTypes = {
+	  loadGame: _react2.default.PropTypes.func,
+	  currentGame: _react2.default.PropTypes.object
+	};
 	
 	exports.default = RunLottery;
 
@@ -22321,6 +22337,10 @@
 	
 	var _GameForm2 = _interopRequireDefault(_GameForm);
 	
+	var _Waiting = __webpack_require__(/*! ./Waiting.jsx */ 182);
+	
+	var _Waiting2 = _interopRequireDefault(_Waiting);
+	
 	function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 	
 	function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
@@ -22340,11 +22360,15 @@
 	    var _this = _possibleConstructorReturn(this, (Games.__proto__ || Object.getPrototypeOf(Games)).call(this, props));
 	
 	    _this.state = {
-	      visitors: [],
+	      visitors: null,
 	      availableSpots: 0,
 	      submissions: 0,
+	      winners: 0,
+	      claimed: 0,
 	      message: ''
 	    };
+	    _this.completeGame = _this.completeGame.bind(_this);
+	    _this.saveGame = _this.saveGame.bind(_this);
 	    return _this;
 	  }
 	
@@ -22379,7 +22403,7 @@
 	    value: function loadGames() {
 	      this.props.loadGame();
 	      $.getJSON('tailgate/Admin/Game', { command: 'list' }).done(function (data) {
-	        this.setState({ availableSpots: data.available_spots });
+	        this.setState({ availableSpots: data.available_spots, winners: data.winners, claimed: data.claimed });
 	      }.bind(this));
 	    }
 	  }, {
@@ -22388,7 +22412,7 @@
 	      $.post('tailgate/Admin/Game', {
 	        command: 'complete',
 	        id: this.props.game.id
-	      }, null, 'json').done(function (data) {
+	      }, null, 'json').done(function () {
 	        this.loadGames();
 	      }.bind(this));
 	    }
@@ -22464,7 +22488,9 @@
 	
 	      if (this.props.game === null) {
 	        title = 'Add new game';
-	        if (this.state.visitors.length === 0) {
+	        if (this.state.visitors === null || this.props.lots === null) {
+	          currentGame = _react2.default.createElement(_Waiting2.default, null);
+	        } else if (this.state.visitors.length === 0) {
 	          currentGame = _react2.default.createElement(
 	            'div',
 	            null,
@@ -22481,7 +22507,7 @@
 	            _react2.default.createElement(
 	              'p',
 	              null,
-	              'Create some tailgate lots first.'
+	              'Create some lots first'
 	            )
 	          );
 	        } else {
@@ -22494,7 +22520,9 @@
 	          submissions: this.state.submissions,
 	          loadGame: this.props.loadGame,
 	          completeGame: this.completeGame,
-	          availableSpots: this.state.availableSpots });
+	          availableSpots: this.state.availableSpots,
+	          winners: this.state.winners,
+	          claimed: this.state.claimed });
 	      } else {
 	        currentGame = null;
 	      }
@@ -22579,6 +22607,8 @@
 	
 	function _inherits(subClass, superClass) { if (typeof superClass !== "function" && superClass !== null) { throw new TypeError("Super expression must either be null or a function, not " + typeof superClass); } subClass.prototype = Object.create(superClass && superClass.prototype, { constructor: { value: subClass, enumerable: false, writable: true, configurable: true } }); if (superClass) Object.setPrototypeOf ? Object.setPrototypeOf(subClass, superClass) : subClass.__proto__ = superClass; }
 	
+	/* global $ */
+	
 	var GameInfo = function (_React$Component) {
 	  _inherits(GameInfo, _React$Component);
 	
@@ -22651,18 +22681,18 @@
 	    key: 'render',
 	    value: function render() {
 	      var button = null;
-	      var message = null;
 	      var timestamp = Math.floor(Date.now() / 1000);
 	      var pickupReport = null;
 	      var winnerReport = null;
 	      var spotReport = null;
+	      var marginRight = {
+	        marginRight: '.5em'
+	      };
 	
 	      if (this.props.game.lottery_run === '1' && this.props.game.pickup_deadline < timestamp) {
 	        pickupReport = _react2.default.createElement(
 	          'div',
-	          { className: 'pull-left', style: {
-	              marginRight: '.5em'
-	            } },
+	          { className: 'pull-left', style: marginRight },
 	          _react2.default.createElement(
 	            'a',
 	            {
@@ -22670,7 +22700,7 @@
 	              target: '_blank',
 	              className: 'btn btn-primary btn-sm' },
 	            _react2.default.createElement('i', { className: 'fa fa-file-text-o' }),
-	            'Pickup report'
+	            '  Pickup report'
 	          )
 	        );
 	
@@ -22684,7 +22714,7 @@
 	              target: '_blank',
 	              className: 'btn btn-primary btn-sm' },
 	            _react2.default.createElement('i', { className: 'fa fa-file-text-o' }),
-	            'Spot report'
+	            '  Spot report'
 	          )
 	        );
 	      }
@@ -22692,9 +22722,7 @@
 	      if (this.props.game.lottery_run === '1') {
 	        winnerReport = _react2.default.createElement(
 	          'div',
-	          { className: 'pull-left', style: {
-	              marginRight: '.5em'
-	            } },
+	          { className: 'pull-left', style: marginRight },
 	          _react2.default.createElement(
 	            'a',
 	            {
@@ -22702,7 +22730,7 @@
 	              target: '_blank',
 	              className: 'btn btn-primary btn-sm' },
 	            _react2.default.createElement('i', { className: 'fa fa-file-text-o' }),
-	            'Winner list'
+	            '  Winner list'
 	          )
 	        );
 	      }
@@ -22725,12 +22753,58 @@
 	          null,
 	          this.props.game.university,
 	          ' ',
-	          this.props.game.mascot,
-	          '- Total submissions: ',
-	          this.props.submissions,
-	          ', Unreserved, available spots: ',
-	          this.props.availableSpots
+	          this.props.game.mascot
 	        ),
+	        _react2.default.createElement(
+	          'div',
+	          { className: 'row' },
+	          _react2.default.createElement(
+	            'div',
+	            { className: 'col-sm-3 text-center' },
+	            _react2.default.createElement(
+	              'strong',
+	              null,
+	              'Submissions:'
+	            ),
+	            _react2.default.createElement('br', null),
+	            this.props.submissions
+	          ),
+	          _react2.default.createElement(
+	            'div',
+	            { className: 'col-sm-3 text-center' },
+	            _react2.default.createElement(
+	              'strong',
+	              null,
+	              'Winners:'
+	            ),
+	            _react2.default.createElement('br', null),
+	            this.props.winners
+	          ),
+	          _react2.default.createElement(
+	            'div',
+	            { className: 'col-sm-3 text-center' },
+	            _react2.default.createElement(
+	              'strong',
+	              null,
+	              'Available spots:'
+	            ),
+	            _react2.default.createElement('br', null),
+	            this.props.availableSpots
+	          ),
+	          _react2.default.createElement(
+	            'div',
+	            { className: 'col-sm-3 text-center' },
+	            _react2.default.createElement(
+	              'strong',
+	              null,
+	              'Claimed:'
+	            ),
+	            _react2.default.createElement('br', null),
+	            this.props.claimed
+	          )
+	        ),
+	        _react2.default.createElement('hr', null),
+	        ' ',
 	        this.state.message,
 	        _react2.default.createElement(
 	          'div',
@@ -22782,8 +22856,22 @@
 	  game: null,
 	  startLottery: null, // function to start the lottery
 	  submissions: 0,
-	  loadGame: null, // function to reload the game Object
-	  availableSpots: 0
+	  loadGame: null,
+	  completeGame: null,
+	  availableSpots: 0,
+	  winners: 0,
+	  claimed: 0
+	};
+	
+	GameInfo.propTypes = {
+	  game: _react2.default.PropTypes.object,
+	  startLottery: _react2.default.PropTypes.func,
+	  submissions: _react2.default.PropTypes.number,
+	  loadGame: _react2.default.PropTypes.func,
+	  completeGame: _react2.default.PropTypes.func,
+	  availableSpots: _react2.default.PropTypes.number,
+	  winners: _react2.default.PropTypes.number,
+	  claimed: _react2.default.PropTypes.number
 	};
 	
 	exports.default = GameInfo;
@@ -22815,6 +22903,11 @@
 	
 	function _inherits(subClass, superClass) { if (typeof superClass !== "function" && superClass !== null) { throw new TypeError("Super expression must either be null or a function, not " + typeof superClass); } subClass.prototype = Object.create(superClass && superClass.prototype, { constructor: { value: subClass, enumerable: false, writable: true, configurable: true } }); if (superClass) Object.setPrototypeOf ? Object.setPrototypeOf(subClass, superClass) : subClass.__proto__ = superClass; }
 	
+	/**
+	 * this script shows the option to run the lottery
+	 * See RunLottery for the processing
+	 */
+	
 	var LotteryRun = function (_React$Component) {
 	  _inherits(LotteryRun, _React$Component);
 	
@@ -22823,7 +22916,11 @@
 	
 	    var _this = _possibleConstructorReturn(this, (LotteryRun.__proto__ || Object.getPrototypeOf(LotteryRun)).call(this, props));
 	
-	    _this.state = { start: false };
+	    _this.state = {
+	      start: false
+	    };
+	    _this.confirmLottery = _this.confirmLottery.bind(_this);
+	    _this.stopLottery = _this.stopLottery.bind(_this);
 	    return _this;
 	  }
 	
@@ -22843,7 +22940,16 @@
 	      var button = null;
 	      var ctime = Date.now() / 1000;
 	      var currentTime = Math.floor(ctime);
-	      if (this.props.game.signup_end < currentTime) {
+	      var marginRight = {
+	        'marginRight': '1em'
+	      };
+	      if (this.props.game.lottery_started === '1') {
+	        button = _react2.default.createElement(
+	          'button',
+	          { className: 'btn btn-success', disabled: true },
+	          'Lottery in progress...'
+	        );
+	      } else if (this.props.game.signup_end < currentTime) {
 	        if (this.state.start) {
 	          button = _react2.default.createElement(
 	            'div',
@@ -22856,19 +22962,17 @@
 	            _react2.default.createElement(
 	              'button',
 	              {
-	                style: {
-	                  marginRight: '1em'
-	                },
+	                style: marginRight,
 	                className: 'btn btn-success btn-lg',
 	                onClick: this.props.startLottery },
 	              _react2.default.createElement('i', { className: 'fa fa-check' }),
-	              'Confirm: Start lottery'
+	              '  Confirm: Start lottery'
 	            ),
 	            _react2.default.createElement(
 	              'button',
 	              { className: 'btn btn-danger btn-lg', onClick: this.stopLottery },
 	              _react2.default.createElement('i', { className: 'fa fa-times' }),
-	              'Cancel running lottery'
+	              '  Cancel running lottery'
 	            )
 	          );
 	        } else {
@@ -22889,6 +22993,11 @@
 	
 	  return LotteryRun;
 	}(_react2.default.Component);
+	
+	LotteryRun.propTypes = {
+	  startLottery: _react2.default.PropTypes.func,
+	  game: _react2.default.PropTypes.object
+	};
 	
 	exports.default = LotteryRun;
 
@@ -22946,6 +23055,11 @@
 	
 	  return DateSelect;
 	}(_react2.default.Component);
+	
+	DateSelect.propTypes = {
+	  update: _react2.default.PropTypes.func,
+	  error: _react2.default.PropTypes.func
+	};
 	
 	var SignupStart = function (_DateSelect) {
 	  _inherits(SignupStart, _DateSelect);
@@ -23183,7 +23297,8 @@
 	          className: "pull-right btn btn-sm btn-primary",
 	          id: this.props.buttonId,
 	          onClick: this.props.handleClick },
-	        "Edit"
+	        _react2.default.createElement("i", { className: "fa fa-calendar" }),
+	        " Edit"
 	      );
 	    }
 	  }]);
@@ -23192,6 +23307,11 @@
 	}(_react2.default.Component);
 	
 	EditDateButton.defaultProps = { buttonId: null, handleClick: null };
+	
+	EditDateButton.propTypes = {
+	  buttonId: _react2.default.PropTypes.string,
+	  handleClick: _react2.default.PropTypes.func
+	};
 	
 	exports.default = EditDateButton;
 
@@ -23236,7 +23356,7 @@
 	    value: function render() {
 	      return _react2.default.createElement(
 	        'div',
-	        { className: 'col-sm-3' },
+	        { className: 'col-sm-12' },
 	        _react2.default.createElement(
 	          'div',
 	          { className: 'alert alert-' + this.props.bgColor },
@@ -23260,6 +23380,13 @@
 	
 	  return DatetimeBox;
 	}(_react2.default.Component);
+	
+	DatetimeBox.propTypes = {
+	  button: _react2.default.PropTypes.element,
+	  title: _react2.default.PropTypes.string,
+	  date: _react2.default.PropTypes.string,
+	  bgColor: _react2.default.PropTypes.string
+	};
 	
 	exports.default = DatetimeBox;
 
@@ -23350,7 +23477,7 @@
 	
 	var _react2 = _interopRequireDefault(_react);
 	
-	var _TextInput = __webpack_require__(/*! ../Mixin/TextInput.jsx */ 184);
+	var _TextInput = __webpack_require__(/*! ../Mixin/TextInput.jsx */ 181);
 	
 	var _TextInput2 = _interopRequireDefault(_TextInput);
 	
@@ -23487,6 +23614,215 @@
 
 /***/ },
 /* 181 */
+/*!****************************************!*\
+  !*** ./javascript/Mixin/TextInput.jsx ***!
+  \****************************************/
+/***/ function(module, exports, __webpack_require__) {
+
+	'use strict';
+	
+	Object.defineProperty(exports, "__esModule", {
+	  value: true
+	});
+	
+	var _createClass = function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; }();
+	
+	var _react = __webpack_require__(/*! react */ 1);
+	
+	var _react2 = _interopRequireDefault(_react);
+	
+	function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
+	
+	function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
+	
+	function _possibleConstructorReturn(self, call) { if (!self) { throw new ReferenceError("this hasn't been initialised - super() hasn't been called"); } return call && (typeof call === "object" || typeof call === "function") ? call : self; }
+	
+	function _inherits(subClass, superClass) { if (typeof superClass !== "function" && superClass !== null) { throw new TypeError("Super expression must either be null or a function, not " + typeof superClass); } subClass.prototype = Object.create(superClass && superClass.prototype, { constructor: { value: subClass, enumerable: false, writable: true, configurable: true } }); if (superClass) Object.setPrototypeOf ? Object.setPrototypeOf(subClass, superClass) : subClass.__proto__ = superClass; }
+	
+	var TextInput = function (_React$Component) {
+	  _inherits(TextInput, _React$Component);
+	
+	  function TextInput(props) {
+	    _classCallCheck(this, TextInput);
+	
+	    var _this = _possibleConstructorReturn(this, (TextInput.__proto__ || Object.getPrototypeOf(TextInput)).call(this, props));
+	
+	    _this.handleBlur = _this.handleBlur.bind(_this);
+	    _this.handleFocus = _this.handleFocus.bind(_this);
+	    return _this;
+	  }
+	
+	  _createClass(TextInput, [{
+	    key: 'handleBlur',
+	    value: function handleBlur(e) {
+	      var emptyMessage = 'Value may not be empty';
+	      if (this.props.label.length > 0) {
+	        emptyMessage = this.props.label + ' may not be empty';
+	      }
+	      if (this.props.required && e.target.value.length < 1) {
+	        this.refs.textInput.style['borderColor'] = 'red';
+	        this.refs.textInput.placeholder = emptyMessage;
+	      }
+	      if (this.props.handleBlur) {
+	        this.props.handleBlur(e);
+	      }
+	    }
+	  }, {
+	    key: 'handleFocus',
+	    value: function handleFocus() {
+	      this.refs.textInput.style['borderColor'] = '';
+	    }
+	  }, {
+	    key: 'render',
+	    value: function render() {
+	      var label = '';
+	      var required = '';
+	      if (this.props.label.length > 0) {
+	        if (this.props.required) {
+	          required = _react2.default.createElement('i', { className: 'fa fa-asterisk text-danger' });
+	        }
+	        label = _react2.default.createElement(
+	          'label',
+	          { htmlFor: this.props.inputId },
+	          this.props.label
+	        );
+	      } else {
+	        label = null;
+	      }
+	      if (this.props.defaultValue === null) {
+	        return _react2.default.createElement(
+	          'div',
+	          { className: 'form-group' },
+	          label,
+	          required,
+	          _react2.default.createElement('input', {
+	            type: 'text',
+	            className: 'form-control',
+	            id: this.props.inputId,
+	            name: this.props.name,
+	            placeholder: this.props.placeholder,
+	            onFocus: this.handleFocus,
+	            onChange: this.props.handleChange,
+	            onBlur: this.handleBlur,
+	            onKeyPress: this.props.handlePress,
+	            value: this.props.value,
+	            style: this.props.style,
+	            ref: 'textInput' })
+	        );
+	      } else {
+	        return _react2.default.createElement(
+	          'div',
+	          { className: 'form-group' },
+	          label,
+	          required,
+	          _react2.default.createElement('input', {
+	            type: 'text',
+	            className: 'form-control',
+	            id: this.props.inputId,
+	            name: this.props.name,
+	            placeholder: this.props.placeholder,
+	            onFocus: this.handleFocus,
+	            onChange: this.props.handleChange,
+	            onBlur: this.handleBlur,
+	            onKeyPress: this.props.handlePress,
+	            style: this.props.style,
+	            ref: 'textInput',
+	            defaultValue: this.props.defaultValue })
+	        );
+	      }
+	    }
+	  }]);
+	
+	  return TextInput;
+	}(_react2.default.Component);
+	
+	TextInput.defaultProps = {
+	  name: '',
+	  label: '',
+	  placeholder: '',
+	  handleBlur: null,
+	  required: false,
+	  handlePress: null,
+	  handleChange: null,
+	  inputId: null,
+	  defaultValue: null,
+	  value: '',
+	  style: {}
+	};
+	
+	TextInput.propTypes = {
+	  name: _react2.default.PropTypes.string,
+	  inputId: _react2.default.PropTypes.string,
+	  label: _react2.default.PropTypes.string,
+	  required: _react2.default.PropTypes.bool,
+	  handleBlur: _react2.default.PropTypes.func,
+	  handlePress: _react2.default.PropTypes.func,
+	  handleChange: _react2.default.PropTypes.func,
+	  placeholder: _react2.default.PropTypes.string,
+	  defaultValue: _react2.default.PropTypes.string,
+	  value: _react2.default.PropTypes.string,
+	  style: _react2.default.PropTypes.object
+	};
+	
+	exports.default = TextInput;
+
+/***/ },
+/* 182 */
+/*!**************************************!*\
+  !*** ./javascript/Admin/Waiting.jsx ***!
+  \**************************************/
+/***/ function(module, exports, __webpack_require__) {
+
+	"use strict";
+	
+	Object.defineProperty(exports, "__esModule", {
+	  value: true
+	});
+	
+	var _createClass = function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; }();
+	
+	var _react = __webpack_require__(/*! react */ 1);
+	
+	var _react2 = _interopRequireDefault(_react);
+	
+	function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
+	
+	function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
+	
+	function _possibleConstructorReturn(self, call) { if (!self) { throw new ReferenceError("this hasn't been initialised - super() hasn't been called"); } return call && (typeof call === "object" || typeof call === "function") ? call : self; }
+	
+	function _inherits(subClass, superClass) { if (typeof superClass !== "function" && superClass !== null) { throw new TypeError("Super expression must either be null or a function, not " + typeof superClass); } subClass.prototype = Object.create(superClass && superClass.prototype, { constructor: { value: subClass, enumerable: false, writable: true, configurable: true } }); if (superClass) Object.setPrototypeOf ? Object.setPrototypeOf(subClass, superClass) : subClass.__proto__ = superClass; }
+	
+	var Waiting = function (_React$Component) {
+	  _inherits(Waiting, _React$Component);
+	
+	  function Waiting() {
+	    _classCallCheck(this, Waiting);
+	
+	    return _possibleConstructorReturn(this, (Waiting.__proto__ || Object.getPrototypeOf(Waiting)).apply(this, arguments));
+	  }
+	
+	  _createClass(Waiting, [{
+	    key: "render",
+	    value: function render() {
+	      return _react2.default.createElement(
+	        "div",
+	        { className: "text-center lead" },
+	        _react2.default.createElement("i", { className: "fa fa-cog fa-spin" }),
+	        "Loading..."
+	      );
+	    }
+	  }]);
+	
+	  return Waiting;
+	}(_react2.default.Component);
+	
+	Waiting.defaultProps = {};
+	
+	exports.default = Waiting;
+
+/***/ },
+/* 183 */
 /*!************************************!*\
   !*** ./javascript/Mixin/Modal.jsx ***!
   \************************************/
@@ -23569,7 +23905,7 @@
 	exports.default = Modal;
 
 /***/ },
-/* 182 */
+/* 184 */
 /*!***************************************!*\
   !*** ./javascript/Admin/Visitors.jsx ***!
   \***************************************/
@@ -23587,13 +23923,13 @@
 	
 	var _react2 = _interopRequireDefault(_react);
 	
-	var _VisitorForm = __webpack_require__(/*! ./VisitorForm.jsx */ 183);
-	
-	var _VisitorForm2 = _interopRequireDefault(_VisitorForm);
-	
-	var _VisitorRow = __webpack_require__(/*! ./VisitorRow.jsx */ 186);
+	var _VisitorRow = __webpack_require__(/*! ./VisitorRow.jsx */ 185);
 	
 	var _VisitorRow2 = _interopRequireDefault(_VisitorRow);
+	
+	var _VisitorForm = __webpack_require__(/*! ./VisitorForm.jsx */ 187);
+	
+	var _VisitorForm2 = _interopRequireDefault(_VisitorForm);
 	
 	function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 	
@@ -23618,10 +23954,22 @@
 	      showForm: false
 	    };
 	    _this.loadVisitors = _this.loadVisitors.bind(_this);
+	    _this.showForm = _this.showForm.bind(_this);
+	    _this.hideForm = _this.hideForm.bind(_this);
 	    return _this;
 	  }
 	
 	  _createClass(Visitors, [{
+	    key: 'showForm',
+	    value: function showForm() {
+	      this.setState({ showForm: true });
+	    }
+	  }, {
+	    key: 'hideForm',
+	    value: function hideForm() {
+	      this.setState({ showForm: false });
+	    }
+	  }, {
 	    key: 'componentDidMount',
 	    value: function componentDidMount() {
 	      this.loadVisitors();
@@ -23655,7 +24003,9 @@
 	          key: key,
 	          game: this.props.game,
 	          value: value,
-	          update: this.loadVisitors });
+	          update: this.loadVisitors,
+	          remove: this.removeVisitor.bind(this, key),
+	          hideForm: this.hideForm });
 	      }.bind(this));
 	      return visitorRow;
 	    }
@@ -23663,11 +24013,9 @@
 	    key: 'render',
 	    value: function render() {
 	      var visitorForm = null;
-	      /*
 	      if (this.state.showForm) {
-	        visitorForm = <VisitorForm closeForm={this.hideForm} loadVisitors={this.loadVisitors}/>
+	        visitorForm = _react2.default.createElement(_VisitorForm2.default, { closeForm: this.hideForm, loadVisitors: this.loadVisitors });
 	      }
-	      */
 	      var visitors = this.getVisitors();
 	
 	      return _react2.default.createElement(
@@ -23680,7 +24028,7 @@
 	            'button',
 	            { className: 'btn btn-success', onClick: this.showForm },
 	            _react2.default.createElement('i', { className: 'fa fa-plus' }),
-	            'Add Team'
+	            '  Add Team'
 	          )
 	        ),
 	        visitorForm,
@@ -23710,7 +24058,330 @@
 	exports.default = Visitors;
 
 /***/ },
-/* 183 */
+/* 185 */
+/*!*****************************************!*\
+  !*** ./javascript/Admin/VisitorRow.jsx ***!
+  \*****************************************/
+/***/ function(module, exports, __webpack_require__) {
+
+	'use strict';
+	
+	Object.defineProperty(exports, "__esModule", {
+	  value: true
+	});
+	
+	var _createClass = function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; }();
+	
+	var _react = __webpack_require__(/*! react */ 1);
+	
+	var _react2 = _interopRequireDefault(_react);
+	
+	var _VisitorRowForm = __webpack_require__(/*! ./VisitorRowForm.jsx */ 186);
+	
+	var _VisitorRowForm2 = _interopRequireDefault(_VisitorRowForm);
+	
+	function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
+	
+	function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
+	
+	function _possibleConstructorReturn(self, call) { if (!self) { throw new ReferenceError("this hasn't been initialised - super() hasn't been called"); } return call && (typeof call === "object" || typeof call === "function") ? call : self; }
+	
+	function _inherits(subClass, superClass) { if (typeof superClass !== "function" && superClass !== null) { throw new TypeError("Super expression must either be null or a function, not " + typeof superClass); } subClass.prototype = Object.create(superClass && superClass.prototype, { constructor: { value: subClass, enumerable: false, writable: true, configurable: true } }); if (superClass) Object.setPrototypeOf ? Object.setPrototypeOf(subClass, superClass) : subClass.__proto__ = superClass; }
+	
+	var VisitorRow = function (_React$Component) {
+	  _inherits(VisitorRow, _React$Component);
+	
+	  function VisitorRow(props) {
+	    _classCallCheck(this, VisitorRow);
+	
+	    var _this = _possibleConstructorReturn(this, (VisitorRow.__proto__ || Object.getPrototypeOf(VisitorRow)).call(this, props));
+	
+	    _this.state = {
+	      showForm: false
+	    };
+	    _this.showForm = _this.showForm.bind(_this);
+	    _this.hideForm = _this.hideForm.bind(_this);
+	    _this.update = _this.update.bind(_this);
+	    return _this;
+	  }
+	
+	  _createClass(VisitorRow, [{
+	    key: 'showForm',
+	    value: function showForm() {
+	      this.setState({
+	        showForm: true
+	      });
+	    }
+	  }, {
+	    key: 'hideForm',
+	    value: function hideForm() {
+	      this.setState({
+	        showForm: false
+	      });
+	    }
+	  }, {
+	    key: 'update',
+	    value: function update() {
+	      this.setState({ showForm: false });
+	      this.props.update();
+	    }
+	  }, {
+	    key: 'render',
+	    value: function render() {
+	      var rowContent = null;
+	      var editButton = null;
+	
+	      if (this.state.showForm) {
+	        rowContent = _react2.default.createElement(_VisitorRowForm2.default, { value: this.props.value, update: this.update, hide: this.hideForm });
+	        editButton = null;
+	      } else {
+	        rowContent = _react2.default.createElement(
+	          'div',
+	          null,
+	          this.props.value.university,
+	          ' - ',
+	          this.props.value.mascot
+	        );
+	        editButton = _react2.default.createElement(VisitorRowEditButton, { handleClick: this.showForm });
+	      }
+	      return _react2.default.createElement(
+	        'tr',
+	        null,
+	        _react2.default.createElement(
+	          'td',
+	          null,
+	          editButton,
+	          this.props.game === null || this.props.game && this.props.game.visitor_id !== this.props.value.id ? _react2.default.createElement(VisitorRowDeleteButton, { handleClick: this.props.remove }) : null,
+	          rowContent
+	        )
+	      );
+	    }
+	  }]);
+	
+	  return VisitorRow;
+	}(_react2.default.Component);
+	
+	VisitorRow.propTypes = {
+	  update: _react2.default.PropTypes.func,
+	  remove: _react2.default.PropTypes.func,
+	  value: _react2.default.PropTypes.object,
+	  game: _react2.default.PropTypes.object,
+	  hideForm: _react2.default.PropTypes.func
+	};
+	
+	exports.default = VisitorRow;
+	
+	var VisitorRowEditButton = function (_React$Component2) {
+	  _inherits(VisitorRowEditButton, _React$Component2);
+	
+	  function VisitorRowEditButton() {
+	    _classCallCheck(this, VisitorRowEditButton);
+	
+	    return _possibleConstructorReturn(this, (VisitorRowEditButton.__proto__ || Object.getPrototypeOf(VisitorRowEditButton)).apply(this, arguments));
+	  }
+	
+	  _createClass(VisitorRowEditButton, [{
+	    key: 'render',
+	    value: function render() {
+	      var bstyle = {
+	        marginRight: '.5em'
+	      };
+	      return _react2.default.createElement(
+	        'button',
+	        {
+	          style: bstyle,
+	          className: 'btn btn-sm btn-primary pull-right',
+	          onClick: this.props.handleClick },
+	        _react2.default.createElement('i', { className: 'fa fa-edit' }),
+	        '  Edit'
+	      );
+	    }
+	  }]);
+	
+	  return VisitorRowEditButton;
+	}(_react2.default.Component);
+	
+	VisitorRowEditButton.propTypes = {
+	  handleClick: _react2.default.PropTypes.func
+	};
+	
+	var VisitorRowDeleteButton = function (_React$Component3) {
+	  _inherits(VisitorRowDeleteButton, _React$Component3);
+	
+	  function VisitorRowDeleteButton() {
+	    _classCallCheck(this, VisitorRowDeleteButton);
+	
+	    return _possibleConstructorReturn(this, (VisitorRowDeleteButton.__proto__ || Object.getPrototypeOf(VisitorRowDeleteButton)).apply(this, arguments));
+	  }
+	
+	  _createClass(VisitorRowDeleteButton, [{
+	    key: 'render',
+	    value: function render() {
+	      var bstyle = {
+	        marginRight: '.5em'
+	      };
+	      return _react2.default.createElement(
+	        'button',
+	        {
+	          style: bstyle,
+	          className: 'btn btn-sm btn-danger pull-right',
+	          onClick: this.props.handleClick },
+	        _react2.default.createElement('i', { className: 'fa fa-times' }),
+	        ' Remove'
+	      );
+	    }
+	  }]);
+	
+	  return VisitorRowDeleteButton;
+	}(_react2.default.Component);
+	
+	VisitorRowDeleteButton.propTypes = {
+	  handleClick: _react2.default.PropTypes.func
+	};
+
+/***/ },
+/* 186 */
+/*!*********************************************!*\
+  !*** ./javascript/Admin/VisitorRowForm.jsx ***!
+  \*********************************************/
+/***/ function(module, exports, __webpack_require__) {
+
+	'use strict';
+	
+	Object.defineProperty(exports, "__esModule", {
+	  value: true
+	});
+	
+	var _createClass = function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; }();
+	
+	var _react = __webpack_require__(/*! react */ 1);
+	
+	var _react2 = _interopRequireDefault(_react);
+	
+	function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
+	
+	function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
+	
+	function _possibleConstructorReturn(self, call) { if (!self) { throw new ReferenceError("this hasn't been initialised - super() hasn't been called"); } return call && (typeof call === "object" || typeof call === "function") ? call : self; }
+	
+	function _inherits(subClass, superClass) { if (typeof superClass !== "function" && superClass !== null) { throw new TypeError("Super expression must either be null or a function, not " + typeof superClass); } subClass.prototype = Object.create(superClass && superClass.prototype, { constructor: { value: subClass, enumerable: false, writable: true, configurable: true } }); if (superClass) Object.setPrototypeOf ? Object.setPrototypeOf(subClass, superClass) : subClass.__proto__ = superClass; }
+	
+	/* global $ */
+	
+	var VisitorRowForm = function (_React$Component) {
+	  _inherits(VisitorRowForm, _React$Component);
+	
+	  function VisitorRowForm(props) {
+	    _classCallCheck(this, VisitorRowForm);
+	
+	    var _this = _possibleConstructorReturn(this, (VisitorRowForm.__proto__ || Object.getPrototypeOf(VisitorRowForm)).call(this, props));
+	
+	    _this.state = {
+	      university: '',
+	      mascot: ''
+	    };
+	    _this.update = _this.update.bind(_this);
+	    _this.updateUniversity = _this.updateUniversity.bind(_this);
+	    _this.updateMascot = _this.updateMascot.bind(_this);
+	    return _this;
+	  }
+	
+	  _createClass(VisitorRowForm, [{
+	    key: 'componentDidMount',
+	    value: function componentDidMount() {
+	      this.setState({ university: this.props.value.university, mascot: this.props.value.mascot });
+	    }
+	  }, {
+	    key: 'updateUniversity',
+	    value: function updateUniversity(event) {
+	      this.setState({ university: event.target.value });
+	    }
+	  }, {
+	    key: 'updateMascot',
+	    value: function updateMascot(event) {
+	      this.setState({ mascot: event.target.value });
+	    }
+	  }, {
+	    key: 'update',
+	    value: function update() {
+	      if (this.state.university.length === 0) {
+	        this.setState({ university: this.props.value.university });
+	        return;
+	      }
+	      if (this.state.mascot.length === 0) {
+	        this.setState({ mascot: this.props.value.mascot });
+	        return;
+	      }
+	      $.post('tailgate/Admin/Visitor', {
+	        command: 'update',
+	        university: this.state.university,
+	        mascot: this.state.mascot,
+	        visitorId: this.props.value.id
+	      }).done(function () {
+	        this.props.update();
+	      }.bind(this));
+	    }
+	  }, {
+	    key: 'render',
+	    value: function render() {
+	      var bump = { marginLeft: '1em' };
+	      return _react2.default.createElement(
+	        'div',
+	        { className: 'row' },
+	        _react2.default.createElement(
+	          'div',
+	          { className: 'col-sm-4' },
+	          _react2.default.createElement('input', {
+	            ref: 'university',
+	            type: 'text',
+	            className: 'form-control',
+	            value: this.state.university,
+	            onChange: this.updateUniversity })
+	        ),
+	        _react2.default.createElement(
+	          'div',
+	          { className: 'col-sm-4' },
+	          _react2.default.createElement('input', {
+	            ref: 'mascot',
+	            type: 'text',
+	            className: 'form-control',
+	            value: this.state.mascot,
+	            onChange: this.updateMascot })
+	        ),
+	        _react2.default.createElement(
+	          'div',
+	          { className: 'col-sm-4' },
+	          _react2.default.createElement(
+	            'button',
+	            { className: 'btn btn-primary btn-sm', onClick: this.update },
+	            _react2.default.createElement('i', { className: 'fa fa-save' }),
+	            '  Update'
+	          ),
+	          _react2.default.createElement(
+	            'button',
+	            { className: 'btn btn-danger btn-sm', style: bump, onClick: this.props.hide },
+	            _react2.default.createElement('i', { className: 'fa fa-times' }),
+	            '  Close'
+	          )
+	        )
+	      );
+	    }
+	  }]);
+	
+	  return VisitorRowForm;
+	}(_react2.default.Component);
+	
+	VisitorRowForm.propTypes = {
+	  handleClick: _react2.default.PropTypes.func,
+	  update: _react2.default.PropTypes.func,
+	  value: _react2.default.PropTypes.object,
+	  hide: _react2.default.PropTypes.func
+	};
+	
+	exports.default = VisitorRowForm;
+
+/***/ },
+/* 187 */
 /*!******************************************!*\
   !*** ./javascript/Admin/VisitorForm.jsx ***!
   \******************************************/
@@ -23728,11 +24399,11 @@
 	
 	var _react2 = _interopRequireDefault(_react);
 	
-	var _TextInput = __webpack_require__(/*! ../Mixin/TextInput.jsx */ 184);
+	var _TextInput = __webpack_require__(/*! ../Mixin/TextInput.jsx */ 181);
 	
 	var _TextInput2 = _interopRequireDefault(_TextInput);
 	
-	var _Alert = __webpack_require__(/*! ../Mixin/Alert.jsx */ 185);
+	var _Alert = __webpack_require__(/*! ../Mixin/Alert.jsx */ 188);
 	
 	var _Alert2 = _interopRequireDefault(_Alert);
 	
@@ -23752,15 +24423,28 @@
 	
 	    var _this = _possibleConstructorReturn(this, (VisitorForm.__proto__ || Object.getPrototypeOf(VisitorForm)).call(this, props));
 	
-	    _this.state = { message: '' };
+	    _this.state = { message: '', mascot: '', university: '' };
+	    _this.updateMascot = _this.updateMascot.bind(_this);
+	    _this.updateUniversity = _this.updateUniversity.bind(_this);
+	    _this.save = _this.save.bind(_this);
 	    return _this;
 	  }
 	
 	  _createClass(VisitorForm, [{
+	    key: 'updateMascot',
+	    value: function updateMascot(e) {
+	      this.setState({ mascot: e.target.value });
+	    }
+	  }, {
+	    key: 'updateUniversity',
+	    value: function updateUniversity(e) {
+	      this.setState({ university: e.target.value });
+	    }
+	  }, {
 	    key: 'save',
 	    value: function save() {
-	      var university = $('#university').val();
-	      var mascot = $('#mascot').val();
+	      var university = this.state.university;
+	      var mascot = this.state.mascot;
 	
 	      if (university.length > 0 && mascot.length > 0) {
 	        $.post('tailgate/Admin/Visitor', {
@@ -23790,12 +24474,13 @@
 	          _react2.default.createElement(
 	            'div',
 	            { className: 'form-group col-sm-6' },
-	            _react2.default.createElement(_TextInput2.default, { label: 'University:', inputId: 'university' })
+	            _react2.default.createElement(_TextInput2.default, { label: 'University:', inputId: 'university',
+	              value: this.state.university, handleChange: this.updateUniversity })
 	          ),
 	          _react2.default.createElement(
 	            'div',
 	            { className: 'form-group col-sm-6' },
-	            _react2.default.createElement(_TextInput2.default, { label: 'Mascot:', inputId: 'mascot' })
+	            _react2.default.createElement(_TextInput2.default, { label: 'Mascot:', inputId: 'mascot', value: this.state.mascot, handleChange: this.updateMascot })
 	          ),
 	          _react2.default.createElement(
 	            'div',
@@ -23804,14 +24489,14 @@
 	              'button',
 	              { className: 'btn btn-primary', onClick: this.save },
 	              _react2.default.createElement('i', { className: 'fa fa-save' }),
-	              'Save'
+	              '  Save'
 	            ),
 	            ' ',
 	            _react2.default.createElement(
 	              'button',
 	              { className: 'btn btn-default', onClick: this.props.closeForm },
 	              _react2.default.createElement('i', { className: 'fa fa-times' }),
-	              'Close'
+	              '  Close'
 	            )
 	          )
 	        )
@@ -23835,151 +24520,7 @@
 	exports.default = VisitorForm;
 
 /***/ },
-/* 184 */
-/*!****************************************!*\
-  !*** ./javascript/Mixin/TextInput.jsx ***!
-  \****************************************/
-/***/ function(module, exports, __webpack_require__) {
-
-	'use strict';
-	
-	Object.defineProperty(exports, "__esModule", {
-	  value: true
-	});
-	
-	var _createClass = function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; }();
-	
-	var _react = __webpack_require__(/*! react */ 1);
-	
-	var _react2 = _interopRequireDefault(_react);
-	
-	function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
-	
-	function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
-	
-	function _possibleConstructorReturn(self, call) { if (!self) { throw new ReferenceError("this hasn't been initialised - super() hasn't been called"); } return call && (typeof call === "object" || typeof call === "function") ? call : self; }
-	
-	function _inherits(subClass, superClass) { if (typeof superClass !== "function" && superClass !== null) { throw new TypeError("Super expression must either be null or a function, not " + typeof superClass); } subClass.prototype = Object.create(superClass && superClass.prototype, { constructor: { value: subClass, enumerable: false, writable: true, configurable: true } }); if (superClass) Object.setPrototypeOf ? Object.setPrototypeOf(subClass, superClass) : subClass.__proto__ = superClass; }
-	
-	/* global $ */
-	
-	var TextInput = function (_React$Component) {
-	  _inherits(TextInput, _React$Component);
-	
-	  function TextInput(props) {
-	    _classCallCheck(this, TextInput);
-	
-	    var _this = _possibleConstructorReturn(this, (TextInput.__proto__ || Object.getPrototypeOf(TextInput)).call(this, props));
-	
-	    _this.state = {};
-	    _this.handleBlur = _this.handleBlur.bind(_this);
-	    _this.handleFocus = _this.handleFocus.bind(_this);
-	    return _this;
-	  }
-	
-	  _createClass(TextInput, [{
-	    key: 'handleBlur',
-	    value: function handleBlur(e) {
-	      if (this.props.required && e.target.value.length < 1) {
-	        $(e.target).css('border-color', 'red');
-	      }
-	      if (this.props.handleBlur) {
-	        this.props.handleBlur(e);
-	      }
-	    }
-	  }, {
-	    key: 'handleFocus',
-	    value: function handleFocus(e) {
-	      $(e.target).css('border-color', '');
-	    }
-	  }, {
-	    key: 'render',
-	    value: function render() {
-	      var label = '';
-	      var required = '';
-	      if (this.props.label.length > 0) {
-	        if (this.props.required) {
-	          required = _react2.default.createElement('i', { className: 'fa fa-asterisk text-danger' });
-	        }
-	        label = _react2.default.createElement(
-	          'label',
-	          { htmlFor: this.props.inputId },
-	          this.props.label
-	        );
-	      } else {
-	        label = null;
-	      }
-	      if (this.props.defaultValue === null) {
-	        return _react2.default.createElement(
-	          'div',
-	          { className: 'form-group' },
-	          label,
-	          required,
-	          _react2.default.createElement('input', {
-	            type: 'text',
-	            className: 'form-control',
-	            id: this.props.inputId,
-	            name: this.props.inputId,
-	            placeholder: this.props.placeholder,
-	            onFocus: this.handleFocus,
-	            onChange: this.props.handleChange,
-	            onBlur: this.handleBlur,
-	            onKeyPress: this.props.handlePress,
-	            value: this.props.value })
-	        );
-	      } else {
-	        return _react2.default.createElement(
-	          'div',
-	          { className: 'form-group' },
-	          label,
-	          required,
-	          _react2.default.createElement('input', {
-	            type: 'text',
-	            className: 'form-control',
-	            id: this.props.inputId,
-	            name: this.props.inputId,
-	            placeholder: this.props.placeholder,
-	            onFocus: this.handleFocus,
-	            onChange: this.props.handleChange,
-	            onBlur: this.handleBlur,
-	            onKeyPress: this.props.handlePress,
-	            defaultValue: this.props.defaultValue })
-	        );
-	      }
-	    }
-	  }]);
-	
-	  return TextInput;
-	}(_react2.default.Component);
-	
-	TextInput.defaultProps = {
-	  label: '',
-	  placeholder: '',
-	  handleBlur: null,
-	  required: false,
-	  handlePress: null,
-	  handleChange: null,
-	  inputId: null,
-	  defaultValue: null,
-	  value: ''
-	};
-	
-	TextInput.propTypes = {
-	  inputId: _react2.default.PropTypes.string,
-	  label: _react2.default.PropTypes.string,
-	  required: _react2.default.PropTypes.bool,
-	  handleBlur: _react2.default.PropTypes.func,
-	  handlePress: _react2.default.PropTypes.func,
-	  handleChange: _react2.default.PropTypes.func,
-	  placeholder: _react2.default.PropTypes.string,
-	  defaultValue: _react2.default.PropTypes.string,
-	  value: _react2.default.PropTypes.string
-	};
-	
-	exports.default = TextInput;
-
-/***/ },
-/* 185 */
+/* 188 */
 /*!************************************!*\
   !*** ./javascript/Mixin/Alert.jsx ***!
   \************************************/
@@ -24043,279 +24584,7 @@
 	exports.default = Alert;
 
 /***/ },
-/* 186 */
-/*!*****************************************!*\
-  !*** ./javascript/Admin/VisitorRow.jsx ***!
-  \*****************************************/
-/***/ function(module, exports, __webpack_require__) {
-
-	'use strict';
-	
-	Object.defineProperty(exports, "__esModule", {
-	  value: true
-	});
-	
-	var _createClass = function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; }();
-	
-	var _react = __webpack_require__(/*! react */ 1);
-	
-	var _react2 = _interopRequireDefault(_react);
-	
-	function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
-	
-	function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
-	
-	function _possibleConstructorReturn(self, call) { if (!self) { throw new ReferenceError("this hasn't been initialised - super() hasn't been called"); } return call && (typeof call === "object" || typeof call === "function") ? call : self; }
-	
-	function _inherits(subClass, superClass) { if (typeof superClass !== "function" && superClass !== null) { throw new TypeError("Super expression must either be null or a function, not " + typeof superClass); } subClass.prototype = Object.create(superClass && superClass.prototype, { constructor: { value: subClass, enumerable: false, writable: true, configurable: true } }); if (superClass) Object.setPrototypeOf ? Object.setPrototypeOf(subClass, superClass) : subClass.__proto__ = superClass; }
-	
-	/* global $ */
-	
-	var VisitorRow = function (_React$Component) {
-	  _inherits(VisitorRow, _React$Component);
-	
-	  function VisitorRow(props) {
-	    _classCallCheck(this, VisitorRow);
-	
-	    var _this = _possibleConstructorReturn(this, (VisitorRow.__proto__ || Object.getPrototypeOf(VisitorRow)).call(this, props));
-	
-	    _this.state = {
-	      showForm: false
-	    };
-	    _this.edit = _this.edit.bind(_this);
-	    _this.view = _this.view.bind(_this);
-	    return _this;
-	  }
-	
-	  _createClass(VisitorRow, [{
-	    key: 'edit',
-	    value: function edit() {
-	      this.setState({ showForm: true });
-	    }
-	  }, {
-	    key: 'view',
-	    value: function view() {
-	      this.setState({ showForm: false });
-	      this.props.update();
-	    }
-	  }, {
-	    key: 'render',
-	    value: function render() {
-	      var rowContent = null;
-	      var editButton = null;
-	
-	      if (this.state.showForm) {
-	        rowContent = _react2.default.createElement(VisitorRowForm, { value: this.props.value, update: this.view });
-	        editButton = null;
-	      } else {
-	        rowContent = _react2.default.createElement(
-	          'div',
-	          null,
-	          this.props.value.university,
-	          ' - ',
-	          this.props.value.mascot
-	        );
-	        editButton = _react2.default.createElement(VisitorRowEditButton, { handleClick: this.edit });
-	      }
-	
-	      return _react2.default.createElement(
-	        'tr',
-	        null,
-	        _react2.default.createElement(
-	          'td',
-	          null,
-	          editButton,
-	          this.props.game && this.props.game.visitor_id !== this.props.value.id ? _react2.default.createElement(VisitorRowDeleteButton, { handleClick: this.props.remove }) : null,
-	          rowContent
-	        )
-	      );
-	    }
-	  }]);
-	
-	  return VisitorRow;
-	}(_react2.default.Component);
-	
-	VisitorRow.propTypes = {
-	  update: _react2.default.PropTypes.func,
-	  remove: _react2.default.PropTypes.func,
-	  value: _react2.default.PropTypes.object,
-	  game: _react2.default.PropTypes.object
-	};
-	
-	exports.default = VisitorRow;
-	
-	var VisitorRowEditButton = function (_React$Component2) {
-	  _inherits(VisitorRowEditButton, _React$Component2);
-	
-	  function VisitorRowEditButton() {
-	    _classCallCheck(this, VisitorRowEditButton);
-	
-	    return _possibleConstructorReturn(this, (VisitorRowEditButton.__proto__ || Object.getPrototypeOf(VisitorRowEditButton)).apply(this, arguments));
-	  }
-	
-	  _createClass(VisitorRowEditButton, [{
-	    key: 'render',
-	    value: function render() {
-	      var bstyle = {
-	        marginRight: '.5em'
-	      };
-	      return _react2.default.createElement(
-	        'button',
-	        {
-	          style: bstyle,
-	          className: 'btn btn-sm btn-primary pull-right',
-	          onClick: this.props.handleClick },
-	        _react2.default.createElement('i', { className: 'fa fa-edit' }),
-	        'Edit'
-	      );
-	    }
-	  }]);
-	
-	  return VisitorRowEditButton;
-	}(_react2.default.Component);
-	
-	VisitorRowEditButton.propTypes = {
-	  handleClick: _react2.default.PropTypes.func
-	};
-	
-	var VisitorRowDeleteButton = function (_React$Component3) {
-	  _inherits(VisitorRowDeleteButton, _React$Component3);
-	
-	  function VisitorRowDeleteButton() {
-	    _classCallCheck(this, VisitorRowDeleteButton);
-	
-	    return _possibleConstructorReturn(this, (VisitorRowDeleteButton.__proto__ || Object.getPrototypeOf(VisitorRowDeleteButton)).apply(this, arguments));
-	  }
-	
-	  _createClass(VisitorRowDeleteButton, [{
-	    key: 'render',
-	    value: function render() {
-	      var bstyle = {
-	        marginRight: '.5em'
-	      };
-	      return _react2.default.createElement(
-	        'button',
-	        {
-	          style: bstyle,
-	          className: 'btn btn-sm btn-danger pull-right',
-	          onClick: this.props.handleClick },
-	        _react2.default.createElement('i', { className: 'fa fa-times' }),
-	        '  Remove'
-	      );
-	    }
-	  }]);
-	
-	  return VisitorRowDeleteButton;
-	}(_react2.default.Component);
-	
-	VisitorRowDeleteButton.propTypes = {
-	  handleClick: _react2.default.PropTypes.func
-	};
-	
-	var VisitorRowForm = function (_React$Component4) {
-	  _inherits(VisitorRowForm, _React$Component4);
-	
-	  function VisitorRowForm(props) {
-	    _classCallCheck(this, VisitorRowForm);
-	
-	    var _this4 = _possibleConstructorReturn(this, (VisitorRowForm.__proto__ || Object.getPrototypeOf(VisitorRowForm)).call(this, props));
-	
-	    _this4.state = {
-	      university: '',
-	      mascot: ''
-	    };
-	    _this4.update = _this4.update.bind(_this4);
-	    _this4.updateUniversity = _this4.updateUniversity.bind(_this4);
-	    _this4.updateMascot = _this4.updateMascot.bind(_this4);
-	    return _this4;
-	  }
-	
-	  _createClass(VisitorRowForm, [{
-	    key: 'componentDidMount',
-	    value: function componentDidMount() {
-	      this.setState({ university: this.props.value.university, mascot: this.props.value.mascot });
-	    }
-	  }, {
-	    key: 'updateUniversity',
-	    value: function updateUniversity(event) {
-	      this.setState({ university: event.target.value });
-	    }
-	  }, {
-	    key: 'updateMascot',
-	    value: function updateMascot(event) {
-	      this.setState({ mascot: event.target.value });
-	    }
-	  }, {
-	    key: 'update',
-	    value: function update() {
-	      if (this.state.university.length === 0) {
-	        this.setState({ university: this.props.value.university });
-	        return;
-	      }
-	      if (this.state.mascot.length === 0) {
-	        this.setState({ mascot: this.props.value.mascot });
-	        return;
-	      }
-	      $.post('tailgate/Admin/Visitor', {
-	        command: 'update',
-	        university: this.state.university,
-	        mascot: this.state.mascot,
-	        visitorId: this.props.value.id
-	      }).done(function () {
-	        this.props.update();
-	      }.bind(this));
-	    }
-	  }, {
-	    key: 'render',
-	    value: function render() {
-	      return _react2.default.createElement(
-	        'div',
-	        { className: 'row' },
-	        _react2.default.createElement(
-	          'div',
-	          { className: 'col-sm-4' },
-	          _react2.default.createElement('input', {
-	            ref: 'university',
-	            type: 'text',
-	            className: 'form-control',
-	            value: this.state.university,
-	            onChange: this.updateUniversity })
-	        ),
-	        _react2.default.createElement(
-	          'div',
-	          { className: 'col-sm-4' },
-	          _react2.default.createElement('input', {
-	            ref: 'mascot',
-	            type: 'text',
-	            className: 'form-control',
-	            value: this.state.mascot,
-	            onChange: this.updateMascot })
-	        ),
-	        _react2.default.createElement(
-	          'div',
-	          { className: 'col-sm-2' },
-	          _react2.default.createElement(
-	            'button',
-	            { className: 'btn btn-primary btn-sm', onClick: this.update },
-	            _react2.default.createElement('i', { className: 'fa fa-save' }),
-	            'Update'
-	          )
-	        )
-	      );
-	    }
-	  }]);
-	
-	  return VisitorRowForm;
-	}(_react2.default.Component);
-	
-	VisitorRowForm.propTypes = {
-	  handleClick: _react2.default.PropTypes.func,
-	  update: _react2.default.PropTypes.func,
-	  value: _react2.default.PropTypes.object
-	};
-
-/***/ },
-/* 187 */
+/* 189 */
 /*!***********************************!*\
   !*** ./javascript/Admin/Lots.jsx ***!
   \***********************************/
@@ -24357,11 +24626,25 @@
 	
 	    var _this = _possibleConstructorReturn(this, (Lots.__proto__ || Object.getPrototypeOf(Lots)).call(this, props));
 	
-	    _this.state = { showForm: false };
+	    _this.state = {
+	      showForm: false
+	    };
+	    _this.showForm = _this.showForm.bind(_this);
+	    _this.hideForm = _this.hideForm.bind(_this);
 	    return _this;
 	  }
 	
 	  _createClass(Lots, [{
+	    key: 'showForm',
+	    value: function showForm() {
+	      this.setState({ showForm: true });
+	    }
+	  }, {
+	    key: 'hideForm',
+	    value: function hideForm() {
+	      this.setState({ showForm: false });
+	    }
+	  }, {
 	    key: 'render',
 	    value: function render() {
 	      var lotForm = void 0;
@@ -24380,7 +24663,7 @@
 	            'button',
 	            { className: 'btn btn-success', onClick: this.showForm },
 	            _react2.default.createElement('i', { className: 'fa fa-plus' }),
-	            'Add Tailgating Lot'
+	            '  Add Tailgating Lot'
 	          )
 	        ),
 	        lotForm,
@@ -24405,417 +24688,6 @@
 	exports.default = Lots;
 
 /***/ },
-/* 188 */
-/*!***************************************!*\
-  !*** ./javascript/Admin/Students.jsx ***!
-  \***************************************/
-/***/ function(module, exports, __webpack_require__) {
-
-	'use strict';
-	
-	Object.defineProperty(exports, "__esModule", {
-	  value: true
-	});
-	
-	var _createClass = function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; }();
-	
-	var _react = __webpack_require__(/*! react */ 1);
-	
-	var _react2 = _interopRequireDefault(_react);
-	
-	var _TextInput = __webpack_require__(/*! ../Mixin/TextInput.jsx */ 184);
-	
-	var _TextInput2 = _interopRequireDefault(_TextInput);
-	
-	var _StudentRow = __webpack_require__(/*! ./StudentRow.jsx */ 196);
-	
-	var _StudentRow2 = _interopRequireDefault(_StudentRow);
-	
-	function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
-	
-	function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
-	
-	function _possibleConstructorReturn(self, call) { if (!self) { throw new ReferenceError("this hasn't been initialised - super() hasn't been called"); } return call && (typeof call === "object" || typeof call === "function") ? call : self; }
-	
-	function _inherits(subClass, superClass) { if (typeof superClass !== "function" && superClass !== null) { throw new TypeError("Super expression must either be null or a function, not " + typeof superClass); } subClass.prototype = Object.create(superClass && superClass.prototype, { constructor: { value: subClass, enumerable: false, writable: true, configurable: true } }); if (superClass) Object.setPrototypeOf ? Object.setPrototypeOf(subClass, superClass) : subClass.__proto__ = superClass; }
-	
-	/* global $ */
-	
-	var Students = function (_React$Component) {
-	  _inherits(Students, _React$Component);
-	
-	  function Students(props) {
-	    _classCallCheck(this, Students);
-	
-	    var _this = _possibleConstructorReturn(this, (Students.__proto__ || Object.getPrototypeOf(Students)).call(this, props));
-	
-	    _this.state = {
-	      students: [],
-	      limit: 50,
-	      search: null,
-	      availableSpots: [],
-	      message: null
-	    };
-	    _this.setMessage = _this.setMessage.bind(_this);
-	    _this.reset = _this.reset.bind(_this);
-	    return _this;
-	  }
-	
-	  _createClass(Students, [{
-	    key: 'componentDidMount',
-	    value: function componentDidMount() {
-	      this.loadStudents(this.state.limit);
-	      this.loadAvailableSpots();
-	    }
-	  }, {
-	    key: 'loadAvailableSpots',
-	    value: function loadAvailableSpots() {
-	      $.getJSON('tailgate/Admin/Lottery', { command: 'getUnclaimedSpots' }).done(function (data) {
-	        this.setState({ availableSpots: data });
-	      }.bind(this));
-	    }
-	  }, {
-	    key: 'searchRows',
-	    value: function searchRows(e) {
-	      var search_phrase = e.target.value;
-	      var search_length = search_phrase.length;
-	
-	      window.setTimeout(function () {
-	        if (search_length > 2) {
-	          this.loadStudents(this.state.limit, search_phrase);
-	        } else if (search_length === 0) {
-	          this.loadStudents(this.state.limit, '');
-	        }
-	      }.bind(this), 600);
-	    }
-	  }, {
-	    key: 'loadStudents',
-	    value: function loadStudents(limit, search) {
-	      if (limit === undefined) {
-	        limit = this.state.limit;
-	      }
-	      if (search === undefined) {
-	        search = this.state.search;
-	      }
-	
-	      if (search !== this.state.search) {
-	        limit = 50;
-	      }
-	      $.getJSON('tailgate/Admin/Student/', {
-	        command: 'list',
-	        limit: limit,
-	        search: search
-	      }).done(function (data) {
-	        this.setState({ students: data, limit: limit, search: search });
-	      }.bind(this));
-	    }
-	  }, {
-	    key: 'reset',
-	    value: function reset() {
-	      this.loadStudents(this.state.limit);
-	      this.loadAvailableSpots();
-	    }
-	  }, {
-	    key: 'preventSpaces',
-	    value: function preventSpaces(e) {
-	      if (e.charCode == '32') {
-	        e.preventDefault();
-	      }
-	    }
-	  }, {
-	    key: 'setMessage',
-	    value: function setMessage(message) {
-	      this.setState({ message: message });
-	    }
-	  }, {
-	    key: 'render',
-	    value: function render() {
-	      var timestamp = Math.floor(Date.now() / 1000);
-	      var availableCount = 0;
-	      var availableSentence = null;
-	      var showAvailableCount = 0;
-	      if (this.props.game) {
-	        showAvailableCount = this.props.game.pickup_deadline < timestamp;
-	        if (showAvailableCount) {
-	          availableCount = this.state.availableSpots.length;
-	          if (availableCount > 1) {
-	            availableSentence = _react2.default.createElement(
-	              'div',
-	              { className: 'alert alert-warning' },
-	              'There are ',
-	              availableCount,
-	              '  unclaimed spots left.'
-	            );
-	          } else if (availableCount === 1) {
-	            availableSentence = _react2.default.createElement(
-	              'div',
-	              { className: 'alert-danger alert' },
-	              'There is just',
-	              _react2.default.createElement(
-	                'strong',
-	                null,
-	                'one'
-	              ),
-	              'more unclaimed spot left.'
-	            );
-	          } else {
-	            availableSentence = _react2.default.createElement(
-	              'div',
-	              { className: 'alert alert-success' },
-	              'All spots have been claimed.'
-	            );
-	          }
-	        }
-	      }
-	      var nextLimit = this.state.limit + 50;
-	      var nextButton = null;
-	      if (this.state.limit <= this.state.students.length) {
-	        nextButton = _react2.default.createElement(
-	          'button',
-	          {
-	            className: 'btn btn-default',
-	            onClick: this.loadStudents.bind(null, nextLimit, this.state.search) },
-	          _react2.default.createElement('i', { className: 'fa fa-plus' }),
-	          'Show more rows'
-	        );
-	      }
-	      return _react2.default.createElement(
-	        'div',
-	        null,
-	        this.state.message ? _react2.default.createElement(
-	          'div',
-	          { className: 'alert alert-danger' },
-	          this.state.message
-	        ) : null,
-	        _react2.default.createElement(
-	          'div',
-	          { className: 'row' },
-	          _react2.default.createElement(
-	            'div',
-	            { className: 'col-sm-4' },
-	            _react2.default.createElement(_TextInput2.default, {
-	              placeholder: 'Search',
-	              handleChange: this.searchRows,
-	              handlePress: this.preventSpaces })
-	          ),
-	          _react2.default.createElement(
-	            'div',
-	            { className: 'col-sm-8' },
-	            showAvailableCount ? availableSentence : null
-	          )
-	        ),
-	        _react2.default.createElement(
-	          'table',
-	          { className: 'table table-striped sans' },
-	          _react2.default.createElement(
-	            'thead',
-	            null,
-	            _react2.default.createElement(
-	              'tr',
-	              null,
-	              _react2.default.createElement(
-	                'th',
-	                null,
-	                'Id'
-	              ),
-	              _react2.default.createElement(
-	                'th',
-	                null,
-	                'Last Name'
-	              ),
-	              _react2.default.createElement(
-	                'th',
-	                null,
-	                'First Name'
-	              ),
-	              _react2.default.createElement(
-	                'th',
-	                null,
-	                'Username'
-	              ),
-	              _react2.default.createElement(
-	                'th',
-	                null,
-	                'Wins'
-	              ),
-	              _react2.default.createElement(
-	                'th',
-	                { className: 'text-center' },
-	                'Eligible'
-	              ),
-	              _react2.default.createElement(
-	                'th',
-	                { className: 'text-center' },
-	                'Allowed'
-	              ),
-	              this.props.game && this.props.game.pickup_deadline < timestamp ? _react2.default.createElement(
-	                'th',
-	                null,
-	                'Current winner'
-	              ) : null,
-	              _react2.default.createElement(
-	                'th',
-	                null,
-	                ' '
-	              )
-	            )
-	          ),
-	          _react2.default.createElement(
-	            'tbody',
-	            { id: 'studentList' },
-	            this.state.students.map(function (value, i) {
-	              return _react2.default.createElement(_StudentRow2.default, {
-	                key: i,
-	                student: value,
-	                resetRows: this.reset,
-	                canAdd: this.props.canAdd,
-	                spots: this.state.availableSpots,
-	                setMessage: this.setMessage,
-	                game: this.props.game });
-	            }.bind(this))
-	          )
-	        ),
-	        nextButton
-	      );
-	    }
-	  }]);
-	
-	  return Students;
-	}(_react2.default.Component);
-	
-	Students.defaultProps = {};
-	Students.propTypes = {
-	  game: _react2.default.PropTypes.object,
-	  canAdd: _react2.default.PropTypes.bool
-	};
-	
-	exports.default = Students;
-
-/***/ },
-/* 189 */
-/*!***************************************!*\
-  !*** ./javascript/Admin/Settings.jsx ***!
-  \***************************************/
-/***/ function(module, exports, __webpack_require__) {
-
-	'use strict';
-	
-	Object.defineProperty(exports, "__esModule", {
-	  value: true
-	});
-	
-	var _createClass = function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; }();
-	
-	var _react = __webpack_require__(/*! react */ 1);
-	
-	var _react2 = _interopRequireDefault(_react);
-	
-	var _TextInput = __webpack_require__(/*! ../Mixin/TextInput.jsx */ 184);
-	
-	var _TextInput2 = _interopRequireDefault(_TextInput);
-	
-	function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
-	
-	function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
-	
-	function _possibleConstructorReturn(self, call) { if (!self) { throw new ReferenceError("this hasn't been initialised - super() hasn't been called"); } return call && (typeof call === "object" || typeof call === "function") ? call : self; }
-	
-	function _inherits(subClass, superClass) { if (typeof superClass !== "function" && superClass !== null) { throw new TypeError("Super expression must either be null or a function, not " + typeof superClass); } subClass.prototype = Object.create(superClass && superClass.prototype, { constructor: { value: subClass, enumerable: false, writable: true, configurable: true } }); if (superClass) Object.setPrototypeOf ? Object.setPrototypeOf(subClass, superClass) : subClass.__proto__ = superClass; }
-	
-	/* global $,CKEDITOR */
-	
-	var Settings = function (_React$Component) {
-	  _inherits(Settings, _React$Component);
-	
-	  function Settings(props) {
-	    _classCallCheck(this, Settings);
-	
-	    var _this = _possibleConstructorReturn(this, (Settings.__proto__ || Object.getPrototypeOf(Settings)).call(this, props));
-	
-	    _this.state = {
-	      newAccountInformation: '',
-	      replyTo: ''
-	    };
-	    return _this;
-	  }
-	
-	  _createClass(Settings, [{
-	    key: 'componentDidMount',
-	    value: function componentDidMount() {
-	      this.newAccountEditor = CKEDITOR.replace('newAccountInformation');
-	      $.getJSON('tailgate/Admin/Settings', { command: 'list' }).done(function (data) {
-	        this.setState({ newAccountInformation: data.new_account_information, replyTo: data.reply_to });
-	        this.newAccountEditor.setData(data.new_account_information);
-	      }.bind(this));
-	      //$('#replyTo').val(this.state.replyTo)
-	    }
-	  }, {
-	    key: 'submitForm',
-	    value: function submitForm(e) {
-	      var replyTo = $('#replyTo').val();
-	      e.preventDefault();
-	      $.getJSON('tailgate/Admin/Settings', {
-	        command: 'testEmail',
-	        replyTo: replyTo
-	      }).done(function (data) {
-	        if (data.success === false) {
-	          $('#replyTo').css('borderColor', 'red');
-	        } else {
-	          $('#settingsForm').submit();
-	        }
-	      });
-	    }
-	  }, {
-	    key: 'render',
-	    value: function render() {
-	      return _react2.default.createElement(
-	        'div',
-	        null,
-	        _react2.default.createElement(
-	          'form',
-	          { method: 'post', action: 'tailgate/Admin/Settings/', id: 'settingsForm' },
-	          _react2.default.createElement('input', { type: 'hidden', name: 'command', value: 'save' }),
-	          _react2.default.createElement(_TextInput2.default, {
-	            required: true,
-	            inputId: 'replyTo',
-	            label: 'Reply to email address',
-	            placeholder: 'Enter an email address students can reply to',
-	            value: this.state.replyTo }),
-	          _react2.default.createElement(
-	            'label',
-	            null,
-	            'Tailgate new student account information'
-	          ),
-	          _react2.default.createElement('textarea', {
-	            id: 'newAccountInformation',
-	            className: 'form-control',
-	            name: 'newAccountInformation',
-	            defaultValue: this.state.newAccountInformation }),
-	          _react2.default.createElement(
-	            'div',
-	            { style: {
-	                marginTop: '1em'
-	              } },
-	            _react2.default.createElement(
-	              'button',
-	              { className: 'btn btn-success', onClick: this.submitForm },
-	              _react2.default.createElement('i', { className: 'fa fa-save' }),
-	              '  Save content'
-	            )
-	          )
-	        )
-	      );
-	    }
-	  }]);
-	
-	  return Settings;
-	}(_react2.default.Component);
-	
-	Settings.defaultProps = {};
-	
-	exports.default = Settings;
-
-/***/ },
 /* 190 */
 /*!**************************************!*\
   !*** ./javascript/Admin/LotForm.jsx ***!
@@ -24834,6 +24706,14 @@
 	
 	var _react2 = _interopRequireDefault(_react);
 	
+	var _TextInput = __webpack_require__(/*! ../Mixin/TextInput.jsx */ 181);
+	
+	var _TextInput2 = _interopRequireDefault(_TextInput);
+	
+	var _Alert = __webpack_require__(/*! ../Mixin/Alert.jsx */ 188);
+	
+	var _Alert2 = _interopRequireDefault(_Alert);
+	
 	function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 	
 	function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
@@ -24842,33 +24722,40 @@
 	
 	function _inherits(subClass, superClass) { if (typeof superClass !== "function" && superClass !== null) { throw new TypeError("Super expression must either be null or a function, not " + typeof superClass); } subClass.prototype = Object.create(superClass && superClass.prototype, { constructor: { value: subClass, enumerable: false, writable: true, configurable: true } }); if (superClass) Object.setPrototypeOf ? Object.setPrototypeOf(subClass, superClass) : subClass.__proto__ = superClass; }
 	
-	var NAME = function (_React$Component) {
-	  _inherits(NAME, _React$Component);
+	/* global $ */
 	
-	  function NAME(props) {
-	    _classCallCheck(this, NAME);
+	var LotForm = function (_React$Component) {
+	  _inherits(LotForm, _React$Component);
 	
-	    var _this = _possibleConstructorReturn(this, (NAME.__proto__ || Object.getPrototypeOf(NAME)).call(this, props));
+	  function LotForm(props) {
+	    _classCallCheck(this, LotForm);
 	
-	    _this.state = { message: '' };
+	    var _this = _possibleConstructorReturn(this, (LotForm.__proto__ || Object.getPrototypeOf(LotForm)).call(this, props));
+	
+	    _this.state = {
+	      message: '',
+	      title: '',
+	      totalSpaces: ''
+	    };
+	    _this.save = _this.save.bind(_this);
+	    _this.updateTitle = _this.updateTitle.bind(_this);
+	    _this.updateSpaces = _this.updateSpaces.bind(_this);
 	    return _this;
 	  }
 	
-	  _createClass(NAME, [{
+	  _createClass(LotForm, [{
 	    key: 'save',
 	    value: function save() {
-	      var title = $('#lotTitle').val();
-	      var totalSpaces = +$('#totalSpaces').val();
-	      if (title.length > 0 && totalSpaces > 0) {
+	      if (this.state.title.length > 0 && this.state.totalSpaces > 0) {
 	        $.post('tailgate/Admin/Lot', {
 	          command: 'add',
-	          title: title,
-	          default_spots: totalSpaces
+	          title: this.state.title,
+	          default_spots: this.state.totalSpaces
 	        }).done(function () {
 	          this.props.closeForm();
 	          this.props.loadLots();
 	        }.bind(this)).fail(function () {
-	          var error_message = _react2.default.createElement(Alert, {
+	          var error_message = _react2.default.createElement(_Alert2.default, {
 	            message: 'Error: Check your lot name and total spaces for correct information' });
 	          this.setState({ message: error_message });
 	        }.bind(this));
@@ -24880,6 +24767,20 @@
 	      if (e.which < 48 || e.which > 57) {
 	        e.preventDefault();
 	      }
+	    }
+	  }, {
+	    key: 'updateTitle',
+	    value: function updateTitle(e) {
+	      this.setState({
+	        title: e.target.value
+	      });
+	    }
+	  }, {
+	    key: 'updateSpaces',
+	    value: function updateSpaces(e) {
+	      this.setState({
+	        totalSpaces: e.target.value
+	      });
 	    }
 	  }, {
 	    key: 'render',
@@ -24894,16 +24795,23 @@
 	          _react2.default.createElement(
 	            'div',
 	            { className: 'form-group col-sm-6' },
-	            _react2.default.createElement(TextInput, { label: 'Name of lot', inputId: 'lotTitle', required: true })
+	            _react2.default.createElement(_TextInput2.default, {
+	              label: 'Name of lot:',
+	              inputId: 'lotTitle',
+	              required: true,
+	              handleChange: this.updateTitle,
+	              value: this.state.title })
 	          ),
 	          _react2.default.createElement(
 	            'div',
 	            { className: 'form-group col-sm-3' },
-	            _react2.default.createElement(TextInput, {
+	            _react2.default.createElement(_TextInput2.default, {
 	              label: 'Total spaces:',
 	              inputId: 'totalSpaces',
 	              handlePress: this.forceNumbers,
-	              required: true })
+	              handleChange: this.updateSpaces,
+	              required: true,
+	              value: this.state.totalSpaces })
 	          ),
 	          _react2.default.createElement(
 	            'div',
@@ -24912,14 +24820,14 @@
 	              'button',
 	              { className: 'btn btn-primary', onClick: this.save },
 	              _react2.default.createElement('i', { className: 'fa fa-save' }),
-	              'Save'
+	              '  Save'
 	            ),
 	            ' ',
 	            _react2.default.createElement(
 	              'button',
 	              { className: 'btn btn-default', onClick: this.props.closeForm },
 	              _react2.default.createElement('i', { className: 'fa fa-times' }),
-	              'Close'
+	              '  Close'
 	            )
 	          )
 	        )
@@ -24927,12 +24835,17 @@
 	    }
 	  }]);
 	
-	  return NAME;
+	  return LotForm;
 	}(_react2.default.Component);
 	
-	NAME.defaultProps = {};
+	LotForm.defaultProps = {};
 	
-	exports.default = NAME;
+	LotForm.propTypes = {
+	  closeForm: _react2.default.PropTypes.func,
+	  loadLots: _react2.default.PropTypes.func
+	};
+	
+	exports.default = LotForm;
 
 /***/ },
 /* 191 */
@@ -24975,7 +24888,9 @@
 	
 	    var _this = _possibleConstructorReturn(this, (LotListing.__proto__ || Object.getPrototypeOf(LotListing)).call(this, props));
 	
-	    _this.state = { spotKey: -1 };
+	    _this.state = {
+	      spotKey: -1
+	    };
 	    return _this;
 	  }
 	
@@ -25035,6 +24950,9 @@
 	      } else {
 	        allowExtraButtons = false;
 	      }
+	      var spacing = {
+	        marginLeft: '.5em'
+	      };
 	      return _react2.default.createElement(
 	        'div',
 	        null,
@@ -25044,9 +24962,7 @@
 	              button = _react2.default.createElement(
 	                'button',
 	                {
-	                  style: {
-	                    marginLeft: '.5em'
-	                  },
+	                  style: spacing,
 	                  className: 'btn btn-danger btn-sm',
 	                  onClick: this.deactivate.bind(this, i) },
 	                'Deactivate'
@@ -25058,23 +24974,19 @@
 	                _react2.default.createElement(
 	                  'button',
 	                  {
-	                    style: {
-	                      marginLeft: '.5em'
-	                    },
-	                    className: 'btn btn-default btn-sm',
+	                    style: spacing,
+	                    className: 'btn btn-success btn-sm',
 	                    onClick: this.activate.bind(this, i) },
 	                  'Activate'
 	                ),
 	                _react2.default.createElement(
 	                  'button',
 	                  {
-	                    style: {
-	                      marginLeft: '.5em'
-	                    },
 	                    className: 'btn btn-danger btn-sm',
-	                    onClick: this.delete.bind(this, i) },
+	                    onClick: this.delete.bind(this, i),
+	                    style: spacing },
 	                  _react2.default.createElement('i', { className: 'fa fa-trash-o' }),
-	                  'Delete'
+	                  '  Delete'
 	                )
 	              );
 	            }
@@ -25087,34 +24999,46 @@
 	              { className: 'panel-body row' },
 	              _react2.default.createElement(
 	                'div',
-	                { className: 'col-sm-5' },
-	                value.title
-	              ),
-	              _react2.default.createElement(
-	                'div',
-	                { className: 'col-sm-3' },
+	                { className: 'col-sm-6' },
 	                _react2.default.createElement(
-	                  'strong',
+	                  'h4',
 	                  null,
-	                  'Total spots:'
+	                  value.title
 	                ),
-	                value.total_spots
+	                _react2.default.createElement(
+	                  'p',
+	                  null,
+	                  _react2.default.createElement(
+	                    'strong',
+	                    null,
+	                    'Total spots:'
+	                  ),
+	                  value.total_spots,
+	                  ', ',
+	                  _react2.default.createElement(
+	                    'strong',
+	                    null,
+	                    'Reserved:'
+	                  ),
+	                  ' ',
+	                  value.reserved ? value.reserved : 0
+	                )
 	              ),
 	              _react2.default.createElement(
 	                'div',
-	                { className: 'col-sm-4' },
+	                { className: 'col-sm-6' },
 	                _react2.default.createElement(
 	                  'button',
 	                  {
 	                    className: 'btn btn-primary btn-sm',
 	                    onClick: this.manageSpots.bind(this, i) },
-	                  'Manage Spots',
+	                  'Manage Spots ',
 	                  _react2.default.createElement('i', {
 	                    className: this.state.spotKey === i ? 'fa fa-caret-up' : 'fa fa-caret-down' })
 	                ),
 	                button
 	              ),
-	              this.state.spotKey === i ? _react2.default.createElement(_Spots2.default, { lotId: value.id, close: this.resetSpots, game: this.props.game }) : null
+	              this.state.spotKey === i ? _react2.default.createElement(_Spots2.default, { lotId: value.id, close: this.resetSpots, game: this.props.game, reload: this.props.loadLots }) : null
 	            )
 	          );
 	        }.bind(this))
@@ -25125,7 +25049,9 @@
 	  return LotListing;
 	}(_react2.default.Component);
 	
-	LotListing.defaultProps = { lots: [] };
+	LotListing.defaultProps = {
+	  lots: []
+	};
 	LotListing.propTypes = {
 	  game: _react2.default.PropTypes.object,
 	  lots: _react2.default.PropTypes.array,
@@ -25153,13 +25079,13 @@
 	
 	var _react2 = _interopRequireDefault(_react);
 	
-	var _Waiting = __webpack_require__(/*! ./Waiting.jsx */ 193);
+	var _Waiting = __webpack_require__(/*! ./Waiting.jsx */ 182);
 	
 	var _Waiting2 = _interopRequireDefault(_Waiting);
 	
-	var _Button = __webpack_require__(/*! ./Button.jsx */ 194);
+	var _Button = __webpack_require__(/*! ./Button.jsx */ 193);
 	
-	var _Alcohol = __webpack_require__(/*! ./Alcohol.jsx */ 195);
+	var _Alcohol = __webpack_require__(/*! ./Alcohol.jsx */ 194);
 	
 	function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 	
@@ -25225,6 +25151,7 @@
 	        spot.reserved = reserved;
 	        allSpots[key] = spot;
 	        this.setState({ spots: allSpots });
+	        this.props.reload();
 	      }.bind(this)).fail(function () {
 	        //let error_message = 'Error: Could not update the spot'
 	      }.bind(this));
@@ -25425,6 +25352,7 @@
 	Spots.propTypes = {
 	  game: _react2.default.PropTypes.object,
 	  close: _react2.default.PropTypes.func,
+	  reload: _react2.default.PropTypes.func,
 	  lotId: _react2.default.PropTypes.string
 	};
 	
@@ -25432,61 +25360,6 @@
 
 /***/ },
 /* 193 */
-/*!**************************************!*\
-  !*** ./javascript/Admin/Waiting.jsx ***!
-  \**************************************/
-/***/ function(module, exports, __webpack_require__) {
-
-	"use strict";
-	
-	Object.defineProperty(exports, "__esModule", {
-	  value: true
-	});
-	
-	var _createClass = function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; }();
-	
-	var _react = __webpack_require__(/*! react */ 1);
-	
-	var _react2 = _interopRequireDefault(_react);
-	
-	function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
-	
-	function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
-	
-	function _possibleConstructorReturn(self, call) { if (!self) { throw new ReferenceError("this hasn't been initialised - super() hasn't been called"); } return call && (typeof call === "object" || typeof call === "function") ? call : self; }
-	
-	function _inherits(subClass, superClass) { if (typeof superClass !== "function" && superClass !== null) { throw new TypeError("Super expression must either be null or a function, not " + typeof superClass); } subClass.prototype = Object.create(superClass && superClass.prototype, { constructor: { value: subClass, enumerable: false, writable: true, configurable: true } }); if (superClass) Object.setPrototypeOf ? Object.setPrototypeOf(subClass, superClass) : subClass.__proto__ = superClass; }
-	
-	var Waiting = function (_React$Component) {
-	  _inherits(Waiting, _React$Component);
-	
-	  function Waiting() {
-	    _classCallCheck(this, Waiting);
-	
-	    return _possibleConstructorReturn(this, (Waiting.__proto__ || Object.getPrototypeOf(Waiting)).apply(this, arguments));
-	  }
-	
-	  _createClass(Waiting, [{
-	    key: "render",
-	    value: function render() {
-	      return _react2.default.createElement(
-	        "div",
-	        { className: "text-center" },
-	        _react2.default.createElement("i", { className: "fa fa-cog fa-spin" }),
-	        "Loading..."
-	      );
-	    }
-	  }]);
-	
-	  return Waiting;
-	}(_react2.default.Component);
-	
-	Waiting.defaultProps = {};
-	
-	exports.default = Waiting;
-
-/***/ },
-/* 194 */
 /*!*************************************!*\
   !*** ./javascript/Admin/Button.jsx ***!
   \*************************************/
@@ -25529,6 +25402,7 @@
 	        "button",
 	        { onClick: this.props.handleClick, className: "btn btn-sm btn-success" },
 	        _react2.default.createElement("i", { className: "fa fa-check" }),
+	        " ",
 	        this.props.label
 	      );
 	    }
@@ -25558,6 +25432,7 @@
 	        "button",
 	        { onClick: this.props.handleClick, className: "btn btn-sm btn-default" },
 	        _react2.default.createElement("i", { className: "fa fa-times" }),
+	        " ",
 	        this.props.label
 	      );
 	    }
@@ -25577,7 +25452,7 @@
 	exports.NoButton = NoButton;
 
 /***/ },
-/* 195 */
+/* 194 */
 /*!**************************************!*\
   !*** ./javascript/Admin/Alcohol.jsx ***!
   \**************************************/
@@ -25623,7 +25498,7 @@
 	        "button",
 	        { className: "btn btn-default btn-sm", onClick: this.props.toggle },
 	        _react2.default.createElement("i", { className: "fa fa-ban" }),
-	        "Sober only"
+	        "  Sober only"
 	      );
 	    }
 	  }]);
@@ -25658,7 +25533,7 @@
 	          "span",
 	          { className: "text-success" },
 	          _react2.default.createElement("i", { className: "fa fa-beer" }),
-	          "Alcohol allowed"
+	          "  Alcohol allowed"
 	        )
 	      );
 	    }
@@ -25674,6 +25549,296 @@
 	
 	exports.Sober = Sober;
 	exports.Alcohol = Alcohol;
+
+/***/ },
+/* 195 */
+/*!***************************************!*\
+  !*** ./javascript/Admin/Students.jsx ***!
+  \***************************************/
+/***/ function(module, exports, __webpack_require__) {
+
+	'use strict';
+	
+	Object.defineProperty(exports, "__esModule", {
+	  value: true
+	});
+	
+	var _createClass = function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; }();
+	
+	var _react = __webpack_require__(/*! react */ 1);
+	
+	var _react2 = _interopRequireDefault(_react);
+	
+	var _TextInput = __webpack_require__(/*! ../Mixin/TextInput.jsx */ 181);
+	
+	var _TextInput2 = _interopRequireDefault(_TextInput);
+	
+	var _StudentRow = __webpack_require__(/*! ./StudentRow.jsx */ 196);
+	
+	var _StudentRow2 = _interopRequireDefault(_StudentRow);
+	
+	function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
+	
+	function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
+	
+	function _possibleConstructorReturn(self, call) { if (!self) { throw new ReferenceError("this hasn't been initialised - super() hasn't been called"); } return call && (typeof call === "object" || typeof call === "function") ? call : self; }
+	
+	function _inherits(subClass, superClass) { if (typeof superClass !== "function" && superClass !== null) { throw new TypeError("Super expression must either be null or a function, not " + typeof superClass); } subClass.prototype = Object.create(superClass && superClass.prototype, { constructor: { value: subClass, enumerable: false, writable: true, configurable: true } }); if (superClass) Object.setPrototypeOf ? Object.setPrototypeOf(subClass, superClass) : subClass.__proto__ = superClass; }
+	
+	/* global $ */
+	
+	var Students = function (_React$Component) {
+	  _inherits(Students, _React$Component);
+	
+	  function Students(props) {
+	    _classCallCheck(this, Students);
+	
+	    var _this = _possibleConstructorReturn(this, (Students.__proto__ || Object.getPrototypeOf(Students)).call(this, props));
+	
+	    _this.limit = 20;
+	
+	    _this.state = {
+	      students: [],
+	      limit: _this.limit,
+	      search: '',
+	      availableSpots: [],
+	      message: null
+	    };
+	    _this.setMessage = _this.setMessage.bind(_this);
+	    _this.reset = _this.reset.bind(_this);
+	    _this.searchRows = _this.searchRows.bind(_this);
+	    _this.loadStudents = _this.loadStudents.bind(_this);
+	    return _this;
+	  }
+	
+	  _createClass(Students, [{
+	    key: 'componentDidMount',
+	    value: function componentDidMount() {
+	      this.loadStudents(this.state.limit);
+	      this.loadAvailableSpots();
+	    }
+	  }, {
+	    key: 'loadAvailableSpots',
+	    value: function loadAvailableSpots() {
+	      $.getJSON('tailgate/Admin/Lottery', { command: 'getUnclaimedSpots' }).done(function (data) {
+	        this.setState({ availableSpots: data });
+	      }.bind(this));
+	    }
+	  }, {
+	    key: 'searchRows',
+	    value: function searchRows(e) {
+	      var search_phrase = e.target.value;
+	      var search_length = search_phrase.length;
+	
+	      this.setState({ search: search_phrase });
+	
+	      if (search_length > 2) {
+	        this.loadStudents(this.state.limit, search_phrase);
+	      } else if (search_length === 0) {
+	        this.loadStudents(this.state.limit, '');
+	      }
+	    }
+	  }, {
+	    key: 'loadStudents',
+	    value: function loadStudents(limit, search) {
+	      if (limit === undefined) {
+	        limit = this.state.limit;
+	      }
+	      if (search === undefined) {
+	        search = this.state.search;
+	      } else if (search !== this.state.search) {
+	        limit = this.limit;
+	      }
+	      $.getJSON('tailgate/Admin/Student/', {
+	        command: 'list',
+	        limit: limit,
+	        search: search
+	      }).done(function (data) {
+	        this.setState({ students: data, limit: limit, search: search });
+	      }.bind(this));
+	    }
+	  }, {
+	    key: 'reset',
+	    value: function reset() {
+	      this.loadStudents(this.state.limit);
+	      this.loadAvailableSpots();
+	    }
+	  }, {
+	    key: 'preventSpaces',
+	    value: function preventSpaces(e) {
+	      if (e.charCode == '32') {
+	        e.preventDefault();
+	      }
+	    }
+	  }, {
+	    key: 'setMessage',
+	    value: function setMessage(message) {
+	      this.setState({ message: message });
+	    }
+	  }, {
+	    key: 'render',
+	    value: function render() {
+	      var timestamp = Math.floor(Date.now() / 1000);
+	      var availableCount = 0;
+	      var availableSentence = null;
+	      var showAvailableCount = 0;
+	      if (this.props.game) {
+	        showAvailableCount = this.props.game.pickup_deadline < timestamp;
+	        if (showAvailableCount) {
+	          availableCount = this.state.availableSpots.length;
+	          if (availableCount > 1) {
+	            availableSentence = _react2.default.createElement(
+	              'div',
+	              { className: 'alert alert-warning' },
+	              'There are ',
+	              availableCount,
+	              '  unclaimed spots left.'
+	            );
+	          } else if (availableCount === 1) {
+	            availableSentence = _react2.default.createElement(
+	              'div',
+	              { className: 'alert-danger alert' },
+	              'There is just',
+	              _react2.default.createElement(
+	                'strong',
+	                null,
+	                'one'
+	              ),
+	              'more unclaimed spot left.'
+	            );
+	          } else {
+	            availableSentence = _react2.default.createElement(
+	              'div',
+	              { className: 'alert alert-success' },
+	              'All spots have been claimed.'
+	            );
+	          }
+	        }
+	      }
+	      var nextLimit = this.state.limit + 50;
+	      var nextButton = null;
+	      if (this.state.limit <= this.state.students.length) {
+	        nextButton = _react2.default.createElement(
+	          'button',
+	          {
+	            className: 'btn btn-default',
+	            onClick: this.loadStudents.bind(null, nextLimit, this.state.search) },
+	          _react2.default.createElement('i', { className: 'fa fa-plus' }),
+	          '  Show more rows'
+	        );
+	      }
+	      return _react2.default.createElement(
+	        'div',
+	        null,
+	        this.state.message ? _react2.default.createElement(
+	          'div',
+	          { className: 'alert alert-danger' },
+	          this.state.message
+	        ) : null,
+	        _react2.default.createElement(
+	          'div',
+	          { className: 'row' },
+	          _react2.default.createElement(
+	            'div',
+	            { className: 'col-sm-4' },
+	            _react2.default.createElement(_TextInput2.default, {
+	              placeholder: 'Search',
+	              handleChange: this.searchRows,
+	              handlePress: this.preventSpaces,
+	              value: this.state.search })
+	          ),
+	          _react2.default.createElement(
+	            'div',
+	            { className: 'col-sm-8' },
+	            showAvailableCount ? availableSentence : null
+	          )
+	        ),
+	        _react2.default.createElement(
+	          'table',
+	          { className: 'table table-striped sans' },
+	          _react2.default.createElement(
+	            'thead',
+	            null,
+	            _react2.default.createElement(
+	              'tr',
+	              null,
+	              _react2.default.createElement(
+	                'th',
+	                null,
+	                'Id'
+	              ),
+	              _react2.default.createElement(
+	                'th',
+	                null,
+	                'Last Name'
+	              ),
+	              _react2.default.createElement(
+	                'th',
+	                null,
+	                'First Name'
+	              ),
+	              _react2.default.createElement(
+	                'th',
+	                null,
+	                'Username'
+	              ),
+	              _react2.default.createElement(
+	                'th',
+	                null,
+	                'Wins'
+	              ),
+	              _react2.default.createElement(
+	                'th',
+	                { className: 'text-center' },
+	                'Eligible'
+	              ),
+	              _react2.default.createElement(
+	                'th',
+	                { className: 'text-center' },
+	                'Allowed'
+	              ),
+	              this.props.game && this.props.game.pickup_deadline < timestamp ? _react2.default.createElement(
+	                'th',
+	                null,
+	                'Current winner'
+	              ) : null,
+	              _react2.default.createElement(
+	                'th',
+	                null,
+	                ' '
+	              )
+	            )
+	          ),
+	          _react2.default.createElement(
+	            'tbody',
+	            { id: 'studentList' },
+	            this.state.students.map(function (value, i) {
+	              return _react2.default.createElement(_StudentRow2.default, {
+	                key: i,
+	                student: value,
+	                resetRows: this.reset,
+	                canAdd: this.props.canAdd,
+	                spots: this.state.availableSpots,
+	                setMessage: this.setMessage,
+	                game: this.props.game });
+	            }.bind(this))
+	          )
+	        ),
+	        nextButton
+	      );
+	    }
+	  }]);
+	
+	  return Students;
+	}(_react2.default.Component);
+	
+	Students.defaultProps = {};
+	Students.propTypes = {
+	  game: _react2.default.PropTypes.object,
+	  canAdd: _react2.default.PropTypes.bool
+	};
+	
+	exports.default = Students;
 
 /***/ },
 /* 196 */
@@ -25717,6 +25882,8 @@
 	    _this.state = {};
 	    _this.addSpot = _this.addSpot.bind(_this);
 	    _this.deleteStudent = _this.deleteStudent.bind(_this);
+	    _this.eligible = _this.eligible.bind(_this);
+	    _this.bannedReason = _this.bannedReason.bind(_this);
 	    return _this;
 	  }
 	
@@ -25724,7 +25891,7 @@
 	    key: 'eligible',
 	    value: function eligible() {
 	      if (this.props.student.eligible === '1') {
-	        this.makeIneligible(this.sprops.resetRows);
+	        this.makeIneligible(this.props.resetRows);
 	      } else {
 	        this.makeEligible(this.props.resetRows);
 	      }
@@ -25795,12 +25962,15 @@
 	  }, {
 	    key: 'addSpot',
 	    value: function addSpot() {
-	      var content = '<select id="spotSelect" class="form-control">' + this.options() + '</select><button id="saveSpot" class="btn btn-success" style="margin-right:.5em">' + 'Assign student</button>';
+	      var content = '<select id="spotSelect" class="form-control"><option disable="true" value="0">- Choose spot below -</option>' + this.options() + '</select><button id="saveSpot" class="btn btn-success" style="margin-right:.5em">' + 'Assign student</button>';
 	      $('#admin-modal .modal-title').text('Assign spot to ' + this.props.student.first_name + ' ' + this.props.student.last_name);
 	      $('#admin-modal .modal-body').html(content);
 	
 	      $('#saveSpot').click(function () {
 	        var spotId = $('#spotSelect').val();
+	        if (spotId === '0') {
+	          return;
+	        }
 	        $.post('tailgate/Admin/Student', {
 	          command: 'assign',
 	          studentId: this.props.student.id,
@@ -26067,7 +26237,10 @@
 	  function BannedIcon(props) {
 	    _classCallCheck(this, BannedIcon);
 	
-	    return _possibleConstructorReturn(this, (BannedIcon.__proto__ || Object.getPrototypeOf(BannedIcon)).call(this, props));
+	    var _this2 = _possibleConstructorReturn(this, (BannedIcon.__proto__ || Object.getPrototypeOf(BannedIcon)).call(this, props));
+	
+	    _this2.hover = _this2.hover.bind(_this2);
+	    return _this2;
 	  }
 	
 	  _createClass(BannedIcon, [{
@@ -26218,6 +26391,138 @@
 	exports.Icon = Icon;
 	exports.YesIcon = YesIcon;
 	exports.NoIcon = NoIcon;
+
+/***/ },
+/* 199 */
+/*!***************************************!*\
+  !*** ./javascript/Admin/Settings.jsx ***!
+  \***************************************/
+/***/ function(module, exports, __webpack_require__) {
+
+	'use strict';
+	
+	Object.defineProperty(exports, "__esModule", {
+	  value: true
+	});
+	
+	var _createClass = function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; }();
+	
+	var _react = __webpack_require__(/*! react */ 1);
+	
+	var _react2 = _interopRequireDefault(_react);
+	
+	var _TextInput = __webpack_require__(/*! ../Mixin/TextInput.jsx */ 181);
+	
+	var _TextInput2 = _interopRequireDefault(_TextInput);
+	
+	function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
+	
+	function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
+	
+	function _possibleConstructorReturn(self, call) { if (!self) { throw new ReferenceError("this hasn't been initialised - super() hasn't been called"); } return call && (typeof call === "object" || typeof call === "function") ? call : self; }
+	
+	function _inherits(subClass, superClass) { if (typeof superClass !== "function" && superClass !== null) { throw new TypeError("Super expression must either be null or a function, not " + typeof superClass); } subClass.prototype = Object.create(superClass && superClass.prototype, { constructor: { value: subClass, enumerable: false, writable: true, configurable: true } }); if (superClass) Object.setPrototypeOf ? Object.setPrototypeOf(subClass, superClass) : subClass.__proto__ = superClass; }
+	
+	/* global $,CKEDITOR */
+	
+	var Settings = function (_React$Component) {
+	  _inherits(Settings, _React$Component);
+	
+	  function Settings(props) {
+	    _classCallCheck(this, Settings);
+	
+	    var _this = _possibleConstructorReturn(this, (Settings.__proto__ || Object.getPrototypeOf(Settings)).call(this, props));
+	
+	    _this.state = {
+	      newAccountInformation: '',
+	      replyTo: ''
+	    };
+	    _this.updateReplyTo = _this.updateReplyTo.bind(_this);
+	    _this.submitForm = _this.submitForm.bind(_this);
+	    return _this;
+	  }
+	
+	  _createClass(Settings, [{
+	    key: 'componentDidMount',
+	    value: function componentDidMount() {
+	      this.newAccountEditor = CKEDITOR.replace('newAccountInformation');
+	      $.getJSON('tailgate/Admin/Settings', { command: 'list' }).done(function (data) {
+	        this.setState({ newAccountInformation: data.new_account_information, replyTo: data.reply_to });
+	        this.newAccountEditor.setData(data.new_account_information);
+	      }.bind(this));
+	    }
+	  }, {
+	    key: 'submitForm',
+	    value: function submitForm(e) {
+	      e.preventDefault();
+	      $.getJSON('tailgate/Admin/Settings', {
+	        command: 'testEmail',
+	        replyTo: this.state.replyTo
+	      }).done(function (data) {
+	        if (data.success === false) {
+	          $('#replyTo').css('borderColor', 'red');
+	        } else {
+	          $('#settingsForm').submit();
+	        }
+	      });
+	    }
+	  }, {
+	    key: 'updateReplyTo',
+	    value: function updateReplyTo(e) {
+	      this.setState({ replyTo: e.target.value });
+	    }
+	  }, {
+	    key: 'render',
+	    value: function render() {
+	      return _react2.default.createElement(
+	        'div',
+	        null,
+	        _react2.default.createElement(
+	          'form',
+	          { method: 'post', action: 'tailgate/Admin/Settings/', id: 'settingsForm' },
+	          _react2.default.createElement('input', { type: 'hidden', name: 'command', value: 'save' }),
+	          _react2.default.createElement(_TextInput2.default, {
+	            required: true,
+	            inputId: 'replyTo',
+	            label: 'Reply to email address',
+	            placeholder: 'Enter an email address students can reply to',
+	            name: 'replyTo',
+	            value: this.state.replyTo,
+	            handleChange: this.updateReplyTo
+	          }),
+	          _react2.default.createElement(
+	            'label',
+	            null,
+	            'Tailgate new student account information'
+	          ),
+	          _react2.default.createElement('textarea', {
+	            id: 'newAccountInformation',
+	            className: 'form-control',
+	            name: 'newAccountInformation',
+	            defaultValue: this.state.newAccountInformation }),
+	          _react2.default.createElement(
+	            'div',
+	            { style: {
+	                marginTop: '1em'
+	              } },
+	            _react2.default.createElement(
+	              'button',
+	              { className: 'btn btn-success', onClick: this.submitForm },
+	              _react2.default.createElement('i', { className: 'fa fa-save' }),
+	              '  Save content'
+	            )
+	          )
+	        )
+	      );
+	    }
+	  }]);
+	
+	  return Settings;
+	}(_react2.default.Component);
+	
+	Settings.defaultProps = {};
+	
+	exports.default = Settings;
 
 /***/ }
 /******/ ]);
