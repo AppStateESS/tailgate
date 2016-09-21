@@ -8,7 +8,7 @@ class YesButton extends React.Component {
   render() {
     return (
       <button onClick={this.props.handleClick} className="btn btn-sm btn-success">
-        <i className="fa fa-check"></i>
+        <i className="fa fa-check"></i>&nbsp;
         {this.props.label}
       </button>
     )
@@ -29,7 +29,7 @@ class NoButton extends React.Component {
   render() {
     return (
       <button onClick={this.props.handleClick} className="btn btn-sm btn-default">
-        <i className="fa fa-times"></i>
+        <i className="fa fa-times"></i>&nbsp;
         {this.props.label}
       </button>
     )

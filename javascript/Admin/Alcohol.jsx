@@ -8,7 +8,7 @@ class Sober extends React.Component {
   render() {
     return (
       <button className="btn btn-default btn-sm" onClick={this.props.toggle}>
-        <i className="fa fa-ban"></i>
+        <i className="fa fa-ban"></i>&nbsp;
         Sober only</button>
     )
   }
@@ -28,7 +28,7 @@ class Alcohol extends React.Component {
     return (
       <button className="btn btn-default btn-sm" onClick={this.props.toggle}>
         <span className="text-success">
-          <i className="fa fa-beer"></i>
+          <i className="fa fa-beer"></i>&nbsp;
           Alcohol allowed</span>
       </button>
     )
