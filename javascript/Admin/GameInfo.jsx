@@ -2,6 +2,8 @@ import React from 'react'
 import LotteryRun from './LotteryRun.jsx'
 import {SignupStart, SignupEnd, PickupDeadline, Kickoff} from './DateSelect.jsx'
 
+/* global $ */
+
 class GameInfo extends React.Component {
   constructor(props) {
     super(props)
@@ -9,8 +11,8 @@ class GameInfo extends React.Component {
       message: null,
       allowEdit: true
     }
-    this.update = this.update.bind(this);
-    this.setError = this.setError.bind(this);
+    this.update = this.update.bind(this)
+    this.setError = this.setError.bind(this)
   }
 
   componentDidMount() {
@@ -46,7 +48,7 @@ class GameInfo extends React.Component {
 
   setError(error) {
     this.setState({message: (
-        <div className='alert alert-danger'>
+        <div className="alert alert-danger">
           {error}
         </div>
       )})
@@ -62,22 +64,22 @@ class GameInfo extends React.Component {
 
   render() {
     let button = null
-    let message = null
     let timestamp = Math.floor(Date.now() / 1000)
     let pickupReport = null
     let winnerReport = null
     let spotReport = null
+    const marginRight = {
+      marginRight: '.5em'
+    }
 
     if (this.props.game.lottery_run === '1' && this.props.game.pickup_deadline < timestamp) {
       pickupReport = (
-        <div className='pull-left' style={{
-          marginRight: '.5em'
-        }}>
+        <div className="pull-left" style={marginRight}>
           <a
-            href='./tailgate/Admin/Report/?command=pickup'
-            target='_blank'
-            className='btn btn-primary btn-sm'>
-            <i className='fa fa-file-text-o'></i>
+            href="./tailgate/Admin/Report/?command=pickup"
+            target="_blank"
+            className="btn btn-primary btn-sm">
+            <i className="fa fa-file-text-o"></i>&nbsp;
             Pickup report</a>
         </div>
       )
@@ -85,10 +87,10 @@ class GameInfo extends React.Component {
       spotReport = (
         <div>
           <a
-            href='./tailgate/Admin/Report/?command=spotReport'
-            target='_blank'
-            className='btn btn-primary btn-sm'>
-            <i className='fa fa-file-text-o'></i>
+            href="./tailgate/Admin/Report/?command=spotReport"
+            target="_blank"
+            className="btn btn-primary btn-sm">
+            <i className="fa fa-file-text-o"></i>&nbsp;
             Spot report</a>
         </div>
       )
@@ -96,15 +98,12 @@ class GameInfo extends React.Component {
 
     if (this.props.game.lottery_run === '1') {
       winnerReport = (
-        <div className='pull-left' style={{
-          marginRight: '.5em'
-        }}>
+        <div className="pull-left" style={marginRight}>
           <a
-            href='./tailgate/Admin/Report/?command=winners'
-            target='_blank'
-            className='btn btn-primary btn-sm'>
-            <i className='fa fa-file-text-o'></i>
-            Winner list</a>
+            href="./tailgate/Admin/Report/?command=winners"
+            target="_blank"
+            className="btn btn-primary btn-sm">
+            <i className="fa fa-file-text-o"></i>&nbsp; Winner list</a>
         </div>
       )
     }
@@ -112,17 +111,30 @@ class GameInfo extends React.Component {
     if (this.props.game.lottery_run == '0') {
       button = <LotteryRun game={this.props.game} startLottery={this.props.startLottery}/>
     } else if (this.props.game.kickoff < Math.floor(Date.now() / 1000)) {
-      button = <button className='btn btn-primary' onClick={this.props.completeGame}>
+      button = <button className="btn btn-primary" onClick={this.props.completeGame}>
         Complete lottery
       </button>
     }
 
     return (
       <div>
-        <h4>{this.props.game.university} {this.props.game.mascot}
-          - Total submissions: {this.props.submissions}, Unreserved, available spots: {this.props.availableSpots}</h4>
-        {this.state.message}
-        <div className='row'>
+        <h4>{this.props.game.university} {this.props.game.mascot}</h4>
+        <div className="row">
+          <div className="col-sm-3 text-center">
+            <strong>Submissions:</strong><br/>{this.props.submissions}
+          </div>
+          <div className="col-sm-3 text-center">
+            <strong>Winners:</strong><br/>{this.props.winners}
+          </div>
+          <div className="col-sm-3 text-center">
+            <strong>Available spots:</strong><br/>{this.props.availableSpots}
+          </div>
+          <div className="col-sm-3 text-center">
+            <strong>Claimed:</strong><br/>{this.props.claimed}
+          </div>
+        </div>
+        <hr/> {this.state.message}
+        <div className="row">
           <SignupStart
             allowEdit={this.state.allowEdit}
             timestamp={timestamp}
@@ -166,8 +178,22 @@ GameInfo.defaultProps = {
   game: null,
   startLottery: null, // function to start the lottery
   submissions: 0,
-  loadGame: null, // function to reload the game Object
-  availableSpots: 0
+  loadGame: null,
+  completeGame: null,
+  availableSpots: 0,
+  winners: 0,
+  claimed: 0
+}
+
+GameInfo.propTypes = {
+  game: React.PropTypes.object,
+  startLottery: React.PropTypes.func,
+  submissions: React.PropTypes.number,
+  loadGame: React.PropTypes.func,
+  completeGame: React.PropTypes.func,
+  availableSpots: React.PropTypes.number,
+  winners: React.PropTypes.number,
+  claimed: React.PropTypes.number
 }
 
 export default GameInfo
