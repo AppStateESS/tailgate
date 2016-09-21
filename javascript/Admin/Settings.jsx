@@ -10,6 +10,8 @@ class Settings extends React.Component {
       newAccountInformation: '',
       replyTo: ''
     }
+    this.updateReplyTo = this.updateReplyTo.bind(this)
+    this.submitForm = this.submitForm.bind(this)
   }
 
   componentDidMount() {
@@ -18,15 +20,13 @@ class Settings extends React.Component {
       this.setState({newAccountInformation: data.new_account_information, replyTo: data.reply_to})
       this.newAccountEditor.setData(data.new_account_information)
     }.bind(this))
-    //$('#replyTo').val(this.state.replyTo)
   }
 
   submitForm(e) {
-    let replyTo = $('#replyTo').val()
     e.preventDefault()
     $.getJSON('tailgate/Admin/Settings', {
       command: 'testEmail',
-      replyTo: replyTo
+      replyTo: this.state.replyTo
     }).done(function (data) {
       if (data.success === false) {
         $('#replyTo').css('borderColor', 'red')
@@ -34,6 +34,10 @@ class Settings extends React.Component {
         $('#settingsForm').submit()
       }
     })
+  }
+
+  updateReplyTo(e) {
+    this.setState({replyTo : e.target.value})
   }
 
   render() {
@@ -46,7 +50,10 @@ class Settings extends React.Component {
             inputId={'replyTo'}
             label={'Reply to email address'}
             placeholder={'Enter an email address students can reply to'}
-            value={this.state.replyTo}/>
+            name="replyTo"
+            value={this.state.replyTo}
+            handleChange={this.updateReplyTo}
+            />
           <label>Tailgate new student account information</label>
           <textarea
             id="newAccountInformation"
