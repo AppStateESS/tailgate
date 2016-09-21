@@ -7,15 +7,20 @@ import StudentRow from './StudentRow.jsx'
 class Students extends React.Component {
   constructor(props) {
     super(props)
+
+    this.limit = 20
+
     this.state = {
       students: [],
-      limit: 50,
-      search: null,
+      limit: this.limit,
+      search: '',
       availableSpots: [],
       message: null
     }
     this.setMessage = this.setMessage.bind(this)
     this.reset = this.reset.bind(this)
+    this.searchRows = this.searchRows.bind(this)
+    this.loadStudents = this.loadStudents.bind(this)
   }
   componentDidMount() {
     this.loadStudents(this.state.limit)
@@ -32,13 +37,13 @@ class Students extends React.Component {
     let search_phrase = e.target.value
     let search_length = search_phrase.length
 
-    window.setTimeout(function () {
-      if (search_length > 2) {
-        this.loadStudents(this.state.limit, search_phrase)
-      } else if (search_length === 0) {
-        this.loadStudents(this.state.limit, '')
-      }
-    }.bind(this), 600)
+    this.setState({search: search_phrase})
+
+    if (search_length > 2) {
+      this.loadStudents(this.state.limit, search_phrase)
+    } else if (search_length === 0) {
+      this.loadStudents(this.state.limit, '')
+    }
   }
 
   loadStudents(limit, search) {
@@ -47,10 +52,8 @@ class Students extends React.Component {
     }
     if (search === undefined) {
       search = this.state.search
-    }
-
-    if (search !== this.state.search) {
-      limit = 50
+    } else if (search !== this.state.search) {
+      limit = this.limit
     }
     $.getJSON('tailgate/Admin/Student/', {
       command: 'list',
@@ -108,22 +111,21 @@ class Students extends React.Component {
       nextButton = <button
         className="btn btn-default"
         onClick={this.loadStudents.bind(null, nextLimit, this.state.search)}>
-        <i className="fa fa-plus"></i>
-        Show more rows
+        <i className="fa fa-plus"></i>&nbsp; Show more rows
       </button>
     }
     return (
       <div>
         {this.state.message
           ? <div className="alert alert-danger">{this.state.message}</div>
-          : null
-}
+          : null}
         <div className="row">
           <div className="col-sm-4">
             <TextInput
               placeholder={'Search'}
               handleChange={this.searchRows}
-              handlePress={this.preventSpaces}/>
+              handlePress={this.preventSpaces}
+              value={this.state.search}/>
           </div>
           <div className="col-sm-8">
             {showAvailableCount
