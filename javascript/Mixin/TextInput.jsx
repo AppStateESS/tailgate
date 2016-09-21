@@ -1,25 +1,28 @@
 import React from 'react'
-/* global $ */
 
 class TextInput extends React.Component {
   constructor(props) {
     super(props)
-    this.state = {}
-    this.handleBlur = this.handleBlur.bind(this);
-    this.handleFocus = this.handleFocus.bind(this);
+    this.handleBlur = this.handleBlur.bind(this)
+    this.handleFocus = this.handleFocus.bind(this)
   }
 
   handleBlur(e) {
+    let emptyMessage = 'Value may not be empty'
+    if (this.props.label.length > 0) {
+      emptyMessage = this.props.label + ' may not be empty'
+    }
     if (this.props.required && e.target.value.length < 1) {
-      $(e.target).css('border-color', 'red')
+      this.refs.textInput.style['borderColor'] = 'red'
+      this.refs.textInput.placeholder = emptyMessage
     }
     if (this.props.handleBlur) {
       this.props.handleBlur(e)
     }
   }
 
-  handleFocus(e) {
-    $(e.target).css('border-color', '')
+  handleFocus() {
+    this.refs.textInput.style['borderColor'] = ''
   }
 
   render() {
@@ -42,13 +45,15 @@ class TextInput extends React.Component {
             type="text"
             className="form-control"
             id={this.props.inputId}
-            name={this.props.inputId}
+            name={this.props.name}
             placeholder={this.props.placeholder}
             onFocus={this.handleFocus}
-            onChange={this.props.handleChange}W
+            onChange={this.props.handleChange}
             onBlur={this.handleBlur}
             onKeyPress={this.props.handlePress}
-            value={this.props.value}/>
+            value={this.props.value}
+            style={this.props.style}
+            ref="textInput"/>
         </div>
       )
     } else {
@@ -60,12 +65,14 @@ class TextInput extends React.Component {
             type="text"
             className="form-control"
             id={this.props.inputId}
-            name={this.props.inputId}
+            name={this.props.name}
             placeholder={this.props.placeholder}
             onFocus={this.handleFocus}
             onChange={this.props.handleChange}
             onBlur={this.handleBlur}
             onKeyPress={this.props.handlePress}
+            style={this.props.style}
+            ref="textInput"
             defaultValue={this.props.defaultValue}/>
         </div>
       )
@@ -75,6 +82,7 @@ class TextInput extends React.Component {
 }
 
 TextInput.defaultProps = {
+  name : '',
   label: '',
   placeholder: '',
   handleBlur: null,
@@ -83,10 +91,12 @@ TextInput.defaultProps = {
   handleChange: null,
   inputId: null,
   defaultValue: null,
-  value: ''
+  value: '',
+  style: {}
 }
 
 TextInput.propTypes = {
+  name: React.PropTypes.string,
   inputId: React.PropTypes.string,
   label: React.PropTypes.string,
   required: React.PropTypes.bool,
@@ -95,7 +105,8 @@ TextInput.propTypes = {
   handleChange: React.PropTypes.func,
   placeholder: React.PropTypes.string,
   defaultValue: React.PropTypes.string,
-  value: React.PropTypes.string
+  value: React.PropTypes.string,
+  style: React.PropTypes.object
 }
 
 export default TextInput
