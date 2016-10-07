@@ -20,6 +20,10 @@ class Lottery extends Base
             case 'confirm':
                 $content = $this->confirmWinner();
                 break;
+
+            default:
+                echo \Server::pageNotFound();
+                exit;
         }
         $view = new \View\HtmlView($content);
         return $view;
@@ -40,7 +44,8 @@ class Lottery extends Base
                 break;
 
             case 'getSpotInfo':
-                $lottery_id = filter_input(INPUT_GET, 'lotteryId', FILTER_SANITIZE_NUMBER_INT);
+                $lottery_id = filter_input(INPUT_GET, 'lotteryId',
+                        FILTER_SANITIZE_NUMBER_INT);
                 $json = $factory->getSpotByLotteryId($lottery_id);
                 break;
 
@@ -88,7 +93,8 @@ class Lottery extends Base
     private function apply()
     {
         $lottery = new \tailgate\Factory\Lottery;
-        $game_id = filter_input(INPUT_POST, 'game_id', FILTER_SANITIZE_NUMBER_INT);
+        $game_id = filter_input(INPUT_POST, 'game_id',
+                FILTER_SANITIZE_NUMBER_INT);
         $student = StudentFactory::getCurrentStudent();
         $student_id = $student->getId();
         $lottery->apply($student_id, $game_id);
@@ -100,7 +106,8 @@ class Lottery extends Base
         $student_id = $student->getId();
         $lotteryFactory = new Factory;
         $spot_id = filter_input(INPUT_POST, 'spotId', FILTER_SANITIZE_NUMBER_INT);
-        $lottery_id = filter_input(INPUT_POST, 'lotteryId', FILTER_SANITIZE_NUMBER_INT);
+        $lottery_id = filter_input(INPUT_POST, 'lotteryId',
+                FILTER_SANITIZE_NUMBER_INT);
         $result = $lotteryFactory->pickSpot($lottery_id, $spot_id);
 
         $view = new \View\JsonView(array('success' => $result));
@@ -119,7 +126,8 @@ class Lottery extends Base
 
         if ($game->getPickupDeadline() < time()) {
             $template->add('message_color', 'danger');
-            $template->add('message', 'Sorry, the confirmation deadline for this lottery has passed.');
+            $template->add('message',
+                    'Sorry, the confirmation deadline for this lottery has passed.');
             $template->add('url', \Server::getSiteUrl());
             $template->add('label', 'Go back to home page');
             $content = $template->get();
@@ -139,7 +147,8 @@ class Lottery extends Base
             }
         } else {
             $template->add('message_color', 'danger');
-            $template->add('message', 'Sorry, could not confirm your lottery win. Contact us if you are having trouble.');
+            $template->add('message',
+                    'Sorry, could not confirm your lottery win. Contact us if you are having trouble.');
             $template->add('url', \Server::getSiteUrl());
             $template->add('label', 'Go back to home page');
         }

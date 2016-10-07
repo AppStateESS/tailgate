@@ -24,6 +24,10 @@ class Student extends Base
             case 'landing':
                 $content = $this->landing();
                 break;
+            
+            default:
+                echo \Server::pageNotFound();exit;
+                break;
         }
 
         $view = new \View\HtmlView($content);
