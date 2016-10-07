@@ -26,9 +26,9 @@ class Lot extends \Resource
     public function __construct()
     {
         parent::__construct();
-        $this->title = new \Variable\TextOnly(null, 'title');
+        $this->title = new \phpws2\Variable\TextOnly(null, 'title');
         $this->title->allowEmpty(false);
-        $this->active = new \Variable\Bool(true, 'active');
+        $this->active = new \phpws2\Variable\Bool(true, 'active');
     }
 
     public function setTitle($title)

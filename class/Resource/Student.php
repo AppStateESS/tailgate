@@ -83,23 +83,23 @@ class Student extends \Resource
     public function __construct()
     {
         parent::__construct();
-        $this->user_id = new \Variable\Integer(0, 'user_id');
-        $this->username = new \Variable\TextOnly(null, 'username');
+        $this->user_id = new \phpws2\Variable\Integer(0, 'user_id');
+        $this->username = new \phpws2\Variable\TextOnly(null, 'username');
         $this->username->setLimit(100);
         $this->username->setIsTableColumn(false);
-        $this->first_name = new \Variable\TextOnly(null, 'first_name');
+        $this->first_name = new \phpws2\Variable\TextOnly(null, 'first_name');
         $this->first_name->setLimit(100);
-        $this->last_name = new \Variable\TextOnly(null, 'last_name');
+        $this->last_name = new \phpws2\Variable\TextOnly(null, 'last_name');
         $this->last_name->setLimit(100);
-        $this->eligible = new \Variable\Bool(true, 'eligible');
-        $this->ineligible_reason = new \Variable\TextOnly(null, 'ineligible_reason');
-        $this->wins = new \Variable\Integer(0, 'wins');
+        $this->eligible = new \phpws2\Variable\Bool(true, 'eligible');
+        $this->ineligible_reason = new \phpws2\Variable\TextOnly(null, 'ineligible_reason');
+        $this->wins = new \phpws2\Variable\Integer(0, 'wins');
         $this->wins->setRange(0, 100);
-        $this->signup_date = new \Variable\DateTime(null, 'signup_date');
-        $this->banned = new \Variable\Bool(false, 'banned');
-        $this->banned_reason = new \Variable\TextOnly(null, 'banned_reason');
-        $this->banned_date = new \Variable\DateTime(0, 'banned_date');
-        $this->email = new \Variable\Email(null, 'email');
+        $this->signup_date = new \phpws2\Variable\DateTime(null, 'signup_date');
+        $this->banned = new \phpws2\Variable\Bool(false, 'banned');
+        $this->banned_reason = new \phpws2\Variable\TextOnly(null, 'banned_reason');
+        $this->banned_date = new \phpws2\Variable\DateTime(0, 'banned_date');
+        $this->email = new \phpws2\Variable\Email(null, 'email');
         $this->email->setIsTableColumn(false);
     }
 

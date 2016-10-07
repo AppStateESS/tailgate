@@ -35,14 +35,14 @@ class Visitor extends \Resource
     public function __construct()
     {
         parent::__construct();
-        $this->university = new \Variable\String(null, 'university');
+        $this->university = new \phpws2\Variable\String(null, 'university');
         $this->university->allowEmpty(false);
         $this->university->setLimit(100);
-        $this->mascot = new \Variable\String(null, 'mascot');
+        $this->mascot = new \phpws2\Variable\String(null, 'mascot');
         $this->mascot->allowEmpty(false);
         $this->mascot->setLimit(100);
-        $this->active = new \Variable\Bool(true, 'active');
-        $this->image = new \Variable\File(null, 'image');
+        $this->active = new \phpws2\Variable\Bool(true, 'active');
+        $this->image = new \phpws2\Variable\File(null, 'image');
         $this->image->allowNull(true);
     }
     

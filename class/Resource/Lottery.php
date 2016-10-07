@@ -68,17 +68,17 @@ class Lottery extends \Resource
     public function __construct()
     {
         parent::__construct();
-        $this->game_id = new \Variable\Integer(0, 'game_id');
-        $this->student_id = new \Variable\Integer(0, 'student_id');
-        $this->lot_id = new \Variable\Integer(0, 'lot_id');
-        $this->spot_id = new \Variable\Integer(0, 'spot_id');
-        $this->winner = new \Variable\Bool(false, 'winner');
-        $this->picked_up = new \Variable\Bool(false, 'picked_up');
-        $this->confirmation = new \Variable\Hash(null, 'confirmation');
+        $this->game_id = new \phpws2\Variable\Integer(0, 'game_id');
+        $this->student_id = new \phpws2\Variable\Integer(0, 'student_id');
+        $this->lot_id = new \phpws2\Variable\Integer(0, 'lot_id');
+        $this->spot_id = new \phpws2\Variable\Integer(0, 'spot_id');
+        $this->winner = new \phpws2\Variable\Bool(false, 'winner');
+        $this->picked_up = new \phpws2\Variable\Bool(false, 'picked_up');
+        $this->confirmation = new \phpws2\Variable\Hash(null, 'confirmation');
         $this->confirmation->allowNull(true);
         $this->confirmation->setLimit(40);
-        $this->confirmed = new \Variable\Bool(false, 'confirmed');
-        $this->emailed = new \Variable\Bool(false, 'emailed');
+        $this->confirmed = new \phpws2\Variable\Bool(false, 'confirmed');
+        $this->emailed = new \phpws2\Variable\Bool(false, 'emailed');
     }
 
     public function createConfirmation()
