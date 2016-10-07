@@ -64,21 +64,21 @@ class Game extends \Resource
     public function __construct()
     {
         parent::__construct();
-        $this->visitor_id = new \Variable\Integer(null, 'visitor_id');
-        $this->kickoff = new \Variable\DateTime(null, 'kickoff');
+        $this->visitor_id = new \phpws2\Variable\Integer(null, 'visitor_id');
+        $this->kickoff = new \phpws2\Variable\DateTime(null, 'kickoff');
         $this->kickoff->setFormat('%s');
-        $this->signup_start = new \Variable\DateTime(null, 'signup_start');
+        $this->signup_start = new \phpws2\Variable\DateTime(null, 'signup_start');
         $this->signup_start->setFormat('%s');
-        $this->signup_end = new \Variable\DateTime(null, 'signup_end');
+        $this->signup_end = new \phpws2\Variable\DateTime(null, 'signup_end');
         $this->signup_end->setFormat('%s');
-        $this->pickup_deadline = new \Variable\DateTime(null, 'pickup_deadline');
+        $this->pickup_deadline = new \phpws2\Variable\DateTime(null, 'pickup_deadline');
         $this->pickup_deadline->setFormat('%s');
-        $this->lottery_run = new \Variable\Bool(false, 'lottery_run');
-        $this->lottery_started = new \Variable\Bool(false, 'lottery_started');
-        $this->completed = new \Variable\Bool(false, 'completed');
-        $this->university = new \Variable\String(null, 'university');
+        $this->lottery_run = new \phpws2\Variable\Bool(false, 'lottery_run');
+        $this->lottery_started = new \phpws2\Variable\Bool(false, 'lottery_started');
+        $this->completed = new \phpws2\Variable\Bool(false, 'completed');
+        $this->university = new \phpws2\Variable\String(null, 'university');
         $this->university->setIsTableColumn(false);
-        $this->mascot = new \Variable\String(null, 'mascot');
+        $this->mascot = new \phpws2\Variable\String(null, 'mascot');
         $this->mascot->setIsTableColumn(false);
     }
 
@@ -182,7 +182,7 @@ class Game extends \Resource
         $this->visitor_id->set($id);
     }
     
-    public function getStringVars()
+    public function getStringVars($return_null = false, $hide = NULL)
     {
         $vars = parent::getStringVars();
         $factory = new \tailgate\Factory\Game;
