@@ -76,9 +76,9 @@ class Game extends \Resource
         $this->lottery_run = new \phpws2\Variable\Bool(false, 'lottery_run');
         $this->lottery_started = new \phpws2\Variable\Bool(false, 'lottery_started');
         $this->completed = new \phpws2\Variable\Bool(false, 'completed');
-        $this->university = new \phpws2\Variable\String(null, 'university');
+        $this->university = new \phpws2\Variable\CanopyString(null, 'university');
         $this->university->setIsTableColumn(false);
-        $this->mascot = new \phpws2\Variable\String(null, 'mascot');
+        $this->mascot = new \phpws2\Variable\CanopyString(null, 'mascot');
         $this->mascot->setIsTableColumn(false);
     }
 

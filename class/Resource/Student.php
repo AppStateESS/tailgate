@@ -39,7 +39,7 @@ class Student extends \Resource
 
     /**
      * Reason student was flagged as ineligible.
-     * @var \Variable\String
+     * @var \Variable\CanopyString
      */
     protected $ineligible_reason;
 
@@ -57,7 +57,7 @@ class Student extends \Resource
 
     /**
      * Reason for ban
-     * @var \Variable\String
+     * @var \Variable\CanopyString
      */
     protected $banned_reason;
 

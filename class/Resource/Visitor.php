@@ -12,13 +12,13 @@ class Visitor extends \Resource
 {
     /**
      * Name of university
-     * @var Variable\String
+     * @var Variable\CanopyString
      */
     protected $university;
 
     /**
      * Name of mascot
-     * @var Variable\String
+     * @var Variable\CanopyString
      */
     protected $mascot;
 
@@ -35,10 +35,10 @@ class Visitor extends \Resource
     public function __construct()
     {
         parent::__construct();
-        $this->university = new \phpws2\Variable\String(null, 'university');
+        $this->university = new \phpws2\Variable\CanopyString(null, 'university');
         $this->university->allowEmpty(false);
         $this->university->setLimit(100);
-        $this->mascot = new \phpws2\Variable\String(null, 'mascot');
+        $this->mascot = new \phpws2\Variable\CanopyString(null, 'mascot');
         $this->mascot->allowEmpty(false);
         $this->mascot->setLimit(100);
         $this->active = new \phpws2\Variable\Bool(true, 'active');
