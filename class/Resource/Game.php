@@ -73,9 +73,9 @@ class Game extends \Resource
         $this->signup_end->setFormat('%s');
         $this->pickup_deadline = new \phpws2\Variable\DateTime(null, 'pickup_deadline');
         $this->pickup_deadline->setFormat('%s');
-        $this->lottery_run = new \phpws2\Variable\Bool(false, 'lottery_run');
-        $this->lottery_started = new \phpws2\Variable\Bool(false, 'lottery_started');
-        $this->completed = new \phpws2\Variable\Bool(false, 'completed');
+        $this->lottery_run = new \phpws2\Variable\Boolean(false, 'lottery_run');
+        $this->lottery_started = new \phpws2\Variable\Boolean(false, 'lottery_started');
+        $this->completed = new \phpws2\Variable\Boolean(false, 'completed');
         $this->university = new \phpws2\Variable\CanopyString(null, 'university');
         $this->university->setIsTableColumn(false);
         $this->mascot = new \phpws2\Variable\CanopyString(null, 'mascot');

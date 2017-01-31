@@ -41,7 +41,7 @@ class Visitor extends \Resource
         $this->mascot = new \phpws2\Variable\CanopyString(null, 'mascot');
         $this->mascot->allowEmpty(false);
         $this->mascot->setLimit(100);
-        $this->active = new \phpws2\Variable\Bool(true, 'active');
+        $this->active = new \phpws2\Variable\Boolean(true, 'active');
         $this->image = new \phpws2\Variable\File(null, 'image');
         $this->image->allowNull(true);
     }

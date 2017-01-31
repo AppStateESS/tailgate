@@ -91,12 +91,12 @@ class Student extends \Resource
         $this->first_name->setLimit(100);
         $this->last_name = new \phpws2\Variable\TextOnly(null, 'last_name');
         $this->last_name->setLimit(100);
-        $this->eligible = new \phpws2\Variable\Bool(true, 'eligible');
+        $this->eligible = new \phpws2\Variable\Boolean(true, 'eligible');
         $this->ineligible_reason = new \phpws2\Variable\TextOnly(null, 'ineligible_reason');
         $this->wins = new \phpws2\Variable\Integer(0, 'wins');
         $this->wins->setRange(0, 100);
         $this->signup_date = new \phpws2\Variable\DateTime(null, 'signup_date');
-        $this->banned = new \phpws2\Variable\Bool(false, 'banned');
+        $this->banned = new \phpws2\Variable\Boolean(false, 'banned');
         $this->banned_reason = new \phpws2\Variable\TextOnly(null, 'banned_reason');
         $this->banned_date = new \phpws2\Variable\DateTime(0, 'banned_date');
         $this->email = new \phpws2\Variable\Email(null, 'email');
