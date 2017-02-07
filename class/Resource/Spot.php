@@ -43,11 +43,11 @@ class Spot extends \Resource
     public function __construct()
     {
         parent::__construct();
-        $this->lot_id = new \phpws2\Variable\Integer(null, 'lot_id');
-        $this->number = new \phpws2\Variable\Integer(null, 'number');
-        $this->reserved = new \phpws2\Variable\Boolean(false, 'reserved');
-        $this->sober = new \phpws2\Variable\Boolean(false, 'sober');
-        $this->active = new \phpws2\Variable\Boolean(true, 'active');
+        $this->lot_id = new \phpws2\Variable\IntegerVar(null, 'lot_id');
+        $this->number = new \phpws2\Variable\IntegerVar(null, 'number');
+        $this->reserved = new \phpws2\Variable\BooleanVar(false, 'reserved');
+        $this->sober = new \phpws2\Variable\BooleanVar(false, 'sober');
+        $this->active = new \phpws2\Variable\BooleanVar(true, 'active');
     }
 
     public function getLotId()

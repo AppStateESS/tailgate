@@ -11,7 +11,7 @@ use tailgate\Factory\Lot as Factory;
 class Lot extends Base
 {
 
-    protected function getJsonView($data, \Request $request)
+    protected function getJsonView($data, \Canopy\Request $request)
     {
         $command = $request->getVar('command');
         $factory = new Factory;
@@ -25,7 +25,7 @@ class Lot extends Base
         return $view;
     }
 
-    public function post(\Request $request)
+    public function post(\Canopy\Request $request)
     {
         $factory = new Factory;
         $view = new \View\JsonView(array('success' => true));

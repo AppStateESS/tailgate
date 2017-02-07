@@ -12,7 +12,7 @@ use tailgate\Resource\Game as Resource;
 class Game extends Base
 {
 
-    protected function getJsonView($data, \Request $request)
+    protected function getJsonView($data, \Canopy\Request $request)
     {
         $command = $request->getVar('command');
         $factory = new Factory;

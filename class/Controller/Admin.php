@@ -11,13 +11,13 @@ define('TAILGATE_DEFAULT_ADMIN_COMMAND', 'Visitor');
 class Admin extends \Http\Controller
 {
 
-    public function get(\Request $request)
+    public function get(\Canopy\Request $request)
     {
         $command = $this->routeCommand($request);
         return $command->get($request);
     }
 
-    public function post(\Request $request)
+    public function post(\Canopy\Request $request)
     {
         $command = $this->routeCommand($request);
         return $command->post($request);

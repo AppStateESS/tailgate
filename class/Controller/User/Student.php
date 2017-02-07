@@ -12,7 +12,7 @@ use tailgate\Resource\Student as Resource;
 class Student extends Base
 {
 
-    public function getHtmlView($data, \Request $request)
+    public function getHtmlView($data, \Canopy\Request $request)
     {
         if (!$request->isVar('command')) {
             $command = 'landing';
@@ -34,7 +34,7 @@ class Student extends Base
         return $view;
     }
 
-    protected function getJsonView($data, \Request $request)
+    protected function getJsonView($data, \Canopy\Request $request)
     {
         $command = $request->getVar('command');
 
@@ -62,7 +62,7 @@ class Student extends Base
         }
     }
 
-    public function post(\Request $request)
+    public function post(\Canopy\Request $request)
     {
         $factory = new Factory;
         $view = new \View\JsonView(array('success' => true));

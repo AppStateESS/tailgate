@@ -9,7 +9,7 @@ namespace tailgate\Controller\Admin;
 abstract class Base extends \Http\Controller
 {
 
-    public function get(\Request $request)
+    public function get(\Canopy\Request $request)
     {
         $data = array();
         $view = $this->getView($data, $request);
@@ -17,7 +17,7 @@ abstract class Base extends \Http\Controller
         return $response;
     }
 
-    public function getHtmlView($data, \Request $request)
+    public function getHtmlView($data, \Canopy\Request $request)
     {
         \Layout::addStyle('tailgate', 'Admin/Setup/style.css');
         javascript('datetimepicker');

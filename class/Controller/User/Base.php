@@ -9,7 +9,7 @@ namespace tailgate\Controller\User;
 abstract class Base extends \Http\Controller
 {
 
-    public function get(\Request $request)
+    public function get(\Canopy\Request $request)
     {
         $data = array();
         $view = $this->getView($data, $request);

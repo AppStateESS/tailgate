@@ -36,7 +36,7 @@ class Game extends \Resource
 
     /**
      * Unix time of deadline for pickup
-     * @var \Variable\Datetime
+     * @var \Variable\DateTime
      */
     protected $pickup_deadline;
     
@@ -64,7 +64,7 @@ class Game extends \Resource
     public function __construct()
     {
         parent::__construct();
-        $this->visitor_id = new \phpws2\Variable\Integer(null, 'visitor_id');
+        $this->visitor_id = new \phpws2\Variable\IntegerVar(null, 'visitor_id');
         $this->kickoff = new \phpws2\Variable\DateTime(null, 'kickoff');
         $this->kickoff->setFormat('%s');
         $this->signup_start = new \phpws2\Variable\DateTime(null, 'signup_start');
@@ -73,12 +73,12 @@ class Game extends \Resource
         $this->signup_end->setFormat('%s');
         $this->pickup_deadline = new \phpws2\Variable\DateTime(null, 'pickup_deadline');
         $this->pickup_deadline->setFormat('%s');
-        $this->lottery_run = new \phpws2\Variable\Boolean(false, 'lottery_run');
-        $this->lottery_started = new \phpws2\Variable\Boolean(false, 'lottery_started');
-        $this->completed = new \phpws2\Variable\Boolean(false, 'completed');
-        $this->university = new \phpws2\Variable\CanopyString(null, 'university');
+        $this->lottery_run = new \phpws2\Variable\BooleanVar(false, 'lottery_run');
+        $this->lottery_started = new \phpws2\Variable\BooleanVar(false, 'lottery_started');
+        $this->completed = new \phpws2\Variable\BooleanVar(false, 'completed');
+        $this->university = new \phpws2\Variable\StringVar(null, 'university');
         $this->university->setIsTableColumn(false);
-        $this->mascot = new \phpws2\Variable\CanopyString(null, 'mascot');
+        $this->mascot = new \phpws2\Variable\StringVar(null, 'mascot');
         $this->mascot->setIsTableColumn(false);
     }
 

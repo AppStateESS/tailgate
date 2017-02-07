@@ -16,12 +16,12 @@ class Module extends \Module implements \SettingDefaults
         $this->setProperName('Tailgating');
     }
 
-    public function beforeRun(\Request $request, \Controller $controller)
+    public function beforeRun(\Canopy\Request $request, \Controller $controller)
     {
         require_once PHPWS_SOURCE_DIR . 'mod/tailgate/conf/defines.php';
     }
 
-    public function getController(\Request $request)
+    public function getController(\Canopy\Request $request)
     {
         $cmd = $request->shiftCommand();
         if ($cmd == 'Admin') {
@@ -37,7 +37,7 @@ class Module extends \Module implements \SettingDefaults
         }
     }
 
-    public function runTime(\Request $request)
+    public function runTime(\Canopy\Request $request)
     {
         if (\PHPWS_Core::atHome()) {
             require_once PHPWS_SOURCE_DIR . 'mod/tailgate/conf/defines.php';

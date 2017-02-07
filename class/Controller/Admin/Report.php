@@ -12,7 +12,7 @@ use tailgate\Factory\Game as GameFactory;
 class Report extends Base
 {
 
-    public function getHtmlView($data, \Request $request)
+    public function getHtmlView($data, \Canopy\Request $request)
     {
         if (!$request->isVar('command')) {
             throw new \Exception('Bad command');

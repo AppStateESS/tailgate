@@ -12,7 +12,7 @@ class Lot extends \Resource
 {
     /**
      * Name of parking lot
-     * @var Variable\CanopyString
+     * @var Variable\StringType
      */
     protected $title;
 
@@ -28,7 +28,7 @@ class Lot extends \Resource
         parent::__construct();
         $this->title = new \phpws2\Variable\TextOnly(null, 'title');
         $this->title->allowEmpty(false);
-        $this->active = new \phpws2\Variable\Boolean(true, 'active');
+        $this->active = new \phpws2\Variable\BooleanVar(true, 'active');
     }
 
     public function setTitle($title)

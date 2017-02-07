@@ -13,7 +13,7 @@ use tailgate\Resource\Lottery as Resource;
 class Lottery extends Base
 {
 
-    public function getHtmlView($data, \Request $request)
+    public function getHtmlView($data, \Canopy\Request $request)
     {
         $command = $request->getVar('command');
         switch ($command) {
@@ -29,7 +29,7 @@ class Lottery extends Base
         return $view;
     }
 
-    protected function getJsonView($data, \Request $request)
+    protected function getJsonView($data, \Canopy\Request $request)
     {
         $command = $request->getVar('command');
         $factory = new Factory;
@@ -72,7 +72,7 @@ class Lottery extends Base
         }
     }
 
-    public function post(\Request $request)
+    public function post(\Canopy\Request $request)
     {
         $view = new \View\JsonView(array('success' => true));
 
