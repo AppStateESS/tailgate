@@ -86,7 +86,7 @@ class Lottery extends Base
                 $view = $this->pickSpot();
                 break;
         }
-        $response = new \Response($view);
+        $response = new \Canopy\Response($view);
         return $response;
     }
 

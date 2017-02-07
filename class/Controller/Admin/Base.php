@@ -13,7 +13,7 @@ abstract class Base extends \Http\Controller
     {
         $data = array();
         $view = $this->getView($data, $request);
-        $response = new \Response($view);
+        $response = new \Canopy\Response($view);
         return $response;
     }
 
@@ -38,7 +38,7 @@ EOF;
     {
         $factory->deactivate($id);
         $view = new \View\JsonView(array('success' => true));
-        $response = new \Response($view);
+        $response = new \Canopy\Response($view);
         return $response;
     }
 

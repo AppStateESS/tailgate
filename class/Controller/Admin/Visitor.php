@@ -29,7 +29,7 @@ class Visitor extends Base
     {
         $factory = new Factory;
         $view = new \View\JsonView(array('success' => true));
-        $response = new \Response($view);
+        $response = new \Canopy\Response($view);
 
         if (!$request->isVar('command')) {
             throw new \Exception('Bad command');

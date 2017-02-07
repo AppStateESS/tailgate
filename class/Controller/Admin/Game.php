@@ -90,7 +90,7 @@ class Game extends Base
             default:
                 throw new \Exception('Bad command:' . $request->getVar('command'));
         }
-        $response = new \Response($view);
+        $response = new \Canopy\Response($view);
         return $response;
     }
 
