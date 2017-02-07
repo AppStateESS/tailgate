@@ -417,7 +417,7 @@ class Lottery extends Base
     private function sendWinnerEmail($lottery, \tailgate\Resource\Game $game)
     {
         $variables = $game->getStringVars();
-        $variables['confirmation_link'] = \Server::getSiteUrl() . 'tailgate/User/Lottery/?command=confirm&amp;hash=' .
+        $variables['confirmation_link'] = \Canopy\Server::getSiteUrl() . 'tailgate/User/Lottery/?command=confirm&amp;hash=' .
                 $lottery['confirmation'];
         $tpl = new \Template();
         $tpl->setModuleTemplate('tailgate', 'Admin/Lottery/Winner.html');

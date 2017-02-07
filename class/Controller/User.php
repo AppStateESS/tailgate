@@ -31,7 +31,7 @@ class User extends \Http\Controller
 
         $className = 'tailgate\Controller\User\\' . $command;
         if (!class_exists($className)) {
-            \Server::pageNotFound();exit;
+            \Canopy\Server::pageNotFound();exit;
         }
         $commandObject = new $className($this->getModule());
         return $commandObject;

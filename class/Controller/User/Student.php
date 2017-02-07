@@ -26,7 +26,7 @@ class Student extends Base
                 break;
             
             default:
-                echo \Server::pageNotFound();exit;
+                echo \Canopy\Server::pageNotFound();exit;
                 break;
         }
 

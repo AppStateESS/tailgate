@@ -22,7 +22,7 @@ class Lottery extends Base
                 break;
 
             default:
-                echo \Server::pageNotFound();
+                echo \Canopy\Server::pageNotFound();
                 exit;
         }
         $view = new \View\HtmlView($content);
@@ -128,7 +128,7 @@ class Lottery extends Base
             $template->add('message_color', 'danger');
             $template->add('message',
                     'Sorry, the confirmation deadline for this lottery has passed.');
-            $template->add('url', \Server::getSiteUrl());
+            $template->add('url', \Canopy\Server::getSiteUrl());
             $template->add('label', 'Go back to home page');
             $content = $template->get();
             return $content;
@@ -139,17 +139,17 @@ class Lottery extends Base
             $template->add('message_color', 'success');
             $template->add('message', 'Lottery win confirmed!');
             if (!\Current_User::isLogged()) {
-                $template->add('url', \Server::getSiteUrl() . 'admin/');
+                $template->add('url', \Canopy\Server::getSiteUrl() . 'admin/');
                 $template->add('label', 'Log in to pick your lot');
             } else {
-                $template->add('url', \Server::getSiteUrl() . 'tailgate/');
+                $template->add('url', \Canopy\Server::getSiteUrl() . 'tailgate/');
                 $template->add('label', 'Go to your status page and pick a spot');
             }
         } else {
             $template->add('message_color', 'danger');
             $template->add('message',
                     'Sorry, could not confirm your lottery win. Contact us if you are having trouble.');
-            $template->add('url', \Server::getSiteUrl());
+            $template->add('url', \Canopy\Server::getSiteUrl());
             $template->add('label', 'Go back to home page');
         }
         $content = $template->get();
