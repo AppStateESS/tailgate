@@ -24,7 +24,7 @@ class Visitor extends \Resource
 
     /**
      * Image file for university
-     * @var Variable\File
+     * @var Variable\FileVar
      */
     protected $image;
     
