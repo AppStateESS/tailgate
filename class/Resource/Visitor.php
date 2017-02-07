@@ -12,13 +12,13 @@ class Visitor extends \Resource
 {
     /**
      * Name of university
-     * @var Variable\StringType
+     * @var Variable\StringVar
      */
     protected $university;
 
     /**
      * Name of mascot
-     * @var Variable\StringType
+     * @var Variable\StringVar
      */
     protected $mascot;
 

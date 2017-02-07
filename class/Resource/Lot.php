@@ -12,7 +12,7 @@ class Lot extends \Resource
 {
     /**
      * Name of parking lot
-     * @var Variable\StringType
+     * @var Variable\StringVar
      */
     protected $title;
 
