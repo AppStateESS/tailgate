@@ -119,7 +119,7 @@ class Lottery extends Base
         $game = \tailgate\Factory\Game::getCurrent();
 
         $hash = filter_input(INPUT_GET, 'hash', FILTER_SANITIZE_STRING);
-        $template = new \Template;
+        $template = new \phpws2\Template;
         $factory = new Factory;
         $template->setModuleTemplate('tailgate', 'User/confirmation.html');
         $template->add('button_color', 'primary');

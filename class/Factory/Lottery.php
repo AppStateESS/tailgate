@@ -419,7 +419,7 @@ class Lottery extends Base
         $variables = $game->getStringVars();
         $variables['confirmation_link'] = \Canopy\Server::getSiteUrl() . 'tailgate/User/Lottery/?command=confirm&amp;hash=' .
                 $lottery['confirmation'];
-        $tpl = new \Template();
+        $tpl = new \phpws2\Template();
         $tpl->setModuleTemplate('tailgate', 'Admin/Lottery/Winner.html');
         $tpl->addVariables($variables);
         $content = $tpl->get();
@@ -429,7 +429,7 @@ class Lottery extends Base
     private function sendLoserEmail($lottery, \tailgate\Resource\Game $game)
     {
         $variables = $game->getStringVars();
-        $tpl = new \Template();
+        $tpl = new \phpws2\Template();
         $tpl->setModuleTemplate('tailgate', 'Admin/Lottery/Loser.html');
         $tpl->addVariables($variables);
         $content = $tpl->get();
@@ -450,7 +450,7 @@ class Lottery extends Base
 
         $message = \Swift_Message::newInstance();
         $message->setSubject($subject);
-        $message->setFrom(\Settings::get('tailgate', 'reply_to'));
+        $message->setFrom(\phpws2\Settings::get('tailgate', 'reply_to'));
         $message->setTo($student->getEmail());
         $message->setBody($content, 'text/html');
 

@@ -6,7 +6,7 @@ namespace tailgate\Resource;
  * @license http://opensource.org/licenses/lgpl-3.0.html
  * @author Matthew McNaney <mcnaney at gmail dot com>
  */
-class Lottery extends \Resource
+class Lottery extends \phpws2\Resource
 {
     /**
      * Id of game the student applied to

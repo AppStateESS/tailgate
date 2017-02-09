@@ -49,7 +49,7 @@ class Game extends Base
         }
         $vars['student_status'] = \tailgate\Factory\Lottery::getStudentStatus();
 
-        $template = new \Template;
+        $template = new \phpws2\Template;
         $template->addVariables($vars);
         $template->setModuleTemplate('tailgate', 'User/sidebar.html');
         $content = $template->get();

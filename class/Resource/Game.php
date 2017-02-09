@@ -8,7 +8,7 @@ namespace tailgate\Resource;
  * @license http://opensource.org/licenses/lgpl-3.0.html
  * @author Matthew McNaney <mcnaney at gmail dot com>
  */
-class Game extends \Resource
+class Game extends \phpws2\Resource
 {
     /**
      * Id of Visitor record

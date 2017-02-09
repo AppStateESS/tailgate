@@ -52,7 +52,7 @@ class Report
         if (empty($result)) {
             return 'Error: unable to pull lottery results.';
         }
-        $template = new \Template(array('rows' => $result));
+        $template = new \phpws2\Template(array('rows' => $result));
         self::fillTitle($template, $game_id);
         $template->setModuleTemplate('tailgate', 'Admin/Report/pickup.html');
         $content = $template->get();
@@ -92,7 +92,7 @@ class Report
 
         $result = $db->select();
 
-        $template = new \Template(array('rows' => $result));
+        $template = new \phpws2\Template(array('rows' => $result));
         self::fillTitle($template, $game_id);
         $template->setModuleTemplate('tailgate', 'Admin/Report/winners.html');
         $content = $template->get();
@@ -127,7 +127,7 @@ class Report
         $c3 = $db->createConditional($c3a, $c3b, 'and');
         $db->joinResources($lottery, $student, $c3, 'left');
         $result = $db->select();
-        $template = new \Template(array('rows' => $result));
+        $template = new \phpws2\Template(array('rows' => $result));
         self::fillTitle($template, $game_id);
         $template->setModuleTemplate('tailgate', 'Admin/Report/spots.html');
 

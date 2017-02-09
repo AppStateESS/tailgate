@@ -60,12 +60,12 @@ abstract class Base extends \phpws2\ResourceFactory
         return $result;
     }
 
-    public function load(\Resource $resource)
+    public function load(\phpws2\Resource $resource)
     {
         self::loadByID($resource);
     }
     
-    public function save(\Resource $resource)
+    public function save(\phpws2\Resource $resource)
     {
         self::saveResource($resource);
     }
