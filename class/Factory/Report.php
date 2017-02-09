@@ -15,7 +15,7 @@ class Report
     {
         $game = Game::getById($game_id);
 
-        $db = \Database::getDB();
+        $db = \phpws2\Database::getDB();
         $lottery = $db->addTable('tg_lottery');
         $lottery->addField('picked_up');
         $lottery->addOrderBy('lot_id');
@@ -61,7 +61,7 @@ class Report
 
     public static function winners($game_id)
     {
-        $db = \Database::getDB();
+        $db = \phpws2\Database::getDB();
         $lottery = $db->addTable('tg_lottery');
         $lottery->addFieldConditional('game_id', $game_id);
         $lottery->addFieldConditional('winner', 1);
@@ -101,7 +101,7 @@ class Report
 
     public static function spotReport($game_id)
     {
-        $db = \Database::getDB();
+        $db = \phpws2\Database::getDB();
         $lot = $db->addTable('tg_lot');
         $lot->addField('title', 'lot_title');
         $lot->addOrderBy('title');

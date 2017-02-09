@@ -36,7 +36,7 @@ class Lot extends Base
      */
     private function createNewSpots($spots, $lot)
     {
-        $db = \Database::getDB();
+        $db = \phpws2\Database::getDB();
         $tbl = $db->addTable('tg_spot');
 
         for ($i = 1; $i <= $spots; $i++) {
@@ -64,7 +64,7 @@ class Lot extends Base
 
         $db->setGroupBy($lot->getField('title'));
 
-        $conditional = new \Database\Conditional($db, $lot->getField('id'), $spot->getField('lot_id'), '=');
+        $conditional = new \phpws2\Database\Conditional($db, $lot->getField('id'), $spot->getField('lot_id'), '=');
 
         $db->joinResources($lot, $spot, $conditional);
         $result = $db->select();
@@ -80,7 +80,7 @@ class Lot extends Base
 
     public static function delete($lot_id)
     {
-        $db = \Database::getDB();
+        $db = \phpws2\Database::getDB();
         $tbl = $db->addTable('tg_lot');
         // failsafe to insure it was deactivated first
         $tbl->addFieldConditional('active', 0);
@@ -95,7 +95,7 @@ class Lot extends Base
 
     public static function deleteSpots($lot_id)
     {
-        $db = \Database::getDB();
+        $db = \phpws2\Database::getDB();
         $tbl = $db->addTable('tg_spot');
         $tbl->addFieldConditional('lot_id', $lot_id);
         $db->delete();

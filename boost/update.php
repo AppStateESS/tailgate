@@ -18,13 +18,13 @@ EOF;
         case (version_compare($currentVersion, '1.2.0', '<')):
             $db = \phpws2\Database::getDB();
             $tbl = $db->addTable('tg_game');
-            $dt = new \Database\Datatype\Smallint($tbl, 'lottery_started');
+            $dt = new \phpws2\Database\Datatype\Smallint($tbl, 'lottery_started');
             $dt->setDefault(0);
             $dt->add();
 
             $db = \phpws2\Database::getDB();
             $tbl = $db->addTable('tg_lottery');
-            $dt = new \Database\Datatype\Smallint($tbl, 'emailed');
+            $dt = new \phpws2\Database\Datatype\Smallint($tbl, 'emailed');
             $dt->setDefault(0);
             $dt->add();
             

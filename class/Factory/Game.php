@@ -49,7 +49,7 @@ class Game extends Base
 
     public function addVisitorInformation($game)
     {
-        $db = \Database::getDB();
+        $db = \phpws2\Database::getDB();
         $tbl = $db->addTable('tg_visitor');
         $tbl->addFieldConditional('id', $game['visitor_id']);
         $row = $db->selectOneRow();
@@ -89,7 +89,7 @@ class Game extends Base
         
         $game = new Resource;
 
-        $db = \Database::getDB();
+        $db = \phpws2\Database::getDB();
         $tbl = $db->addTable('tg_game');
         $tbl2 = $db->addTable('tg_visitor');
         $tbl2->addField('university');
@@ -110,7 +110,7 @@ class Game extends Base
 
     public static function getCurrentId()
     {
-        $db = \Database::getDB();
+        $db = \phpws2\Database::getDB();
         $tbl = $db->addTable('tg_game');
         $tbl->addFieldConditional('completed', 0);
         $tbl->addField('id');
@@ -130,7 +130,7 @@ class Game extends Base
 
     public static function completeLottery($game_id)
     {
-        $db = \Database::getDB();
+        $db = \phpws2\Database::getDB();
         $tbl = $db->addTable('tg_game');
         $tbl->addFieldConditional('id', (int) $game_id);
         $tbl->addValue('lottery_run', 1);
@@ -139,7 +139,7 @@ class Game extends Base
 
     public static function resetEligibility($game_id)
     {
-        $db = \Database::getDB();
+        $db = \phpws2\Database::getDB();
         $tbl = $db->addTable('tg_student');
         $tbl->addValue('eligible', 1);
         $tbl->addValue('ineligible_reason', '');
@@ -153,7 +153,7 @@ class Game extends Base
      */
     public static function completeGame($game_id)
     {
-        $db = \Database::getDB();
+        $db = \phpws2\Database::getDB();
         $tbl = $db->addTable('tg_game');
         $tbl->addFieldConditional('id', (int) $game_id);
         $db->delete();
@@ -167,7 +167,7 @@ class Game extends Base
     {
         $game = new Resource;
 
-        $db = \Database::getDB();
+        $db = \phpws2\Database::getDB();
         $tbl = $db->addTable('tg_game');
         $tbl2 = $db->addTable('tg_visitor');
         $tbl2->addField('university');
@@ -187,7 +187,7 @@ class Game extends Base
 
     public static function clearLottery()
     {
-        $db = \Database::getDB();
+        $db = \phpws2\Database::getDB();
         $tbl = $db->addTable('tg_lottery');
         $tbl->truncate();
     }

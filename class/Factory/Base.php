@@ -11,7 +11,7 @@ abstract class Base extends \phpws2\ResourceFactory
 
     public function deactivate($id)
     {
-        $db = \Database::getDB();
+        $db = \phpws2\Database::getDB();
         $tbl = $db->addTable($this->table);
         $tbl->addFieldConditional('id', $id);
         $tbl->addValue('active', 0);
@@ -20,7 +20,7 @@ abstract class Base extends \phpws2\ResourceFactory
 
     public function activate($id)
     {
-        $db = \Database::getDB();
+        $db = \phpws2\Database::getDB();
         $tbl = $db->addTable($this->table);
         $tbl->addFieldConditional('id', $id);
         $tbl->addValue('active', 1);
@@ -36,7 +36,7 @@ abstract class Base extends \phpws2\ResourceFactory
      */
     public function getListDB($mode = TG_LIST_ALL, $order_by = null, $order_dir = 'asc')
     {
-        $db = \Database::getDB();
+        $db = \phpws2\Database::getDB();
         $tbl = $db->addTable($this->table);
         if (!empty($order_by)) {
             $tbl->addOrderBy($order_by, $order_dir);

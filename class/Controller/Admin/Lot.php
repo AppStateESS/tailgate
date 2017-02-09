@@ -66,7 +66,7 @@ class Lot extends Base
         
         $factory->deactivate($id);
 
-        $db = \Database::getDB();
+        $db = \phpws2\Database::getDB();
         $tbl = $db->addTable('tg_spot');
         $tbl->addValue('active', 0);
         $tbl->addFieldConditional('lot_id', $id);
@@ -80,7 +80,7 @@ class Lot extends Base
     {
         $factory->activate($id);
 
-        $db = \Database::getDB();
+        $db = \phpws2\Database::getDB();
         $tbl = $db->addTable('tg_spot');
         $tbl->addValue('active', 1);
         $tbl->addFieldConditional('lot_id', $id);

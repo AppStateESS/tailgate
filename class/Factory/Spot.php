@@ -27,9 +27,9 @@ class Spot extends Base
             $lotteryTable->addField('student_id');
             $lotteryTable->addField('spot_id');
             $lotteryTable->addField('id', 'lottery_id');
-            $c1 = new \Database\Conditional($db, $lotteryTable->getField('game_id'), $current_game->getId(), '=');
-            $c2 = new \Database\Conditional($db, $lotteryTable->getField('game_id'), null, 'is');
-            $c3 = new \Database\Conditional($db, $c1, $c2, 'or');
+            $c1 = new \phpws2\Database\Conditional($db, $lotteryTable->getField('game_id'), $current_game->getId(), '=');
+            $c2 = new \phpws2\Database\Conditional($db, $lotteryTable->getField('game_id'), null, 'is');
+            $c3 = new \phpws2\Database\Conditional($db, $c1, $c2, 'or');
 
             $db->addConditional($c3);
 
@@ -64,7 +64,7 @@ class Spot extends Base
     
     public static function getLotIdFromId($spot_id)
     {
-        $db = \Database::getDB();
+        $db = \phpws2\Database::getDB();
         $tbl = $db->addTable('tg_spot');
         $tbl->addField('lot_id');
         $tbl->addFieldConditional('id', $spot_id);

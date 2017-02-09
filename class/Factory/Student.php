@@ -23,7 +23,7 @@ class Student extends Base
         if (!$user_id) {
             return null;
         }
-        $db = \Database::getDB();
+        $db = \phpws2\Database::getDB();
         $student = $db->addTable('tg_student');
         $student->addFieldConditional('user_id', $user_id);
         $users = $db->addTable('users');
@@ -138,7 +138,7 @@ class Student extends Base
         if (!$student_id) {
             return null;
         }
-        $db = \Database::getDB();
+        $db = \phpws2\Database::getDB();
         $student = $db->addTable('tg_student');
         $student->addFieldConditional('id', $student_id);
         $users = $db->addTable('users');
@@ -216,11 +216,11 @@ class Student extends Base
         if (empty($student_id)) {
             throw new \Exception('Bad student id:' . $student_id);
         }
-        $db = \Database::getDB();
+        $db = \phpws2\Database::getDB();
         $tbl = $db->addTable('tg_student');
         $tbl->addFieldConditional('id', $student_id);
         $wins = $tbl->getField('wins');
-        $exp = new \Database\Expression($wins . '+1');
+        $exp = new \phpws2\Database\Expression($wins . '+1');
         $tbl->addValue('wins', $exp);
         $db->update();
     }

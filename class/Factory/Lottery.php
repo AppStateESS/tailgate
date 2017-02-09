@@ -20,7 +20,7 @@ class Lottery extends Base
             $game_id = $game->getId();
         }
 
-        $db = \Database::getDB();
+        $db = \phpws2\Database::getDB();
         $tbl = $db->addTable('tg_lottery');
         $tbl->addFieldConditional('student_id', $student_id);
         $tbl->addFieldConditional('game_id', $game_id);
@@ -69,7 +69,7 @@ class Lottery extends Base
 
     public function getEntry($game_id, $student_id)
     {
-        $db = \Database::getDB();
+        $db = \phpws2\Database::getDB();
         $tbl = $db->addTable('tg_lottery');
         $tbl->addFieldConditional('game_id', $game_id);
         $tbl->addFieldConditional('student_id', $student_id);
@@ -97,7 +97,7 @@ class Lottery extends Base
 
     public function totalAvailableSpots()
     {
-        $db = \Database::getDB();
+        $db = \phpws2\Database::getDB();
         $tbl = $db->addTable('tg_spot');
         $tbl->addFieldConditional('active', 1);
         $tbl->addFieldConditional('reserved', 0);
@@ -128,7 +128,7 @@ class Lottery extends Base
             return $total_spots;
         }
 
-        $db = \Database::getDB();
+        $db = \phpws2\Database::getDB();
         $tbl = $db->addTable('tg_lottery');
         $tbl->addField('id');
         $tbl->addField('student_id');
@@ -161,8 +161,8 @@ class Lottery extends Base
 
     public function flagWinner($lottery_id)
     {
-        $confirmation = md5(randomString(10, true, true));
-        $db = \Database::getDB();
+        $confirmation = md5(\Canopy\TextString::randomString(10, true, true));
+        $db = \phpws2\Database::getDB();
         $tbl = $db->addTable('tg_lottery');
         $tbl->addValue('winner', 1);
         $tbl->addValue('confirmation', $confirmation);
@@ -202,7 +202,7 @@ class Lottery extends Base
             $game = GameFactory::getById($game_id);
         }
 
-        $db2 = \Database::getDB();
+        $db2 = \phpws2\Database::getDB();
         $lotteryTable = $db2->addTable('tg_lottery');
         $lotteryTable->addFieldConditional('game_id', $game_id);
         $lotteryTable->addFieldConditional('spot_id', 0, '!=');
@@ -211,7 +211,7 @@ class Lottery extends Base
         }
         $lotteryTable->addField('spot_id');
 
-        $db = \Database::getDB();
+        $db = \phpws2\Database::getDB();
         $spotTable = $db->addTable('tg_spot');
         $lotTable = $db->addTable('tg_lot');
         if ($active_only) {
@@ -239,7 +239,7 @@ class Lottery extends Base
         $cond = $db->createConditional($spotTable->getField('lot_id'),
                 $lotTable->getField('id'), '=');
         $db->joinResources($spotTable, $lotTable, $cond);
-        $expression = new \Database\Expression('(' . $db2->selectQuery() . ')');
+        $expression = new \phpws2\Database\Expression('(' . $db2->selectQuery() . ')');
         $spotTable->addFieldConditional('id', $expression, 'not in');
 
         return $db->select();
@@ -253,13 +253,13 @@ class Lottery extends Base
             $game_id = $game->getId();
         }
 
-        $db2 = \Database::getDB();
+        $db2 = \phpws2\Database::getDB();
         $lotteryTable = $db2->addTable('tg_lottery');
         $lotteryTable->addFieldConditional('spot_id', 0, '!=');
         $lotteryTable->addFieldConditional('game_id', $game_id);
         $lotteryTable->addField('spot_id');
 
-        $db = \Database::getDB();
+        $db = \phpws2\Database::getDB();
         $spotTable = $db->addTable('tg_spot');
         $lotTable = $db->addTable('tg_lot');
         $lotTable->addField('title', 'lot_title');
@@ -271,7 +271,7 @@ class Lottery extends Base
         $cond = $db->createConditional($spotTable->getField('lot_id'),
                 $lotTable->getField('id'), '=');
         $db->joinResources($spotTable, $lotTable, $cond);
-        $expression = new \Database\Expression('(' . $db2->selectQuery() . ')');
+        $expression = new \phpws2\Database\Expression('(' . $db2->selectQuery() . ')');
         $spotTable->addFieldConditional('id', $expression, 'not in');
         $db->setGroupBy($spotTable->getField('lot_id'));
 
@@ -309,7 +309,7 @@ class Lottery extends Base
     public static function spotTaken($spot_id)
     {
         $game_id = \tailgate\Factory\Game::getCurrentId();
-        $db = \Database::getDB();
+        $db = \phpws2\Database::getDB();
         $tbl = $db->addTable('tg_lottery');
         $tbl->addFieldConditional('game_id', $game_id);
         $tbl->addFieldConditional('spot_id', $spot_id);
@@ -320,7 +320,7 @@ class Lottery extends Base
     public static function spotPickedUp($spot_id)
     {
         $game_id = \tailgate\Factory\Game::getCurrentId();
-        $db = \Database::getDB();
+        $db = \phpws2\Database::getDB();
         $tbl = $db->addTable('tg_lottery');
         $tbl->addFieldConditional('game_id', $game_id);
         $tbl->addFieldConditional('spot_id', $spot_id);
@@ -335,7 +335,7 @@ class Lottery extends Base
         $lottery->setId($lottery_id);
         $this->load($lottery);
 
-        $db = \Database::getDB();
+        $db = \phpws2\Database::getDB();
         $spotTable = $db->addTable('tg_spot');
         $spotTable->addFieldConditional('id', $lottery->getSpotId());
         $lotTable = $db->addTable('tg_lot');
@@ -353,7 +353,7 @@ class Lottery extends Base
             $game_id = $game->getId();
         }
 
-        $db = \Database::getDB();
+        $db = \phpws2\Database::getDB();
         $tbl = $db->addTable('tg_lottery');
         $tbl->addFieldConditional('game_id', $game_id);
         $tbl->addFieldConditional('emailed', 0);
@@ -464,7 +464,7 @@ class Lottery extends Base
     {
         $game = GameFactory::getCurrent();
 
-        $db = \Database::getDB();
+        $db = \phpws2\Database::getDB();
         $t = $db->addTable('tg_lottery');
         $t->addFieldConditional('game_id', $game->getId());
         $t->addFieldConditional('confirmation', $hash);
@@ -483,7 +483,7 @@ class Lottery extends Base
 
     public function isWinner($game_id, $student_id)
     {
-        $db = \Database::getDB();
+        $db = \phpws2\Database::getDB();
         $tbl = $db->addTable('tg_lottery');
         $tbl->addFieldConditional('game_id', $game_id);
         $tbl->addFieldConditional('student_id', $student_id);
@@ -504,7 +504,7 @@ class Lottery extends Base
 
     public function pickedUp($lottery_id)
     {
-        $db = \Database::getDB();
+        $db = \phpws2\Database::getDB();
         $tbl = $db->addTable('tg_lottery');
         $tbl->addValue('picked_up', 1);
         $tbl->addFieldConditional('id', $lottery_id);
@@ -516,7 +516,7 @@ class Lottery extends Base
         if (empty($game_id)) {
             throw new \Exception('Game id is zero');
         }
-        $db = \Database::getDB();
+        $db = \phpws2\Database::getDB();
         $tbl = $db->addTable('tg_lottery');
         $tbl->addFieldConditional('game_id', $game_id);
         $tbl->addField('id', 'count')->showCount(true);
@@ -531,7 +531,7 @@ class Lottery extends Base
      */
     public static function getLotteryByStudentId($student_id)
     {
-        $db = \Database::getDB();
+        $db = \phpws2\Database::getDB();
         $tbl = $db->addTable('tg_lottery');
         $tbl->addFieldConditional('student_id', $student_id);
         $row = $db->selectOneRow();
@@ -567,7 +567,7 @@ class Lottery extends Base
 
     private static function removeUnclaimedSpot($spot_id)
     {
-        $db = \Database::getDB();
+        $db = \phpws2\Database::getDB();
         $tbl = $db->addTable('tg_lottery');
         $tbl->addFieldConditional('spot_id', $spot_id);
         $tbl->addFieldConditional('picked_up', 0);
@@ -576,7 +576,7 @@ class Lottery extends Base
 
     public static function removeStudentWin($student_id, $game_id)
     {
-        $db = \Database::getDB();
+        $db = \phpws2\Database::getDB();
         $tbl = $db->addTable('tg_lottery');
         $tbl->addFieldConditional('student_id', $student_id);
         $tbl->addFieldConditional('game_id', $game_id);
