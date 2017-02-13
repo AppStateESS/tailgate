@@ -6,7 +6,7 @@ namespace tailgate\Controller;
  * @license http://opensource.org/licenses/lgpl-3.0.html
  * @author Matthew McNaney <mcnaney at gmail dot com>
  */
-class User extends \Http\Controller
+class User extends \phpws2\Http\Controller
 {
 
     public function get(\Canopy\Request $request)

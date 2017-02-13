@@ -7,7 +7,7 @@
 
 function tailgate_uninstall(&$content)
 {
-    $db = Database::newDB();
+    $db = \phpws2\Database::newDB();
 
     $db->buildTable('tg_game')->drop(true);
     $db->buildTable('tg_lot')->drop(true);

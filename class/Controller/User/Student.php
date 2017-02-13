@@ -84,7 +84,7 @@ class Student extends Base
 
     private function getContent()
     {
-        $json['welcome'] = \Settings::get('tailgate', 'welcome');
+        $json['welcome'] = \phpws2\Settings::get('tailgate', 'welcome');
 
         return $json;
     }
@@ -113,7 +113,7 @@ class Student extends Base
     
     private function notStudentMessage()
     {
-        $email = \Settings::get('tailgate', 'reply_to');
+        $email = \phpws2\Settings::get('tailgate', 'reply_to');
         return <<<EOF
 <h2>Sorry</h2>
 <p>You are not listed as a student. Only students in good standing may participate in the tailgate lottery.</p>
@@ -151,7 +151,7 @@ EOF;
 
     private function newAccountInformation()
     {
-        $content = \Settings::get('tailgate', 'new_account_information');
+        $content = \phpws2\Settings::get('tailgate', 'new_account_information');
         $content .= '<div class="text-center"><a class="btn btn-primary btn-lg" href="' . PHPWS_SOURCE_HTTP . 'admin/">Click to login</a></div>';
         return $content;
     }
