@@ -23,7 +23,7 @@ class Game extends Base
                 break;
         }
 
-        $view = new \View\JsonView($json);
+        $view = new \phpws2\View\JsonView($json);
         return $view;
     }
 

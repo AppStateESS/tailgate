@@ -16,7 +16,7 @@ class Module extends \Canopy\Module implements \Canopy\SettingDefaults
         $this->setProperName('Tailgating');
     }
 
-    public function beforeRun(\Canopy\Request $request, \Controller $controller)
+    public function beforeRun(\Canopy\Request $request, \Canopy\Controller $controller)
     {
         require_once PHPWS_SOURCE_DIR . 'mod/tailgate/conf/defines.php';
     }

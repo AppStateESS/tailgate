@@ -25,14 +25,14 @@ class Settings extends Base
                 $json = array('success'=> filter_input(INPUT_GET, 'replyTo', FILTER_VALIDATE_EMAIL));
                 break;
         }
-        $view = new \View\JsonView($json);
+        $view = new \phpws2\View\JsonView($json);
         return $view;
     }
 
     public function post(\Canopy\Request $request)
     {
         $factory = new Factory;
-        $view = new \View\JsonView(array('success' => true));
+        $view = new \phpws2\View\JsonView(array('success' => true));
         $response = new \Canopy\Response($view);
 
         if (!$request->isVar('command')) {

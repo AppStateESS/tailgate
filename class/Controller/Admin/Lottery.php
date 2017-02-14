@@ -35,14 +35,14 @@ class Lottery extends Base
                 throw new \Exception('Bad command:' . $request->getVar('command'));
         }
 
-        $view = new \View\JsonView($json);
+        $view = new \phpws2\View\JsonView($json);
         return $view;
     }
 
     public function post(\Canopy\Request $request)
     {
         $factory = new Factory;
-        $view = new \View\JsonView(array('success' => true));
+        $view = new \phpws2\View\JsonView(array('success' => true));
 
         if (!$request->isVar('command')) {
             throw new \Exception('Bad command');
@@ -57,7 +57,7 @@ class Lottery extends Base
                 break;
 
             case 'notify':
-                $view = $view = new \View\JsonView(array('sent' => $factory->notify()));
+                $view = $view = new \phpws2\View\JsonView(array('sent' => $factory->notify()));
                 break;
 
             case 'completeLottery':
@@ -93,7 +93,7 @@ class Lottery extends Base
         } catch (\Exception $e) {
             $data['error'] = $e->getMessage();
         }
-        $view = new \View\JsonView($data);
+        $view = new \phpws2\View\JsonView($data);
         return $view;
     }
 

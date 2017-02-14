@@ -33,7 +33,7 @@ class Admin extends \phpws2\Http\Controller
 
         $className = 'tailgate\Controller\Admin\\' . $command;
         if (!class_exists($className)) {
-            throw new \Http\NotAcceptableException($request);
+            throw new \phpws2\Http\NotAcceptableException($request);
         }
         $commandObject = new $className($this->getModule());
         return $commandObject;

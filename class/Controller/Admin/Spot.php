@@ -22,14 +22,14 @@ class Spot extends Base
                 break;
         }
 
-        $view = new \View\JsonView($json);
+        $view = new \phpws2\View\JsonView($json);
         return $view;
     }
 
     public function post(\Canopy\Request $request)
     {
         $factory = new Factory;
-        $view = new \View\JsonView(array('success' => true));
+        $view = new \phpws2\View\JsonView(array('success' => true));
         $response = new \Canopy\Response($view);
 
         if (!$request->isVar('command')) {

@@ -36,7 +36,7 @@ class Report extends Base
                 throw new \Exception('Unknown report command');
         }
         
-        $view = new \View\HtmlView($content);
+        $view = new \phpws2\View\HtmlView($content);
         return $view;
     }
 

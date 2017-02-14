@@ -47,7 +47,7 @@ class Lottery extends \phpws2\Resource
 
     /**
      * Confirmation code expected from student to confirm they are coming
-     * @var \Variable\Hash
+     * @var \Variable\HashVar
      */
     protected $confirmation;
 
@@ -74,7 +74,7 @@ class Lottery extends \phpws2\Resource
         $this->spot_id = new \phpws2\Variable\IntegerVar(0, 'spot_id');
         $this->winner = new \phpws2\Variable\BooleanVar(false, 'winner');
         $this->picked_up = new \phpws2\Variable\BooleanVar(false, 'picked_up');
-        $this->confirmation = new \phpws2\Variable\Hash(null, 'confirmation');
+        $this->confirmation = new \phpws2\Variable\HashVar(null, 'confirmation');
         $this->confirmation->allowNull(true);
         $this->confirmation->setLimit(40);
         $this->confirmed = new \phpws2\Variable\BooleanVar(false, 'confirmed');

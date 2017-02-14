@@ -25,7 +25,7 @@ class Lottery extends Base
                 echo \Canopy\Server::pageNotFound();
                 exit;
         }
-        $view = new \View\HtmlView($content);
+        $view = new \phpws2\View\HtmlView($content);
         return $view;
     }
 
@@ -54,7 +54,7 @@ class Lottery extends Base
                 break;
         }
 
-        $view = new \View\JsonView($json);
+        $view = new \phpws2\View\JsonView($json);
         return $view;
     }
 
@@ -74,7 +74,7 @@ class Lottery extends Base
 
     public function post(\Canopy\Request $request)
     {
-        $view = new \View\JsonView(array('success' => true));
+        $view = new \phpws2\View\JsonView(array('success' => true));
 
         $command = $request->getVar('command');
         switch ($command) {
@@ -110,7 +110,7 @@ class Lottery extends Base
                 FILTER_SANITIZE_NUMBER_INT);
         $result = $lotteryFactory->pickSpot($lottery_id, $spot_id);
 
-        $view = new \View\JsonView(array('success' => $result));
+        $view = new \phpws2\View\JsonView(array('success' => $result));
         return $view;
     }
 

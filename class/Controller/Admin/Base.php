@@ -30,14 +30,14 @@ abstract class Base extends \phpws2\Http\Controller
 <div id="tailgate-setup"></div>
 $script
 EOF;
-        $view = new \View\HtmlView($content);
+        $view = new \phpws2\View\HtmlView($content);
         return $view;
     }
 
     protected function deactivate($factory, $id)
     {
         $factory->deactivate($id);
-        $view = new \View\JsonView(array('success' => true));
+        $view = new \phpws2\View\JsonView(array('success' => true));
         $response = new \Canopy\Response($view);
         return $response;
     }

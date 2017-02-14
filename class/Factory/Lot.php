@@ -62,7 +62,7 @@ class Lot extends Base
         $id->showCount();
         $id->setAlias('total_spots');
 
-        $db->setGroupBy($lot->getField('title'));
+        $db->setGroupBy(array($lot->getField('title'), $lot->getField('id')));
 
         $conditional = new \phpws2\Database\Conditional($db, $lot->getField('id'), $spot->getField('lot_id'), '=');
 

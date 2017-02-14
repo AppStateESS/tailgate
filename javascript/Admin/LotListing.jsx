@@ -9,6 +9,7 @@ class LotListing extends React.Component {
     this.state = {
       spotKey: -1
     }
+    this.resetSpots = this.resetSpots.bind(this)
   }
 
   resetSpots() {

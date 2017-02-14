@@ -24907,6 +24907,7 @@
 	    _this.state = {
 	      spotKey: -1
 	    };
+	    _this.resetSpots = _this.resetSpots.bind(_this);
 	    return _this;
 	  }
 	

@@ -50,14 +50,14 @@ class Game extends Base
                 throw new \Exception('Unknown command');
         }
 
-        $view = new \View\JsonView($json);
+        $view = new \phpws2\View\JsonView($json);
         return $view;
     }
 
     public function post(\Canopy\Request $request)
     {
         $factory = new Factory;
-        $view = new \View\JsonView(array('success' => true));
+        $view = new \phpws2\View\JsonView(array('success' => true));
 
         if (!$request->isVar('command')) {
             throw new \Exception('Bad command');
@@ -68,19 +68,19 @@ class Game extends Base
                 break;
 
             case 'updateSignupStart':
-                $view = new \View\JsonView($this->updateSignupStart());
+                $view = new \phpws2\View\JsonView($this->updateSignupStart());
                 break;
             
             case 'updateSignupEnd':
-                $view = new \View\JsonView($this->updateSignupEnd());
+                $view = new \phpws2\View\JsonView($this->updateSignupEnd());
                 break;
             
             case 'updatePickupDeadline':
-                $view = new \View\JsonView($this->updatePickupDeadline());
+                $view = new \phpws2\View\JsonView($this->updatePickupDeadline());
                 break;
             
             case 'updateKickoff':
-                $view = new \View\JsonView($this->updateKickoff());
+                $view = new \phpws2\View\JsonView($this->updateKickoff());
                 break;
             
             case 'complete':
@@ -205,7 +205,7 @@ class Game extends Base
         $factory->save($game);
         $garray = $game->getStringVars();
         $garray = $factory->addVisitorInformation($garray);
-        $view = new \View\JsonView($garray);
+        $view = new \phpws2\View\JsonView($garray);
         return $view;
     }
 
