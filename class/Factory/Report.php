@@ -103,6 +103,7 @@ class Report
     {
         $db = \phpws2\Database::getDB();
         $lot = $db->addTable('tg_lot');
+        $lot->addFieldConditional('active', 1);
         $lot->addField('title', 'lot_title');
         $lot->addOrderBy('title');
         $spot = $db->addTable('tg_spot');
@@ -132,7 +133,6 @@ class Report
         $template->setModuleTemplate('tailgate', 'Admin/Report/spots.html');
 
         $content = $template->get();
-        
         self::downloadPDF($content, 'Spot_Report.pdf');
     }
 
