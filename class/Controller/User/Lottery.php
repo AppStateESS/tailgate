@@ -138,8 +138,14 @@ class Lottery extends Base
         if ($confirm) {
             $template->add('message_color', 'success');
             $template->add('message', 'Lottery win confirmed!');
+            $auth = \Current_User::getAuthorization();
+            if (!empty($auth->login_link)) {
+                $url = $auth->login_link;
+            } else {
+                $url = 'index.php?module=users&action=user&command=login_page';
+            }
             if (!\Current_User::isLogged()) {
-                $template->add('url', \Canopy\Server::getSiteUrl() . 'admin/');
+                $template->add('url', $url);
                 $template->add('label', 'Log in to pick your lot');
             } else {
                 $template->add('url', \Canopy\Server::getSiteUrl() . 'tailgate/');
