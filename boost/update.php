@@ -27,14 +27,14 @@ EOF;
             $dt = new \phpws2\Database\Datatype\Smallint($tbl, 'emailed');
             $dt->setDefault(0);
             $dt->add();
-            
+
             $db = \phpws2\Database::getDB();
             $tbl = $db->addTable('tg_lottery');
             $columns[] = $tbl->getDataType('student_id');
             $columns[] = $tbl->getDataType('game_id');
             $unique = new \phpws2\Database\Unique($columns);
             $unique->add();
-            
+
             $content[] = <<<EOF
 <pre>
     + Flagging beginning of lottery
@@ -42,6 +42,8 @@ EOF;
     + Unique keys added to tg_lottery to prevent repeats
 </pre>
 EOF;
+        case (version_compare($currentVersion, '1.2.1', '<')):
+            $content[] = '<pre>+ Fixed spot report bug</pre>';
     }
     return true;
 }
