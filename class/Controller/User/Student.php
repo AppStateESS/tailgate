@@ -24,9 +24,10 @@ class Student extends Base
             case 'landing':
                 $content = $this->landing();
                 break;
-            
+
             default:
-                echo \Canopy\Server::pageNotFound();exit;
+                echo \Canopy\Server::pageNotFound();
+                exit;
                 break;
         }
 
@@ -110,7 +111,7 @@ class Student extends Base
             return $this->newAccountInformation();
         }
     }
-    
+
     private function notStudentMessage()
     {
         $email = \phpws2\Settings::get('tailgate', 'reply_to');
@@ -152,7 +153,13 @@ EOF;
     private function newAccountInformation()
     {
         $content = \phpws2\Settings::get('tailgate', 'new_account_information');
-        $content .= '<div class="text-center"><a class="btn btn-primary btn-lg" href="' . PHPWS_SOURCE_HTTP . 'admin/">Click to login</a></div>';
+        $auth = \Current_User::getAuthorization();
+        if (!empty($auth->login_link)) {
+            $url = PHPWS_HOME_HTTP . $auth->login_link;
+        } else {
+            $url = PHPWS_HOME_HTTP . 'index.php?module=users&action=user&command=login_page';
+        }
+        $content .= '<div class="text-center"><a class="btn btn-primary btn-lg" href="' . $url . '">Click to login</a></div>';
         return $content;
     }
 

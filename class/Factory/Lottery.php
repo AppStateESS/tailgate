@@ -81,7 +81,7 @@ class Lottery extends Base
         $lottery->setVars($result);
         return $lottery;
     }
-    
+
     public function totalSpotsClaimed($game_id)
     {
         $db = \phpws2\Database::getDB();
@@ -156,7 +156,7 @@ class Lottery extends Base
         $tbl->addFieldConditional('winner', 1);
         $col = $tbl->addField('id');
         $col->showCount(true);
-        return (int)$db->selectColumn();
+        return (int) $db->selectColumn();
     }
 
     public function flagWinner($lottery_id)
@@ -497,7 +497,13 @@ class Lottery extends Base
         if (\Current_User::isLogged()) {
             $content = '<a class="btn btn-primary btn-sm" href="./tailgate">Check lottery status</a>';
         } else {
-            $content = '<a class="btn btn-primary btn-sm" href="./admin">Login</a>';
+            $auth = \Current_User::getAuthorization();
+            if (!empty($auth->login_link)) {
+                $url = PHPWS_HOME_HTTP . $auth->login_link;
+            } else {
+                $url = PHPWS_HOME_HTTP . 'index.php?module=users&action=user&command=login_page';
+            }
+            $content = '<a class="btn btn-primary btn-sm" href="' . $url . '">Login</a>';
         }
         return $content;
     }
