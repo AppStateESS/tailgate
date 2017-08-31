@@ -2,17 +2,23 @@ sudo: false
 language: php
 php:
 - 7
-
 install:
 - nvm install 6
 - npm install
-
 script:
 - ".travis-build/phplint ."
-#- phpunit
-
 after_success:
 - npm run prod
 - rm -rf node_modules
 - tar -czf tailgate.tar.gz *
-
+deploy:
+  provider: releases
+  skip_cleanup: true
+  api_key:
+    secure: n5E+DfSeUjjO7XVSlZci+q68BpxK9DkWykvet71i8gAv+hJ4q+b9giYgrUEHXdJkrvxRni7U/AtcFLNRQoTAcET5eeCEX6TzOaEK2rGqPBuTvH+F65KA7fBRtto/9nqHa4S1sjA4720WFxIDiW3PGMEwaOowkn2dsHwviWSmsqKOTz2c9rdlLpM5HXFE10u5fML1f5hN8pxxq79BtgqGCh5wbU8+IxkmRdR/JFGbIZOhc1N5sK5f7SowGW6Eb5lNpu4KeEKjoJA4jRyjDVKE/4szVHs+tHI4VH2jU/K7N4urssoKvsUbX4+8PXuSKodc7VnvpyVaygx71ZqzbO4AS4m8vxyS4DsLgV2JeHD5Lh3BguMKsutSFCXdLTIoLV58T8w0v6im5iprzwg93SzLdd3tDaTy0yWfkHRMtFbNIiLEC+e27/xP18KfwYQoc/k6zykmq9FILNLh4cOTXzQyE60qO1FZw38ZPIkaAfiehjINlbj1XV561tUBo8XhJb9fJIy5OsiVwKxDtggneyf9xPq5l6NGCY3P6vqi5GJFuSKf+VqTJ2926SQHDsEM9FiLYGaI467UkTLzJBY8Uf6xvSC+7VJ6j+cCC+WlZA15bMgOF5VYdsNfzeNdJqz5wDx/SGhCSRXqqrYhdvNeKQrtcEpzEcnfRG1X8CDksWwje/s=
+  file: tailgate.tar.gz
+  overwrite: true
+  on:
+    repo: AppStateESS/tailgate
+    branch: master
+    tags: true
