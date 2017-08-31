@@ -2,15 +2,19 @@ sudo: false
 language: php
 php:
 - 7
+
 install:
 - nvm install 6
 - npm install
+
 script:
 - ".travis-build/phplint ."
+
 after_success:
 - npm run prod
 - rm -rf node_modules
 - tar -czf tailgate.tar.gz *
+
 deploy:
   provider: releases
   skip_cleanup: true
