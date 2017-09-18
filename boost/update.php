@@ -44,6 +44,9 @@ EOF;
 EOF;
         case (version_compare($currentVersion, '1.2.1', '<')):
             $content[] = '<pre>+ Fixed spot report bug</pre>';
+
+        case (version_compare($currentVersion, '1.2.2', '<')):
+            $content[] = '<pre>+ Removed wkpdftohtml to use dompdf.</pre>';
     }
     return true;
 }
