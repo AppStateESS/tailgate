@@ -24,9 +24,4 @@ if (!defined('SWIFT_MAIL_TRANSPORT_TYPE')) {
 
 define('REACT_DEVMODE', false);
 
-define('WKPDF_PATH', '/usr/bin/wkhtmltopdf');
-
-define('USE_XVFB', true);
-define('XVFB_PATH', '/usr/bin/xvfb-run');
-
 define('TAILGATE_BANNER_URL', 'url/to/banner/site');

@@ -1,5 +1,6 @@
 {
     "require": {
-        "swiftmailer/swiftmailer": "@stable"
+        "swiftmailer/swiftmailer": "@stable",
+        "dompdf/dompdf": "^0.8.0"
     }
 }
