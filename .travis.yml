@@ -6,6 +6,7 @@ php:
 install:
 - nvm install 6
 - npm install
+- composer install
 
 script:
 - ".travis-build/phplint ."
