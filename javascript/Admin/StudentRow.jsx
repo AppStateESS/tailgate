@@ -195,7 +195,7 @@ class StudentRow extends React.Component {
             className="btn btn-sm btn-danger"
             style={dangerStyle}
             onClick={this.deleteStudent}>
-            <i className="fa fa-trash-o"></i>&nbsp; Delete</button>
+            <i className="far fa-trash-alt"></i>&nbsp; Delete</button>
         </td>
       </tr>
     )

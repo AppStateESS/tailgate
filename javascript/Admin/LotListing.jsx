@@ -83,7 +83,7 @@ class LotListing extends React.Component {
                   className="btn btn-danger btn-sm"
                   onClick={this.delete.bind(this, i)}
                   style={spacing}>
-                  <i className="fa fa-trash-o"></i>&nbsp; Delete</button>
+                  <i className="far fa-trash-alt"></i>&nbsp; Delete</button>
               </span>
             }
           }
