@@ -72,7 +72,7 @@ class GameForm extends React.Component {
         <div className="row">
           <div className="col-sm-12 text-center">
             <button className="btn btn-success" onClick={this.props.save}>
-              <i className="fa fa-save"></i>
+              <i className="fa fa-save"></i>&nbsp;
               Save game
             </button>
           </div>
