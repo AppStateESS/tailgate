@@ -1,4 +1,5 @@
 import React from 'react'
+import PropTypes from 'prop-types'
 
 class Icon extends React.Component {
   constructor(props) {
@@ -25,10 +26,10 @@ class Icon extends React.Component {
 
 Icon.defaultProps = {}
 Icon.propTypes = {
-  handleOver : React.PropTypes.func,
-  handleClick: React.PropTypes.func,
-  iconClass: React.PropTypes.string,
-  title: React.PropTypes.string
+  handleOver : PropTypes.func,
+  handleClick: PropTypes.func,
+  iconClass: PropTypes.string,
+  title: PropTypes.string
 }
 
 class YesIcon extends React.Component {

@@ -1,9 +1,9 @@
-/* global $ */
-
 import React from 'react'
 import TextInput from '../Mixin/TextInput.jsx'
 import Alert from '../Mixin/Alert.jsx'
+import PropTypes from 'prop-types'
 
+/* global $ */
 class VisitorForm extends React.Component {
   constructor(props) {
     super(props)
@@ -73,8 +73,8 @@ VisitorForm.defaultProps = {
 }
 
 VisitorForm.propTypes = {
-  closeForm: React.PropTypes.func,
-  loadVisitors: React.PropTypes.func
+  closeForm: PropTypes.func,
+  loadVisitors: PropTypes.func
 }
 
 export default VisitorForm

@@ -1,5 +1,6 @@
 import React from 'react'
 import {Icon} from '../Mixin/Icon.jsx'
+import PropTypes from 'prop-types'
 
 /* global $ */
 
@@ -36,8 +37,8 @@ class EligibleIcon extends React.Component {
 }
 
 EligibleIcon.propTypes = {
-  value : React.PropTypes.object,
-  handleClick: React.PropTypes.func
+  value : PropTypes.object,
+  handleClick: PropTypes.func
 }
 
 class BannedIcon extends React.Component {
@@ -75,8 +76,8 @@ class BannedIcon extends React.Component {
 }
 
 BannedIcon.propTypes = {
-  value : React.PropTypes.object,
-  handleClick: React.PropTypes.func
+  value : PropTypes.object,
+  handleClick: PropTypes.func
 }
 
 export {EligibleIcon, BannedIcon}

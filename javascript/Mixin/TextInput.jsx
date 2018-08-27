@@ -1,4 +1,6 @@
 import React from 'react'
+import PropTypes from 'prop-types'
+
 
 class TextInput extends React.Component {
   constructor(props) {
@@ -96,17 +98,17 @@ TextInput.defaultProps = {
 }
 
 TextInput.propTypes = {
-  name: React.PropTypes.string,
-  inputId: React.PropTypes.string,
-  label: React.PropTypes.string,
-  required: React.PropTypes.bool,
-  handleBlur: React.PropTypes.func,
-  handlePress: React.PropTypes.func,
-  handleChange: React.PropTypes.func,
-  placeholder: React.PropTypes.string,
-  defaultValue: React.PropTypes.string,
-  value: React.PropTypes.string,
-  style: React.PropTypes.object
+  name: PropTypes.string,
+  inputId: PropTypes.string,
+  label: PropTypes.string,
+  required: PropTypes.bool,
+  handleBlur: PropTypes.func,
+  handlePress: PropTypes.func,
+  handleChange: PropTypes.func,
+  placeholder: PropTypes.string,
+  defaultValue: PropTypes.string,
+  value: PropTypes.string,
+  style: PropTypes.object
 }
 
 export default TextInput

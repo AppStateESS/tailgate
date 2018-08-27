@@ -1,6 +1,7 @@
 import React from 'react'
 import VisitorRow from './VisitorRow.jsx'
 import VisitorForm from './VisitorForm.jsx'
+import PropTypes from 'prop-types'
 
 /* global $ */
 
@@ -89,7 +90,7 @@ Visitors.defaultProps = {
   game: {}
 }
 Visitors.propTypes = {
-  game: React.PropTypes.object
+  game: PropTypes.object
 }
 
 export default Visitors

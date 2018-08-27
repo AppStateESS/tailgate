@@ -94,8 +94,8 @@ class ConfirmSpot extends React.Component {
 }
 
 ConfirmSpot.propTypes = {
-  lottery: React.PropTypes.object,
-  loadData: React.PropTypes.func
+  lottery: PropTypes.object,
+  loadData: PropTypes.func
 }
 
 export default ConfirmSpot

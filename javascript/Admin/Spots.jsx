@@ -2,6 +2,7 @@ import React from 'react'
 import Waiting from './Waiting.jsx'
 import {YesButton, NoButton} from './Button.jsx'
 import {Alcohol, Sober} from './Alcohol.jsx'
+import PropTypes from 'prop-types'
 
 /* global $ */
 
@@ -194,10 +195,10 @@ Spots.defaultProps = {
 }
 
 Spots.propTypes = {
-  game: React.PropTypes.object,
-  close: React.PropTypes.func,
-  reload: React.PropTypes.func,
-  lotId: React.PropTypes.string
+  game: PropTypes.object,
+  close: PropTypes.func,
+  reload: PropTypes.func,
+  lotId: PropTypes.string
 }
 
 export default Spots

@@ -1,5 +1,6 @@
 import React from 'react'
 import VisitorRowForm from './VisitorRowForm.jsx'
+import PropTypes from 'prop-types'
 
 class VisitorRow extends React.Component {
   constructor(props) {
@@ -59,11 +60,11 @@ class VisitorRow extends React.Component {
 }
 
 VisitorRow.propTypes = {
-  update: React.PropTypes.func,
-  remove: React.PropTypes.func,
-  value: React.PropTypes.object,
-  game: React.PropTypes.object,
-  hideForm: React.PropTypes.func
+  update: PropTypes.func,
+  remove: PropTypes.func,
+  value: PropTypes.object,
+  game: PropTypes.object,
+  hideForm: PropTypes.func
 }
 
 export default VisitorRow
@@ -86,7 +87,7 @@ class VisitorRowEditButton extends React.Component {
 }
 
 VisitorRowEditButton.propTypes = {
-  handleClick: React.PropTypes.func
+  handleClick: PropTypes.func
 }
 
 class VisitorRowDeleteButton extends React.Component {
@@ -106,5 +107,5 @@ class VisitorRowDeleteButton extends React.Component {
 }
 
 VisitorRowDeleteButton.propTypes = {
-  handleClick: React.PropTypes.func
+  handleClick: PropTypes.func
 }

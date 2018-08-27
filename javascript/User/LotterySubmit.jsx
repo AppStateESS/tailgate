@@ -24,8 +24,8 @@ class LotterySubmit extends React.Component {
 }
 
 LotterySubmit.propTypes = {
-  game: React.PropTypes.object,
-  handleClick: React.PropTypes.func
+  game: PropTypes.object,
+  handleClick: PropTypes.func
 }
 
 export default LotterySubmit

@@ -1,6 +1,7 @@
 import React from 'react'
 import TextInput from '../Mixin/TextInput.jsx'
 import StudentRow from './StudentRow.jsx'
+import PropTypes from 'prop-types'
 
 /* global $ */
 
@@ -172,8 +173,8 @@ class Students extends React.Component {
 
 Students.defaultProps = {}
 Students.propTypes = {
-  game: React.PropTypes.object,
-  canAdd: React.PropTypes.bool
+  game: PropTypes.object,
+  canAdd: PropTypes.bool
 }
 
 export default Students

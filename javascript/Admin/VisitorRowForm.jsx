@@ -1,4 +1,5 @@
 import React from 'react'
+import PropTypes from 'prop-types'
 
 /* global $ */
 
@@ -79,10 +80,10 @@ class VisitorRowForm extends React.Component {
 }
 
 VisitorRowForm.propTypes = {
-  handleClick: React.PropTypes.func,
-  update: React.PropTypes.func,
-  value: React.PropTypes.object,
-  hide: React.PropTypes.func
+  handleClick: PropTypes.func,
+  update: PropTypes.func,
+  value: PropTypes.object,
+  hide: PropTypes.func
 }
 
 export default VisitorRowForm

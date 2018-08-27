@@ -1,4 +1,5 @@
 import React from 'react'
+import PropTypes from 'prop-types'
 
 /**
  * this script shows the option to run the lottery
@@ -57,8 +58,8 @@ class LotteryRun extends React.Component {
 }
 
 LotteryRun.propTypes = {
-  startLottery: React.PropTypes.func,
-  game: React.PropTypes.object
+  startLottery: PropTypes.func,
+  game: PropTypes.object
 }
 
 export default LotteryRun

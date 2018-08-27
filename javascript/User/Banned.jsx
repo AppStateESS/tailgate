@@ -15,7 +15,7 @@ class Banned extends React.Component {
 }
 
 Banned.propTypes = {
-  student : React.PropTypes.object
+  student : PropTypes.object
 }
 
 export default Banned

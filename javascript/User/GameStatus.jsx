@@ -116,10 +116,10 @@ class GameStatus extends React.Component {
 }
 
 GameStatus.propTypes = {
-  game: React.PropTypes.object,
-  lottery: React.PropTypes.object,
-  spot: React.PropTypes.object,
-  loadData: React.PropTypes.func
+  game: PropTypes.object,
+  lottery: PropTypes.object,
+  spot: PropTypes.object,
+  loadData: PropTypes.func
 }
 
 export default GameStatus
