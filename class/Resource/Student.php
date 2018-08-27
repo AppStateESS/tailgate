@@ -167,6 +167,11 @@ class Student extends \phpws2\Resource
     {
         return $this->username->get();
     }
+    
+    public function getUserId()
+    {
+        return $this->user_id->get();
+    }
 
     public function getWins()
     {
