@@ -1,5 +1,6 @@
 import React from 'react'
 import {EligibleIcon, BannedIcon} from './StudentRowIcons.jsx'
+import PropTypes from 'prop-types'
 
 /* global $ */
 
@@ -158,7 +159,7 @@ class StudentRow extends React.Component {
       winner = <span className="text-danger">Banned</span>
     } else if (value.eligible === '0') {
       winner = <span className="text-warning">Ineligible</span>
-    } else if (this.props.spots.length > 0) {
+    } else if (this.props.spots && this.props.spots.length > 0) {
       let winnerStyle = {
         marginRight: '1em'
       }
@@ -205,11 +206,11 @@ class StudentRow extends React.Component {
 
 StudentRow.defaultProps = {}
 StudentRow.propTypes = {
-  student: React.PropTypes.object,
-  spots: React.PropTypes.array,
-  setMessage: React.PropTypes.func,
-  resetRows: React.PropTypes.func,
-  game: React.PropTypes.object
+  student: PropTypes.object,
+  spots: PropTypes.array,
+  setMessage: PropTypes.func,
+  resetRows: PropTypes.func,
+  game: PropTypes.object
 }
 
 export default StudentRow
