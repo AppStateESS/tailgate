@@ -1,4 +1,5 @@
 import React from 'react'
+import PropTypes from 'prop-types'
 
 class Sober extends React.Component {
   constructor(props) {
@@ -16,7 +17,7 @@ class Sober extends React.Component {
 
 Sober.defaultProps = {}
 Sober.propTypes = {
-  toggle : React.PropTypes.func
+  toggle : PropTypes.func
 }
 
 class Alcohol extends React.Component {
@@ -37,7 +38,7 @@ class Alcohol extends React.Component {
 
 Alcohol.defaultProps = {}
 Alcohol.propTypes = {
-  toggle : React.PropTypes.func
+  toggle : PropTypes.func
 }
 
 export {Sober, Alcohol}
