@@ -11,13 +11,28 @@ class React
 
     public static function load($filename, $development = true, $addons = true)
     {
-        $root_directory = PHPWS_SOURCE_HTTP . 'mod/tailgate/javascript/dist';
+        static $vendorUsed = false;
+        $vendor = null;
+        
+        $root_directory = PHPWS_SOURCE_HTTP . 'mod/tailgate/javascript';
         if ($development) {
-            $script_file = $filename . '.dev.js';
+            $subdir = 'dev';
+            $script_file = "dev/{$filename}.js";
         } else {
-            $script_file = $filename . '.prod.js';
+            $subdir = 'build';
+            $script_file = "build/{$filename}.js";
         }
-        $script_header = "<script type='text/javascript' src='$root_directory/$script_file'></script>";
+        
+        if (!$vendorUsed) {
+            $vendorUsed = true;
+            $vendor = <<<EOF
+<script type="text/javascript" src="$root_directory/$subdir/vendor.js"></script>
+EOF;
+        }
+        $script_header = <<<EOF
+$vendor
+<script type="text/javascript" src="$root_directory/$subdir/{$filename}.js"></script>
+EOF;
         return $script_header;
     }
 
