@@ -168,7 +168,10 @@ class Student extends Base
         $student->setEligible(false);
         self::saveResource($student);
 
-        Lottery::removeStudentWin($student_id, Game::getCurrentId());
+        $gameId = Game::getCurrentId();
+        if ($gameId) {
+            Lottery::removeStudentWin($student_id, $gameId);
+        }
     }
 
     public function unban($student_id)
