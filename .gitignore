@@ -3,3 +3,6 @@
 /vendor/
 /conf/defines.php
 /javascript/dist/
+/javascript/build/
+/javascript/dev/
+/assets.json
