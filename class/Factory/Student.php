@@ -205,13 +205,21 @@ class Student extends Base
 
     public function delete($student_id)
     {
-        $student = new Resource;
-        $student->setId($student_id);
+        $student = $this->getById($student_id);
+        $userId = $student->getUserId();
+        $user = new \PHPWS_User($userId);
+
         self::deleteResource($student);
         $db = \phpws2\Database::getDB();
         $lottery = $db->addTable('tg_lottery');
         $lottery->addFieldConditional('student_id', $student_id);
         $db->delete();
+
+        // If current user is allowed to delete users and the student deleted is not a deity or a higher level admin THEN
+        // remove the user record as well.
+        if (\Current_User::allow('users', 'delete_users') && (!$user->isDeity() && !$user->allow('users') && !$user->allow('tailgate'))) {
+            $user->kill();
+        }
     }
 
     public static function incrementWins($student_id)
