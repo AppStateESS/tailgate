@@ -1,6 +1,7 @@
 import React from 'react'
 import TextInput from '../Mixin/TextInput.jsx'
 import Alert from '../Mixin/Alert.jsx'
+import PropTypes from 'prop-types'
 
 /* global $ */
 
@@ -91,8 +92,8 @@ class LotForm extends React.Component {
 LotForm.defaultProps = {}
 
 LotForm.propTypes = {
-  closeForm: React.PropTypes.func,
-  loadLots: React.PropTypes.func
+  closeForm: PropTypes.func,
+  loadLots: PropTypes.func
 }
 
 export default LotForm

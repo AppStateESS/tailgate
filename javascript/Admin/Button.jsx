@@ -1,4 +1,5 @@
 import React from 'react'
+import PropTypes from 'prop-types'
 
 class YesButton extends React.Component {
   constructor(props) {
@@ -16,8 +17,8 @@ class YesButton extends React.Component {
 }
 
 YesButton.propTypes = {
-  handleClick : React.PropTypes.func,
-  label: React.PropTypes.string
+  handleClick : PropTypes.func,
+  label: PropTypes.string
 }
 
 
@@ -39,8 +40,8 @@ class NoButton extends React.Component {
 NoButton.defaultProps = {}
 
 NoButton.propTypes = {
-  handleClick : React.PropTypes.func,
-  label: React.PropTypes.string
+  handleClick : PropTypes.func,
+  label: PropTypes.string
 }
 
 export {YesButton, NoButton}

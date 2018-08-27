@@ -1,6 +1,7 @@
 import React from 'react'
 import LotForm from './LotForm.jsx'
 import LotListing from './LotListing.jsx'
+import PropTypes from 'prop-types'
 
 class Lots extends React.Component {
   constructor(props) {
@@ -44,9 +45,9 @@ class Lots extends React.Component {
 }
 
 Lots.propTypes = {
-  loadLots: React.PropTypes.func,
-  lots: React.PropTypes.array,
-  game: React.PropTypes.object
+  loadLots: PropTypes.func,
+  lots: PropTypes.array,
+  game: PropTypes.object
 
 }
 

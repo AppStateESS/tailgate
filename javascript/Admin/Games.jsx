@@ -2,6 +2,8 @@ import React from 'react'
 import GameInfo from './GameInfo.jsx'
 import GameForm from './GameForm.jsx'
 import Waiting from './Waiting.jsx'
+import PropTypes from 'prop-types'
+
 /* global $ */
 
 class Games extends React.Component {
@@ -180,11 +182,11 @@ Games.defaultProps = {
 }
 
 Games.propTypes = {
-  loadGame: React.PropTypes.func,
-  loadLots: React.PropTypes.func,
-  startLottery: React.PropTypes.func,
-  game: React.PropTypes.object,
-  lots: React.PropTypes.array
+  loadGame: PropTypes.func,
+  loadLots: PropTypes.func,
+  startLottery: PropTypes.func,
+  game: PropTypes.object,
+  lots: PropTypes.array
 }
 
 export default Games

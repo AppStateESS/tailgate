@@ -1,4 +1,5 @@
 import React from 'react'
+import PropTypes from 'prop-types'
 
 class DatetimeBox extends React.Component {
   constructor(props) {
@@ -19,10 +20,10 @@ class DatetimeBox extends React.Component {
 }
 
 DatetimeBox.propTypes = {
-  button: React.PropTypes.element,
-  title: React.PropTypes.string,
-  date: React.PropTypes.string,
-  bgColor: React.PropTypes.string
+  button: PropTypes.element,
+  title: PropTypes.string,
+  date: PropTypes.string,
+  bgColor: PropTypes.string
 }
 
 export default DatetimeBox

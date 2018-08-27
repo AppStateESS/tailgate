@@ -1,5 +1,6 @@
 import React from 'react'
 import Spots from './Spots.jsx'
+import PropTypes from 'prop-types'
 
 /* global $ */
 
@@ -122,9 +123,9 @@ LotListing.defaultProps = {
   lots: []
 }
 LotListing.propTypes = {
-  game: React.PropTypes.object,
-  lots: React.PropTypes.array,
-  loadLots: React.PropTypes.func
+  game: PropTypes.object,
+  lots: PropTypes.array,
+  loadLots: PropTypes.func
 }
 
 export default LotListing

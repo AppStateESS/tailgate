@@ -1,4 +1,5 @@
 import React from 'react'
+import PropTypes from 'prop-types'
 
 class EditDateButton extends React.Component {
   constructor() {
@@ -17,8 +18,8 @@ class EditDateButton extends React.Component {
 EditDateButton.defaultProps = {buttonId: null, handleClick: null}
 
 EditDateButton.propTypes = {
-  buttonId : React.PropTypes.string,
-  handleClick: React.PropTypes.func
+  buttonId : PropTypes.string,
+  handleClick: PropTypes.func
 }
 
 export default EditDateButton

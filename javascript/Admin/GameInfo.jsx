@@ -1,6 +1,7 @@
 import React from 'react'
 import LotteryRun from './LotteryRun.jsx'
-import {SignupStart, SignupEnd, PickupDeadline, Kickoff} from './DateSelect.jsx'
+import {SignupStart, SignupEnd, PickupDeadline, Kickoff,} from './DateSelect.jsx'
+import PropTypes from 'prop-types'
 
 /* global $ */
 
@@ -9,7 +10,7 @@ class GameInfo extends React.Component {
     super(props)
     this.state = {
       message: null,
-      allowEdit: true
+      allowEdit: true,
     }
     this.update = this.update.bind(this)
     this.setError = this.setError.bind(this)
@@ -24,34 +25,34 @@ class GameInfo extends React.Component {
     if (game.lottery_run == '0' || this.state.allowEdit) {
       $('#signup-start').datetimepicker({
         value: game.signup_start_ts,
-        maxDate: game.signup_end_ts.substr(0, 10)
+        maxDate: game.signup_end_ts.substr(0, 10),
       })
 
       $('#signup-end').datetimepicker({
         value: game.signup_end_ts,
         minDate: game.signup_start_ts.substr(0, 10),
-        maxDate: game.pickup_deadline_ts.substr(0, 10)
+        maxDate: game.pickup_deadline_ts.substr(0, 10),
       })
 
       $('#pickup-deadline').datetimepicker({
         value: game.pickup_deadline_ts,
         minDate: game.signup_end_ts.substr(0, 10),
-        maxDate: game.kickoff_ts
+        maxDate: game.kickoff_ts,
       })
 
       $('#kickoff').datetimepicker({
         value: game.kickoff_ts,
-        minDate: game.pickup_deadline_ts.substr(0, 10)
+        minDate: game.pickup_deadline_ts.substr(0, 10),
       })
     }
   }
 
   setError(error) {
-    this.setState({message: (
-        <div className="alert alert-danger">
-          {error}
-        </div>
-      )})
+    this.setState(
+      {message: (<div className="alert alert-danger">
+        {error}
+      </div>)}
+    )
   }
 
   update() {
@@ -79,8 +80,7 @@ class GameInfo extends React.Component {
             href="./tailgate/Admin/Report/?command=pickup"
             target="_blank"
             className="btn btn-primary btn-sm">
-            <i className="fa fa-file-text-o"></i>&nbsp;
-            Pickup report</a>
+            <i className="fa fa-file-text-o"></i>&nbsp; Pickup report</a>
         </div>
       )
 
@@ -90,8 +90,7 @@ class GameInfo extends React.Component {
             href="./tailgate/Admin/Report/?command=spotReport"
             target="_blank"
             className="btn btn-primary btn-sm">
-            <i className="fa fa-file-text-o"></i>&nbsp;
-            Spot report</a>
+            <i className="fa fa-file-text-o"></i>&nbsp; Spot report</a>
         </div>
       )
     }
@@ -118,7 +117,8 @@ class GameInfo extends React.Component {
 
     return (
       <div>
-        <h4>{this.props.game.university} {this.props.game.mascot}</h4>
+        <h4>{this.props.game.university}
+          {this.props.game.mascot}</h4>
         <div className="row">
           <div className="col-sm-3 text-center">
             <strong>Submissions:</strong><br/>{this.props.submissions}
@@ -163,10 +163,11 @@ class GameInfo extends React.Component {
         {winnerReport}
         {pickupReport}
         {spotReport}
-        <div style={{
-          marginTop: '.5em',
-          clear: 'both'
-        }}>
+        <div
+          style={{
+            marginTop: '.5em',
+            clear: 'both',
+          }}>
           {button}
         </div>
       </div>
@@ -182,18 +183,18 @@ GameInfo.defaultProps = {
   completeGame: null,
   availableSpots: 0,
   winners: 0,
-  claimed: 0
+  claimed: 0,
 }
 
 GameInfo.propTypes = {
-  game: React.PropTypes.object,
-  startLottery: React.PropTypes.func,
-  submissions: React.PropTypes.number,
-  loadGame: React.PropTypes.func,
-  completeGame: React.PropTypes.func,
-  availableSpots: React.PropTypes.number,
-  winners: React.PropTypes.number,
-  claimed: React.PropTypes.number
+  game: PropTypes.object,
+  startLottery: PropTypes.func,
+  submissions: PropTypes.number,
+  loadGame: PropTypes.func,
+  completeGame: PropTypes.func,
+  availableSpots: PropTypes.number,
+  winners: PropTypes.number,
+  claimed: PropTypes.number,
 }
 
 export default GameInfo

@@ -1,4 +1,5 @@
 import React from 'react'
+import PropTypes from 'prop-types'
 
 /* global $ */
 
@@ -7,8 +8,9 @@ class RunLottery extends React.Component {
     super(props)
     this.state = {
       spotsLeft: 0,
-      messageLog: '',
+      messageLog: ''
     }
+    this.concatMessage = this.concatMessage.bind(this)
   }
 
   getTotalSpots() {
@@ -51,16 +53,18 @@ class RunLottery extends React.Component {
     this.concatMessage('Starting lottery. Do not refresh or leave page.')
     this.concatMessage('Checking number of available spots.')
     let totalSpotsXHR = this.getTotalSpots()
-    totalSpotsXHR.done(function(data) {
+    totalSpotsXHR.done(function (data) {
       let totalSpots = data.available_spots
       this.concatMessage(totalSpots + ' spots are available.')
       this.setState({spotsLeft: totalSpots})
 
       this.concatMessage('Assigning winners.')
       let winnersXHR = this.chooseWinners()
-      winnersXHR.done(function(data) {
+      winnersXHR.done(function (data) {
         if (data.error !== undefined) {
-          this.concatMessage('An error occurred while running the lottery: ' + data.error)
+          this.concatMessage(
+            'An error occurred while running the lottery: ' + data.error
+          )
           return
         }
         this.concatMessage(data.spots_filled + ' spots filled.')
@@ -70,20 +74,20 @@ class RunLottery extends React.Component {
         if (data.spots_filled === '0') {
           this.concatMessage('Finished. Closing lottery.')
           let closeXHR = this.closeLottery()
-          closeXHR.done(function() {
+          closeXHR.done(function () {
             this.props.loadGame()
           }.bind(this))
         } else {
           this.concatMessage('Notifying winners and losers.')
           let notifyXHR = this.notifyWinners()
-          notifyXHR.done(function(data) {
+          notifyXHR.done(function (data) {
             this.concatMessage(data.sent + ' email(s) sent.')
             this.concatMessage('Finished. Closing lottery.')
             let closeXHR = this.closeLottery()
-            closeXHR.done(function() {
+            closeXHR.done(function () {
               this.props.loadGame()
             }.bind(this))
-          }.bind(this)).fail(function(){
+          }.bind(this)).fail(function () {
             this.concatMessage('The email process failed while sending.')
           }.bind(this))
         }
@@ -94,19 +98,18 @@ class RunLottery extends React.Component {
   render() {
     return (
       <div>
-        <h4>Running lottery for {this.props.currentGame.university}&nbsp;
-          {this.props.currentGame.mascot}&nbsp;
-          -&nbsp;{this.props.currentGame.kickoff_format}</h4>
+        <h4>Running lottery for {this.props.currentGame.university}&nbsp; {this.props.currentGame.mascot}&nbsp; -&nbsp;{this.props.currentGame.kickoff_format}</h4>
         <div>
-          <pre style={{height : '300px', width : '100%'}}>{this.state.messageLog}</pre></div>
-            </div>
+          <pre style={{height : '300px', width : '100%'}}>{this.state.messageLog}</pre>
+        </div>
+      </div>
     )
   }
 }
 
 RunLottery.propTypes = {
-  loadGame: React.PropTypes.func,
-  currentGame: React.PropTypes.object
+  loadGame: PropTypes.func,
+  currentGame: PropTypes.object,
 }
 
 export default RunLottery

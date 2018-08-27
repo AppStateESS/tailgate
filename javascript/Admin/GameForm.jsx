@@ -1,5 +1,7 @@
 import React from 'react'
 import TextInput from '../Mixin/TextInput.jsx'
+import PropTypes from 'prop-types'
+
 
 /* global $ */
 
@@ -81,6 +83,6 @@ class GameForm extends React.Component {
 }
 
 GameForm.propTypes = {
-  visitors: React.PropTypes.array
+  visitors: PropTypes.array
 }
 export default GameForm

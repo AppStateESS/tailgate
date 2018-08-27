@@ -2,6 +2,7 @@ import React from 'react'
 import EditDateButton from './EditDateButton.jsx'
 import DatetimeBox from './DatetimeBox.jsx'
 import Datepicker from '../Mixin/datepicker'
+import PropTypes from 'prop-types'
 
 class DateSelect extends React.Component {
   constructor(props, dom, signupCommand) {
@@ -11,8 +12,8 @@ class DateSelect extends React.Component {
 }
 
 DateSelect.propTypes = {
-  update: React.PropTypes.func,
-  error: React.PropTypes.func
+  update: PropTypes.func,
+  error: PropTypes.func
 }
 
 class SignupStart extends DateSelect {
