@@ -136,11 +136,7 @@ insert into users
 EOF;
 
     $user_stmt = $dbh->prepare($user_insert);
-    $user_stmt->bindParam(':id', $user_id);
-    $user_stmt->bindParam(':username', $username);
-    $user_stmt->bindParam(':full_name', $full_name);
-    $user_stmt->bindParam(':email', $email);
-    
+
     $group_insert = <<<EOF
 insert into users_groups 
     (id, active, name, user_id) 
@@ -148,10 +144,8 @@ insert into users_groups
     (:id, 1, :username, :user_id)
 EOF;
     $group_stmt = $dbh->prepare($group_insert);
-    $group_stmt->bindParam(':id', $group_id);
-    $group_stmt->bindParam(':username', $username);
-    $group_stmt->bindParam(':user_id', $user_id);
-    
+
+
     $student_insert = <<<EOF
 insert into tg_student
     (user_id, first_name, last_name)
@@ -159,16 +153,14 @@ insert into tg_student
     (:user_id, :first_name, :last_name)        
 EOF;
     $student_stmt = $dbh->prepare($student_insert);
-    $student_stmt->bindParam(':user_id', $user_id);
-    $student_stmt->bindParam(':first_name', $first_name);
-    $student_stmt->bindParam(':last_name', $last_name);
-    
+
     $user_id_result = $dbh->query('select id from users_seq', PDO::FETCH_ASSOC);
     $lastUserId = $user_id_result->fetchColumn();
 
-    $group_id_result = $dbh->query('select id from users_groups_seq', PDO::FETCH_ASSOC);
+    $group_id_result = $dbh->query('select id from users_groups_seq',
+            PDO::FETCH_ASSOC);
     $lastGroupId = $group_id_result->fetchColumn();
-    
+
     for ($i = 1; $i <= STUDENT_LIMIT; $i++) {
         $user_id = $lastUserId + $i;
         $group_id = $lastGroupId + $i;
@@ -177,8 +169,20 @@ EOF;
         $full_name = "$first_name $last_name";
         $username = makeUsername($first_name, $last_name);
         $email = $username . '@appstate.edu';
+        $user_stmt->bindParam(':id', $user_id);
+        $user_stmt->bindParam(':username', $username);
+        $user_stmt->bindParam(':full_name', $full_name);
+        $user_stmt->bindParam(':email', $email);
         $user_stmt->execute();
+
+        $group_stmt->bindParam(':id', $group_id);
+        $group_stmt->bindParam(':username', $username);
+        $group_stmt->bindParam(':user_id', $user_id);
         $group_stmt->execute();
+
+        $student_stmt->bindParam(':user_id', $user_id);
+        $student_stmt->bindParam(':first_name', $first_name);
+        $student_stmt->bindParam(':last_name', $last_name);
         $student_stmt->execute();
         echo "Created user $username\n";
     }
