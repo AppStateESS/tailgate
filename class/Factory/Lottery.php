@@ -6,6 +6,9 @@ use tailgate\Resource\Lottery as Resource;
 use tailgate\Factory\Game as GameFactory;
 use tailgate\Factory\Student as StudentFactory;
 
+// Not for production!
+//require_once PHPWS_SOURCE_DIR . 'mod/tailgate/class/FakeSwiftMailer.php';
+
 /**
  * @license http://opensource.org/licenses/lgpl-3.0.html
  * @author Matthew McNaney <mcnaney at gmail dot com>
