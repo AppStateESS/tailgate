@@ -16,7 +16,7 @@ class Students extends React.Component {
       limit: this.limit,
       search: '',
       availableSpots: [],
-      message: null
+      message: null,
     }
     this.setMessage = this.setMessage.bind(this)
     this.reset = this.reset.bind(this)
@@ -29,9 +29,11 @@ class Students extends React.Component {
   }
 
   loadAvailableSpots() {
-    $.getJSON('tailgate/Admin/Lottery', {command: 'getUnclaimedSpots'}).done(function (data) {
-      this.setState({availableSpots: data})
-    }.bind(this))
+    $.getJSON('tailgate/Admin/Lottery', {command: 'getUnclaimedSpots'}).done(
+      function (data) {
+        this.setState({availableSpots: data})
+      }.bind(this)
+    )
   }
 
   searchRows(e) {
@@ -59,9 +61,9 @@ class Students extends React.Component {
     $.getJSON('tailgate/Admin/Student/', {
       command: 'list',
       limit: limit,
-      search: search
+      search: search,
     }).done(function (data) {
-      this.setState({students: data, limit: limit, search: search})
+      this.setState({students: data, limit: limit, search: search,})
     }.bind(this))
   }
 
@@ -95,9 +97,8 @@ class Students extends React.Component {
           )
         } else if (availableCount === 1) {
           availableSentence = (
-            <div className="alert-danger alert">There is just
-              <strong>one</strong>
-              more unclaimed spot left.</div>
+            <div className="alert-danger alert">There is just&nbsp;
+              <strong>ONE</strong>&nbsp;more unclaimed spot left.</div>
           )
         } else {
           availableSentence = <div className="alert alert-success">
@@ -117,9 +118,11 @@ class Students extends React.Component {
     }
     return (
       <div>
-        {this.state.message
-          ? <div className="alert alert-danger">{this.state.message}</div>
-          : null}
+        {
+          this.state.message
+            ? <div className="alert alert-danger">{this.state.message}</div>
+            : null
+        }
         <div className="row">
           <div className="col-sm-4">
             <TextInput
@@ -129,9 +132,11 @@ class Students extends React.Component {
               value={this.state.search}/>
           </div>
           <div className="col-sm-8">
-            {showAvailableCount
-              ? availableSentence
-              : null}
+            {
+              showAvailableCount
+                ? availableSentence
+                : null
+            }
           </div>
         </div>
         <table className="table table-striped sans">
@@ -144,27 +149,32 @@ class Students extends React.Component {
               <th>Wins</th>
               <th className="text-center">Eligible</th>
               <th className="text-center">Allowed</th>
-              {this.props.game && this.props.game.pickup_deadline < timestamp
-                ? <th>Current winner</th>
-                : null}
+              {
+                this.props.game && this.props.game.pickup_deadline < timestamp
+                  ? <th>Current winner</th>
+                  : null
+              }
               <th>&nbsp;</th>
             </tr>
           </thead>
           <tbody id="studentList">
-            {this.state.students.map(function (value, i) {
-              return (<StudentRow
-                key={i}
-                student={value}
-                resetRows={this.reset}
-                canAdd={this.props.canAdd}
-                spots={this.state.availableSpots}
-                setMessage={this.setMessage}
-                game={this.props.game}/>)
-            }.bind(this))}
+            {
+              this.state.students.map(function (value, i) {
+                return (
+                  <StudentRow
+                    key={i}
+                    student={value}
+                    resetRows={this.reset}
+                    canAdd={this.props.canAdd}
+                    spots={this.state.availableSpots}
+                    setMessage={this.setMessage}
+                    game={this.props.game}/>
+                )
+              }.bind(this))
+            }
           </tbody>
         </table>
-        {nextButton
-}
+        {nextButton}
       </div>
     )
   }
@@ -174,7 +184,7 @@ class Students extends React.Component {
 Students.defaultProps = {}
 Students.propTypes = {
   game: PropTypes.object,
-  canAdd: PropTypes.bool
+  canAdd: PropTypes.bool,
 }
 
 export default Students
