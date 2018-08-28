@@ -1,0 +1,16 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <title>FakeSwiftMailer</title>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    </head>
+    <body>
+        <h2>Subject: <?=$subject?></h2>
+        <h3>To: <?=is_array($to) ? implode(',', $to) : $to?></h3>
+        <h3>Cc: <?=is_array($cc) ? implode(',', $cc) : $cc?></h3>
+        <h3>Bcc: <?=is_array($bcc) ? implode(',', $bcc) : $bcc?></h3>
+        <h3>From: <?=is_array($from) ? implode(',', $from) : $from?></h3>
+        <div><?=$body?></div>
+    </body>
+</html>
