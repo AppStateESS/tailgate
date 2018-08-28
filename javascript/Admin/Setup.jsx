@@ -108,14 +108,7 @@ class Setup extends React.Component {
             onClick={this.changeTab.bind(null, 'games')}>
             <a style={cursor}>Games</a>
           </li>
-          <li
-            role="presentation"
-            className={this.state.currentTab === 'visitors'
-            ? 'active'
-            : ''}
-            onClick={this.changeTab.bind(null, 'visitors')}>
-            <a style={cursor}>Visitors</a>
-          </li>
+
           <li
             role="presentation"
             className={this.state.currentTab === 'lots'
@@ -131,6 +124,14 @@ class Setup extends React.Component {
             : ''}
             onClick={this.changeTab.bind(null, 'students')}>
             <a style={cursor}>Students</a>
+          </li>
+          <li
+            role="presentation"
+            className={this.state.currentTab === 'visitors'
+            ? 'active'
+            : ''}
+            onClick={this.changeTab.bind(null, 'visitors')}>
+            <a style={cursor}>Visitors</a>
           </li>
           <li
             role="presentation"
