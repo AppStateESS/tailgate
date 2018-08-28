@@ -1,5 +1,7 @@
 <?php
 
+use \phpws2\Database;
+
 function tailgate_update(&$content, $currentVersion)
 {
     switch ($currentVersion) {
@@ -50,6 +52,23 @@ EOF;
 
         case (version_compare($currentVersion, '1.2.4', '<')):
             $content[] = '<pre>+ Removed wkpdftohtml to use dompdf.</pre>';
+
+        case (version_compare($currentVersion, '1.3.0', '<')):
+            $db = Database::getDB();
+            $tbl = $db->addTable('tg_student');
+            $newdt = new \phpws2\Database\Datatype\Text($tbl, '');
+            $newdt->setIsNull(true);
+            $tbl->alter($tbl->getDataType('ineligible_reason'), $newdt);
+            $tbl->alter($tbl->getDataType('banned_reason'), $newdt);
+            
+            $content[] = <<<EOF
+<pre>
++ Fixed date time picker.
++ Added FakeSwiftMailer for testing.
++ Student banned reasons set to default null.
++ Fixed error check.
+</pre>
+EOF;
     }
     return true;
 }
