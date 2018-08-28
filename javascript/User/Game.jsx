@@ -1,5 +1,6 @@
 import React from 'react'
 import GameStatus from './GameStatus.jsx'
+import PropTypes from 'prop-types'
 
 class Game extends React.Component {
   render() {

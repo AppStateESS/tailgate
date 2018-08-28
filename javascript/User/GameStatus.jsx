@@ -1,6 +1,7 @@
 import React from 'react'
 import LotterySubmit from './LotterySubmit.jsx'
 import ConfirmSpot from './ConfirmSpot.jsx'
+import PropTypes from 'prop-types'
 
 /* global $ */
 
@@ -106,7 +107,7 @@ class GameStatus extends React.Component {
           }
         } else {
           // the lottery signup has not yet begun
-          content = <div className="alert alert-success">Tailgate lottery for this game begins at
+          content = <div className="alert alert-success">Tailgate lottery for this game begins at&nbsp;
             <strong>{this.props.game.signup_start_format}</strong>. See you then!</div>
         }
       }

@@ -1,5 +1,6 @@
 import React from 'react'
 import Waiting from './Waiting.jsx'
+import PropTypes from 'prop-types'
 
 /* global $ */
 
