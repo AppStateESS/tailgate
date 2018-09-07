@@ -7,7 +7,7 @@ use tailgate\Factory\Game as GameFactory;
 use tailgate\Factory\Student as StudentFactory;
 
 // Not for production!
-//require_once PHPWS_SOURCE_DIR . 'mod/tailgate/class/FakeSwiftMailer.php';
+// require_once PHPWS_SOURCE_DIR . 'mod/tailgate/class/FakeSwiftMailer.php';
 
 /**
  * @license http://opensource.org/licenses/lgpl-3.0.html
@@ -400,20 +400,12 @@ class Lottery extends Base
             return $transport;
         }
 
-        switch (SWIFT_MAIL_TRANSPORT_TYPE) {
-            case 1:
-                $transport = \Swift_SmtpTransport::newInstance(SWIFT_MAIL_TRANSPORT_PARAMETER);
-                break;
-            case 2:
-                $transport = \Swift_SendmailTransport::newInstance(SWIFT_MAIL_TRANSPORT_PARAMETER);
-                break;
-            case 3:
-                $transport = \Swift_MailTransport::newInstance();
-                break;
-
-            default:
-                throw new \Exception('Wrong Swift Mail transport type');
+        if (SWIFT_MAIL_TRANSPORT_TYPE == 1) {
+            $transport = new \Swift_SmtpTransport(SWIFT_MAIL_TRANSPORT_PARAMETER);
+        } else {
+            $transport = new \Swift_SendmailTransport(SWIFT_MAIL_TRANSPORT_PARAMETER);
         }
+
         return $transport;
     }
 
