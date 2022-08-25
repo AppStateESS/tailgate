@@ -20,9 +20,9 @@ abstract class Base extends \phpws2\Http\Controller
     public function getHtmlView($data, \Canopy\Request $request)
     {
         \Layout::addStyle('tailgate', 'Admin/Setup/style.css');
+        javascript('jquery');
         javascript('datetimepicker');
         javascript('ckeditor');
-        javascript('jquery');
 
         $script = \tailgate\Factory\React::load('setup', REACT_DEVMODE);
         $content = <<<EOF
