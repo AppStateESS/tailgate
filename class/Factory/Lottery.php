@@ -116,6 +116,7 @@ class Lottery extends Base
      */
     public function chooseWinners()
     {
+
         $currentGame = GameFactory::getCurrent();
         if ($currentGame->getLotteryStarted()) {
             throw new \Exception('Lottery previously run');
@@ -141,13 +142,14 @@ class Lottery extends Base
 
         for ($i = 0; $i < $spots_left; $i++) {
             $row = $db->selectOneRow();
-            if ($row['id']) {
+            if (!empty($row['id'])) {
                 $this->flagWinner($row['id']);
                 Student::incrementWins($row['student_id']);
             } else {
                 break;
             }
         }
+
         return $i;
     }
 
@@ -191,8 +193,8 @@ class Lottery extends Base
     }
 
     public static function getAvailableSpots($game_id = 0, $lot_id = 0,
-            $allow_reserved = false, $include_unclaimed = false,
-            $active_only = true)
+        $allow_reserved = false, $include_unclaimed = false,
+        $active_only = true)
     {
         if (empty($game_id)) {
             $factory = new GameFactory;
@@ -240,7 +242,7 @@ class Lottery extends Base
         }
 
         $cond = $db->createConditional($spotTable->getField('lot_id'),
-                $lotTable->getField('id'), '=');
+            $lotTable->getField('id'), '=');
         $db->joinResources($spotTable, $lotTable, $cond);
         $expression = new \phpws2\Database\Expression('(' . $db2->selectQuery() . ')');
         $spotTable->addFieldConditional('id', $expression, 'not in');
@@ -272,7 +274,7 @@ class Lottery extends Base
         $spotTable->addFieldConditional('active', 1);
         $spotTable->addFieldConditional('reserved', 0);
         $cond = $db->createConditional($spotTable->getField('lot_id'),
-                $lotTable->getField('id'), '=');
+            $lotTable->getField('id'), '=');
         $db->joinResources($spotTable, $lotTable, $cond);
         $expression = new \phpws2\Database\Expression('(' . $db2->selectQuery() . ')');
         $spotTable->addFieldConditional('id', $expression, 'not in');
@@ -344,7 +346,7 @@ class Lottery extends Base
         $lotTable = $db->addTable('tg_lot');
         $lotTable->addField('title');
         $cond = $db->createConditional($spotTable->getField('lot_id'),
-                $lotTable->getField('id'), '=');
+            $lotTable->getField('id'), '=');
         $db->joinResources($spotTable, $lotTable, $cond);
         return $db->selectOneRow();
     }
@@ -413,7 +415,7 @@ class Lottery extends Base
     {
         $variables = $game->getStringVars();
         $variables['confirmation_link'] = \Canopy\Server::getSiteUrl() . 'tailgate/User/Lottery/?command=confirm&amp;hash=' .
-                $lottery['confirmation'];
+            $lottery['confirmation'];
         $tpl = new \phpws2\Template();
         $tpl->setModuleTemplate('tailgate', 'Admin/Lottery/Winner.html');
         $tpl->addVariables($variables);
@@ -430,7 +432,7 @@ class Lottery extends Base
         $content = $tpl->get();
 
         $this->sendEmail('Tailgate unsuccessful', $lottery['student_id'],
-                $content);
+            $content);
     }
 
     private function sendEmail($subject, $student_id, $content)
@@ -439,17 +441,25 @@ class Lottery extends Base
         $student = StudentFactory::getById($student_id);
         if (!is_object($student)) {
             \PHPWS_Core::log("Student #$student_id does not exist.",
-                    'tailgate_error.txt');
+                'tailgate_error.txt');
             return;
         }
 
-        $message = \Swift_Message::newInstance();
+        if (method_exists('\\Swift_Message', 'newInstance')) {
+            $message = \Swift_Message::newInstance();
+        } else {
+            $message = new \Swift_Message();
+        }
         $message->setSubject($subject);
         $message->setFrom(\phpws2\Settings::get('tailgate', 'reply_to'));
         $message->setTo($student->getEmail());
         $message->setBody($content, 'text/html');
 
-        $mailer = \Swift_Mailer::newInstance($transport);
+        if (method_exists('\\Swift_Mailer', 'newInstance')) {
+            $mailer = \Swift_Mailer::newInstance($transport);
+        } else {
+            $mailer = new \Swift_Mailer($transport);
+        }
         $log = "Subject: $subject, To: " . $student->getEmail();
         \PHPWS_Core::log($log, 'tailgate_email.log');
         $mailer->send($message);
@@ -526,7 +536,7 @@ class Lottery extends Base
     }
 
     /**
-     * 
+     *
      * @param type $student_id
      * @return \tailgate\Resource\Lottery
      */
