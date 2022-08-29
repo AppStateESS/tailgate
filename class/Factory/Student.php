@@ -45,14 +45,15 @@ class Student extends Base
     public function isStudent($username)
     {
         $url = str_replace('{studentId}', $username, TAILGATE_BANNER_URL);
+
         $ch = curl_init();
-        curl_setopt_array($ch, array(CURLOPT_RETURNTRANSFER => 1, CURLOPT_SSL_VERIFYHOST => 0,
-            CURLOPT_SSL_VERIFYPEER => 0, CURLOPT_URL => $url));
+        curl_setopt_array($ch,
+            array(CURLOPT_RETURNTRANSFER => 1, CURLOPT_URL => $url, CURLOPT_FAILONERROR => 1, CURLOPT_TIMEOUT => 8, CURLOPT_SSL_VERIFYHOST => 0, CURLOPT_SSL_VERIFYPEER => 0));
 
         $result = curl_exec($ch);
 
         $error = curl_error($ch);
-
+        curl_close($ch);
         if (!empty($error)) {
             throw new \Exception('Could not contact Banner server.');
         }
@@ -60,9 +61,9 @@ class Student extends Base
         if (!$result) {
             return false;
         }
+
         $json = json_decode($result);
 
-        curl_close($ch);
         return $json->creditHoursEnrolled > 0;
     }
 
