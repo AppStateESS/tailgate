@@ -31,7 +31,7 @@ class Student extends Base
         $users->addField('username');
 
         $conditional = $db->createConditional($student->getField('user_id'),
-                $users->getField('id'));
+            $users->getField('id'));
         $db->joinResources($student, $users, $conditional);
         $row = $db->selectOneRow();
         if (!$row) {
@@ -44,19 +44,24 @@ class Student extends Base
 
     public function isStudent($username)
     {
-        $url = TAILGATE_BANNER_URL . $username;
-        $ch = curl_init($url);
-        ob_start();
+        $url = str_replace('{studentId}', $username, TAILGATE_BANNER_URL);
+        $ch = curl_init();
+        curl_setopt_array($ch, array(CURLOPT_RETURNTRANSFER => 1, CURLOPT_SSL_VERIFYHOST => 0,
+            CURLOPT_SSL_VERIFYPEER => 0, CURLOPT_URL => $url));
+
         $result = curl_exec($ch);
+
         $error = curl_error($ch);
+
         if (!empty($error)) {
             throw new \Exception('Could not contact Banner server.');
         }
-        $jsonString = ob_get_clean();
+
         if (!$result) {
             return false;
         }
-        $json = json_decode($jsonString);
+        $json = json_decode($result);
+
         curl_close($ch);
         return $json->creditHoursEnrolled > 0;
     }
@@ -74,9 +79,9 @@ class Student extends Base
         $student = new Resource;
 
         $student->setFirstName(filter_input(INPUT_POST, 'firstName',
-                        FILTER_SANITIZE_STRING));
+                FILTER_SANITIZE_STRING));
         $student->setLastName(filter_input(INPUT_POST, 'lastName',
-                        FILTER_SANITIZE_STRING));
+                FILTER_SANITIZE_STRING));
         $student->setUserId($user_id);
         $student->stampSignupDate();
 
@@ -84,7 +89,7 @@ class Student extends Base
     }
 
     public function getList($mode = TG_LIST_ALL, $order_by = null,
-            $order_dir = 'asc')
+        $order_dir = 'asc')
     {
         $game = Game::getCurrent();
 
@@ -97,7 +102,7 @@ class Student extends Base
         $users->addField('email');
         $users->addField('username');
         $conditional = $db->createConditional($student->getField('user_id'),
-                $users->getField('id'));
+            $users->getField('id'));
         $db->joinResources($student, $users, $conditional);
 
         // if game show if they won lottery
@@ -106,7 +111,7 @@ class Student extends Base
             $lottery->addField('winner');
             $lottery->addField('picked_up');
             $s_l_cond = $db->createConditional($student->getField('id'),
-                    $lottery->getField('student_id'));
+                $lottery->getField('student_id'));
             $db->joinResources($student, $lottery, $s_l_cond, 'left');
         }
 
@@ -119,11 +124,11 @@ class Student extends Base
 
         if (!empty($search)) {
             $c1 = $db->createConditional($student->getField('first_name'),
-                    "%$search%", 'like');
+                "%$search%", 'like');
             $c2 = $db->createConditional($student->getField('last_name'),
-                    "%$search%", 'like');
+                "%$search%", 'like');
             $c3 = $db->createConditional($users->getField('username'),
-                    "%$search%", 'like');
+                "%$search%", 'like');
             $c4 = $db->createConditional($c1, $c2, 'or');
             $c5 = $db->createConditional($c3, $c4, 'or');
             $db->addConditional($c5);
@@ -146,7 +151,7 @@ class Student extends Base
         $users->addField('username');
 
         $conditional = $db->createConditional($student->getField('user_id'),
-                $users->getField('id'));
+            $users->getField('id'));
         $db->joinResources($student, $users, $conditional);
         $row = $db->selectOneRow();
         if (!$row) {
